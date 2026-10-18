@@ -43,7 +43,7 @@ shopt -s nullglob
 for bundle in "$products"/*.bundle; do
     ditto "$bundle" "$app/Contents/Resources/$(basename "$bundle")"
 done
-frameworks=("$products"/PackageFrameworks/*.framework)
+frameworks=("$products"/*.framework "$products"/PackageFrameworks/*.framework)
 for framework in ${frameworks[@]+"${frameworks[@]}"}; do
     ditto "$framework" "$app/Contents/Frameworks/$(basename "$framework")"
 done
@@ -77,17 +77,34 @@ set_string LSMinimumSystemVersion "$min_macos"
 set_string LSApplicationCategoryType "$APP_CATEGORY"
 set_string NSHumanReadableCopyright "$COPYRIGHT"
 /usr/libexec/PlistBuddy -c "Merge $tmp/assets.plist" "$plist" >/dev/null
+
+entitlements="$tmp/app.entitlements"
+cp Bundle/App.entitlements "$entitlements"
+
+sparkle="$app/Contents/Frameworks/Sparkle.framework"
+if [[ -d $sparkle ]]; then
+    # Sandboxed Sparkle installs through its Installer XPC service (sparkle-project.org/documentation/sandboxing).
+    /usr/libexec/PlistBuddy -c "Add :SUEnableInstallerLauncherService bool true" "$plist"
+    /usr/libexec/PlistBuddy \
+        -c "Add :com.apple.security.temporary-exception.mach-lookup.global-name array" \
+        -c "Add :com.apple.security.temporary-exception.mach-lookup.global-name:0 string $BUNDLE_ID-spks" \
+        -c "Add :com.apple.security.temporary-exception.mach-lookup.global-name:1 string $BUNDLE_ID-spki" \
+        "$entitlements"
+    if [[ $config == release ]]; then
+        [[ -n ${SPARKLE_FEED_URL:-} && -n ${SPARKLE_PUBLIC_KEY:-} ]] ||
+            die "release builds need SPARKLE_FEED_URL and SPARKLE_PUBLIC_KEY in Bundle/app.env (see make sparkle-keys)"
+        set_string SUFeedURL "$SPARKLE_FEED_URL"
+        set_string SUPublicEDKey "$SPARKLE_PUBLIC_KEY"
+    fi
+fi
 plutil -lint -s "$plist"
 
 if [[ $config == debug ]]; then
     identity="-"
-    entitlements="$tmp/debug.entitlements"
-    cp Bundle/App.entitlements "$entitlements"
     /usr/libexec/PlistBuddy -c "Add :com.apple.security.get-task-allow bool true" "$entitlements"
     sign_args=(--force --sign -)
 else
     identity=$(signing_identity)
-    entitlements=Bundle/App.entitlements
     sign_args=(--force --options runtime --sign "$identity")
     [[ $identity == "-" ]] || sign_args+=(--timestamp)
 fi

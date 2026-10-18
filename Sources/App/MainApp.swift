@@ -5,14 +5,20 @@ import SwiftUI
 struct MainApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model = AppModel(greeter: LocalGreeter())
+    @StateObject private var updates = Updates()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(model)
         }
+        .commands {
+            CommandGroup(after: .appInfo) {
+                CheckForUpdatesView(updates: updates)
+            }
+        }
         Settings {
-            SettingsView()
+            SettingsView(automaticallyChecksForUpdates: $updates.automaticallyChecksForUpdates)
         }
     }
 }
