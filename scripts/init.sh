@@ -64,16 +64,24 @@ echo 0.0.0 >version.txt
 printf '{\n  ".": "0.0.0"\n}\n' >.release-please-manifest.json
 rm -f CHANGELOG.md
 
+# Deletes the marked template-only blocks, then squeezes the blank lines they leave.
+drop_template_blocks() {
+    local file=$1 start=$2 end=$3 content
+    sed -i '' "/$start/,/$end/d" "$file"
+    content=$(cat -s "$file")
+    printf '%s\n' "$content" >"$file"
+}
+
 log "update LICENSE, README, CODEOWNERS, issue templates"
 sed -i '' "s|^Copyright (c) .*|Copyright (c) $year $holder|" LICENSE
 sed -i '' "1s|.*|# $display_name|" README.md
-sed -i '' '/<!-- template-only:start -->/,/<!-- template-only:end -->/d' README.md
+drop_template_blocks README.md '<!-- template-only:start -->' '<!-- template-only:end -->'
 sed -i '' "s|@[A-Za-z0-9_/-]*|$codeowner|g" .github/CODEOWNERS
 sed -i '' "s|github.com/[^/]*/[^/]*/security|github.com/$repo/security|" .github/ISSUE_TEMPLATE/config.yml
 
 log "remove template-only files"
-sed -i '' '/^# template-only:start/,/^# template-only:end/d' Makefile
-rm -f docs/TEMPLATE-PLAN.md docs/ACCEPTANCE.md "$0"
+drop_template_blocks Makefile '^# template-only:start' '^# template-only:end'
+rm -f docs/TEMPLATE-PLAN.md docs/ACCEPTANCE.md "$ROOT/scripts/init.sh"
 
 cat >&2 <<EOF
 
