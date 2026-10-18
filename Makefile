@@ -12,6 +12,16 @@ ENV := source Bundle/app.env
 help: ## List targets
 	@awk 'BEGIN { FS = ":.*## " } /^##@/ { printf "\n%s\n", substr($$0, 5) } /^[a-z-]+:.*## / { printf "  %-18s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
+##@ Setup
+
+.PHONY: setup
+setup: doctor ## Check the toolchain and install git hooks
+	lefthook install
+
+.PHONY: doctor
+doctor: ## Check Xcode, tools and signing identity
+	scripts/doctor.sh
+
 ##@ Develop
 
 .PHONY: build
@@ -41,6 +51,15 @@ run: ## Build and run the debug .app, logs in this terminal; pass ARGS="..."
 .PHONY: logs
 logs: ## Stream this app's unified logs
 	@$(ENV) && log stream --level debug --predicate "subsystem == \"$$BUNDLE_ID\""
+
+.PHONY: smoke
+smoke: ## Smoke-test the debug .app (or APP=path)
+	scripts/smoke.sh $(APP)
+
+##@ Verify
+
+.PHONY: ci
+ci: lint test app smoke ## Everything CI runs; the definition of done
 
 .PHONY: clean
 clean: ## Remove build output
