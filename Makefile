@@ -61,6 +61,28 @@ smoke: ## Smoke-test the debug .app (or APP=path)
 .PHONY: ci
 ci: lint test app smoke ## Everything CI runs; the definition of done
 
+##@ Release (CI runs `make release` after release-please creates the tag)
+
+.PHONY: release-app
+release-app: ## Build dist/<App>.app: universal, hardened runtime, signed
+	scripts/build-app.sh release
+
+.PHONY: release-dmg
+release-dmg: ## Package dist/<App>.app into a DMG, sign and notarize it
+	scripts/package-dmg.sh
+
+.PHONY: appcast
+appcast: ## Generate dist/appcast.xml for the DMG
+	scripts/appcast.sh
+
+.PHONY: release
+release: ## Full release into dist/: app, notarization, DMG, dSYM, appcast, checksums
+	scripts/release.sh
+
+.PHONY: sparkle-keys
+sparkle-keys: ## Create the Sparkle EdDSA key and write its public half to Bundle/app.env
+	scripts/sparkle-keys.sh
+
 .PHONY: clean
 clean: ## Remove build output
 	rm -rf .build dist

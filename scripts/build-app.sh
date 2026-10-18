@@ -91,9 +91,9 @@ if [[ -d $sparkle ]]; then
         -c "Add :com.apple.security.temporary-exception.mach-lookup.global-name:1 string $BUNDLE_ID-spki" \
         "$entitlements"
     if [[ $config == release ]]; then
-        [[ -n ${SPARKLE_FEED_URL:-} && -n ${SPARKLE_PUBLIC_KEY:-} ]] ||
-            die "release builds need SPARKLE_FEED_URL and SPARKLE_PUBLIC_KEY in Bundle/app.env (see make sparkle-keys)"
-        set_string SUFeedURL "$SPARKLE_FEED_URL"
+        [[ -n ${RELEASES_URL:-} && -n ${SPARKLE_PUBLIC_KEY:-} ]] ||
+            die "release builds need RELEASES_URL and SPARKLE_PUBLIC_KEY in Bundle/app.env (see make sparkle-keys)"
+        set_string SUFeedURL "$RELEASES_URL/latest/download/appcast.xml"
         set_string SUPublicEDKey "$SPARKLE_PUBLIC_KEY"
     fi
 fi
