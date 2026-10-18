@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, test, build
+    # release-please PRs only touch version.txt, CHANGELOG.md and the manifest. A skipped
+    # job still satisfies the required check; the same-repo guard keeps forks from skipping.
+    if: ${{ !(startsWith(github.head_ref, 'release-please--') && github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@v6
+        with:
+          path: .build
+          key: build-${{ runner.os }}-xcode-26.2-${{ hashFiles('Package.resolved') }}
+          restore-keys: build-${{ runner.os }}-xcode-26.2-
+      - run: make ci
