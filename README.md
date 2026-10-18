@@ -1,11 +1,11 @@
 # macos-swiftui-spm-template
 
-<!-- template-intro:start -->
+<!-- template-only:start -->
 AI-friendly macOS app template built on Swift Package Manager — pure `Package.swift`,
 no `.xcodeproj`, predictable layout, and AGENTS.md conventions for LLM-assisted
 development. Create a repository with **Use this template**, then follow
 [Start a new app](#start-a-new-app).
-<!-- template-intro:end -->
+<!-- template-only:end -->
 
 ## What you get
 
@@ -31,6 +31,7 @@ development. Create a repository with **Use this template**, then follow
 - [lefthook](https://lefthook.dev) for git hooks: `brew install lefthook`
 - The app runs on macOS 14 or later
 
+<!-- template-only:start -->
 ## Start a new app
 
 After **Use this template** and cloning your repository:
@@ -48,6 +49,8 @@ CODEOWNERS and the issue templates, removes the template's own planning docs, an
 finally deletes itself. Then replace `Bundle/Assets.xcassets/AppIcon.appiconset` and
 the Greeter demo, and work through the one-time setup in
 [docs/RELEASING.md](docs/RELEASING.md).
+
+<!-- template-only:end -->
 
 ## Commands
 

@@ -14,6 +14,12 @@ help: ## List targets
 
 ##@ Setup
 
+# template-only:start
+.PHONY: init
+init: ## First run after "Use this template": ARGS="--name MyApp --bundle-id com.example.myapp"
+	scripts/init.sh $(ARGS)
+# template-only:end
+
 .PHONY: setup
 setup: doctor ## Check the toolchain and install git hooks
 	lefthook install
