@@ -60,3 +60,13 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Template
+.swiftpm/
+dist/
+*.p12
+*.p8
+*.cer
+*.provisionprofile
+.env
+.env.*

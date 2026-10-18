@@ -1,0 +1,36 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Default name" : {
+      "localizations" : {
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "默认名字" } }
+      }
+    },
+    "Greet" : {
+      "localizations" : {
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打招呼" } }
+      }
+    },
+    "Hello, %@!" : {
+      "localizations" : {
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "你好，%@！" } }
+      }
+    },
+    "Name" : {
+      "localizations" : {
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "名字" } }
+      }
+    },
+    "Please enter a name." : {
+      "localizations" : {
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请输入名字。" } }
+      }
+    },
+    "Something went wrong" : {
+      "localizations" : {
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "出错了" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}
