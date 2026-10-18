@@ -6,10 +6,11 @@ enum SettingsKey {
 
 public struct SettingsView: View {
     @AppStorage(SettingsKey.defaultName) private var defaultName = ""
-    @Binding private var automaticallyChecksForUpdates: Bool
+    private let automaticallyChecksForUpdates: Binding<Bool>?
 
-    public init(automaticallyChecksForUpdates: Binding<Bool>) {
-        _automaticallyChecksForUpdates = automaticallyChecksForUpdates
+    /// Pass nil where the app does not update itself (App Store builds).
+    public init(automaticallyChecksForUpdates: Binding<Bool>?) {
+        self.automaticallyChecksForUpdates = automaticallyChecksForUpdates
     }
 
     public var body: some View {
@@ -17,8 +18,10 @@ public struct SettingsView: View {
             TextField(text: $defaultName) {
                 Text("Default name", bundle: .module)
             }
-            Toggle(isOn: $automaticallyChecksForUpdates) {
-                Text("Automatically check for updates", bundle: .module)
+            if let automaticallyChecksForUpdates {
+                Toggle(isOn: automaticallyChecksForUpdates) {
+                    Text("Automatically check for updates", bundle: .module)
+                }
             }
         }
         .padding(20)

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Builds $APP_NAME.app from the Swift package.
 #   debug   → .build/app/Debug/$APP_NAME.app, ad-hoc signed, debugger can attach
-#   release → dist/$APP_NAME.app, universal, hardened runtime, Developer ID or ad-hoc
+#   release → dist/$APP_NAME.app, universal; Developer ID + hardened runtime, or ad-hoc
+#   mas     → dist/mas/$APP_NAME.app, universal, no Sparkle, Apple Distribution signed;
+#             needs TEAM_ID and MAS_PROVISIONING_PROFILE
 # Prints the .app path on stdout.
 #
 # `swift build` output is not shippable: it copies .xcassets/.xcstrings raw and its
@@ -10,6 +12,8 @@
 
 source "$(dirname "$0")/common.sh"
 
+universal=(-destination 'generic/platform=macOS' ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO)
+derived_data=.build/xcode
 config=${1:-}
 case "$config" in
     debug)
@@ -20,9 +24,20 @@ case "$config" in
     release)
         xc_config=Release
         app=$RELEASE_APP
-        build_args=(-destination 'generic/platform=macOS' ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO)
+        build_args=("${universal[@]}")
         ;;
-    *) die "usage: build-app.sh debug|release" ;;
+    mas)
+        [[ -n ${TEAM_ID:-} ]] || die "App Store builds need TEAM_ID in Bundle/app.env"
+        [[ -f ${MAS_PROVISIONING_PROFILE:-} ]] ||
+            die "set MAS_PROVISIONING_PROFILE to the Mac App Store .provisionprofile"
+        mas_identity=$(find_identity "Apple Distribution|3rd Party Mac Developer Application")
+        [[ -n $mas_identity ]] || die "no Apple Distribution identity for team $TEAM_ID in the keychain"
+        xc_config=Release
+        app="dist/mas/$APP_NAME.app"
+        derived_data=.build/xcode-mas
+        build_args=("${universal[@]}")
+        ;;
+    *) die "usage: build-app.sh debug|release|mas" ;;
 esac
 
 tmp=$(mktemp -d)
@@ -31,9 +46,21 @@ trap 'rm -rf "$tmp"' EXIT
 min_macos=$(swift package dump-package | jq -r '.platforms[] | select(.platformName == "macos") | .version')
 [[ -n "$min_macos" ]] || die "Package.swift declares no macOS platform"
 
-log "xcodebuild $xc_config"
-xcodebuild build -quiet -scheme App -configuration "$xc_config" -derivedDataPath .build/xcode "${build_args[@]}"
-products=".build/xcode/Build/Products/$xc_config"
+source_dir=$ROOT
+if [[ $config == mas ]]; then
+    # APP_STORE=1 drops Sparkle from Package.swift; resolving that in the repo would
+    # rewrite Package.resolved, so build a copy.
+    source_dir="$tmp/src"
+    for path in Package.swift Package.resolved Sources Tests; do
+        ditto "$path" "$source_dir/$path"
+    done
+    export APP_STORE=1
+fi
+
+log "xcodebuild $config"
+(cd "$source_dir" && xcodebuild build -quiet -scheme App -configuration "$xc_config" \
+    -derivedDataPath "$ROOT/$derived_data" "${build_args[@]}")
+products="$derived_data/Build/Products/$xc_config"
 
 log "assemble $app"
 rm -rf "$app"
@@ -48,6 +75,7 @@ for framework in ${frameworks[@]+"${frameworks[@]}"}; do
     ditto "$framework" "$app/Contents/Frameworks/$(basename "$framework")"
 done
 shopt -u nullglob
+ditto Bundle/PrivacyInfo.xcprivacy "$app/Contents/Resources/PrivacyInfo.xcprivacy"
 
 log "compile Bundle/Assets.xcassets"
 xcrun actool Bundle/Assets.xcassets \
@@ -99,19 +127,31 @@ if [[ -d $sparkle ]]; then
 fi
 plutil -lint -s "$plist"
 
-if [[ $config == debug ]]; then
-    identity="-"
-    /usr/libexec/PlistBuddy -c "Add :com.apple.security.get-task-allow bool true" "$entitlements"
-    sign_args=(--force --sign -)
-else
-    identity=$(signing_identity)
-    sign_args=(--force --sign "$identity")
-    # Hardened runtime exists for notarization. Its library validation needs a Team ID,
-    # which ad-hoc code lacks, so an ad-hoc app would refuse its own Sparkle.framework.
-    if [[ $identity != "-" ]]; then
-        sign_args+=(--options runtime --timestamp)
-    fi
-fi
+case $config in
+    debug)
+        identity="-"
+        /usr/libexec/PlistBuddy -c "Add :com.apple.security.get-task-allow bool true" "$entitlements"
+        sign_args=(--force --sign -)
+        ;;
+    release)
+        identity=$(signing_identity)
+        sign_args=(--force --sign "$identity")
+        # Hardened runtime exists for notarization. Its library validation needs a Team ID,
+        # which ad-hoc code lacks, so an ad-hoc app would refuse its own Sparkle.framework.
+        if [[ $identity != "-" ]]; then
+            sign_args+=(--options runtime --timestamp)
+        fi
+        ;;
+    mas)
+        identity=$mas_identity
+        ditto "$MAS_PROVISIONING_PROFILE" "$app/Contents/embedded.provisionprofile"
+        /usr/libexec/PlistBuddy \
+            -c "Add :com.apple.application-identifier string $TEAM_ID.$BUNDLE_ID" \
+            -c "Add :com.apple.developer.team-identifier string $TEAM_ID" \
+            "$entitlements"
+        sign_args=(--force --sign "$identity")
+        ;;
+esac
 
 log "codesign (identity: $identity)"
 # Inside out, no --deep: nested code keeps its own entitlements.

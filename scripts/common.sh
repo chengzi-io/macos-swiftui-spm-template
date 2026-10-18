@@ -25,16 +25,23 @@ log() {
     echo "==> $*" >&2
 }
 
-# Prints the codesign identity: "-" (ad-hoc) when TEAM_ID is empty,
-# otherwise the SHA-1 of the team's Developer ID Application certificate.
+# Prints the SHA-1 of the first valid identity for TEAM_ID whose name matches the
+# extended regex. Policy: codesigning (default) or basic (installer certificates).
+find_identity() {
+    local pattern=$1 policy=${2:-codesigning}
+    security find-identity -v -p "$policy" |
+        awk -v pattern="$pattern" -v team="($TEAM_ID)" '$0 ~ pattern && index($0, team) { print $2; exit }'
+}
+
+# Prints the codesign identity for Developer ID builds: "-" (ad-hoc) when TEAM_ID is
+# empty, otherwise the team's Developer ID Application certificate.
 signing_identity() {
-    if [[ -z "${TEAM_ID:-}" ]]; then
+    if [[ -z ${TEAM_ID:-} ]]; then
         echo "-"
         return
     fi
     local id
-    id=$(security find-identity -v -p codesigning |
-        awk -v team="($TEAM_ID)" '/Developer ID Application/ && index($0, team) { print $2; exit }')
-    [[ -n "$id" ]] || die "no 'Developer ID Application' identity for team $TEAM_ID in the keychain"
+    id=$(find_identity "Developer ID Application")
+    [[ -n $id ]] || die "no 'Developer ID Application' identity for team $TEAM_ID in the keychain"
     echo "$id"
 }

@@ -29,7 +29,7 @@ ok "lefthook $(lefthook version)"
 # Release prerequisites are only needed for local releases; CI imports its own.
 if [[ -z ${TEAM_ID:-} ]]; then
     warn "TEAM_ID empty: release builds are ad-hoc signed and not notarized"
-elif security find-identity -v -p codesigning | grep -q "Developer ID Application.*($TEAM_ID)"; then
+elif [[ -n $(find_identity "Developer ID Application") ]]; then
     ok "Developer ID Application identity for $TEAM_ID"
 else
     warn "no Developer ID Application identity for $TEAM_ID in the keychain (needed for local releases)"
