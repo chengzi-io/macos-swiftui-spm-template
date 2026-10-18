@@ -8,6 +8,7 @@ rm -rf dist
 mkdir -p dist
 
 app=$(scripts/build-app.sh release)
+scripts/smoke.sh "$app"
 scripts/notarize.sh "$app"
 scripts/package-dmg.sh >/dev/null
 

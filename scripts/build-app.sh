@@ -105,8 +105,12 @@ if [[ $config == debug ]]; then
     sign_args=(--force --sign -)
 else
     identity=$(signing_identity)
-    sign_args=(--force --options runtime --sign "$identity")
-    [[ $identity == "-" ]] || sign_args+=(--timestamp)
+    sign_args=(--force --sign "$identity")
+    # Hardened runtime exists for notarization. Its library validation needs a Team ID,
+    # which ad-hoc code lacks, so an ad-hoc app would refuse its own Sparkle.framework.
+    if [[ $identity != "-" ]]; then
+        sign_args+=(--options runtime --timestamp)
+    fi
 fi
 
 log "codesign (identity: $identity)"
