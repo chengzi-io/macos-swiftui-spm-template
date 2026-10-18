@@ -1,0 +1,18 @@
+## Change type
+
+- [ ] `feat` — new behavior
+- [ ] `fix` — bug fix
+- [ ] `docs` — documentation only
+- [ ] `refactor` — no behavior change
+- [ ] `perf` — performance
+- [ ] `chore` — tooling, dependencies, CI
+
+## Verification
+
+<!-- Commands you ran and what they showed, e.g. `make ci` passed. -->
+
+## Checklist
+
+- [ ] Title follows Conventional Commits, for example `feat(settings): add launch at login`
+- [ ] Breaking change is marked with `!` after the type or a `BREAKING CHANGE:` footer
+- [ ] `make ci` passes locally

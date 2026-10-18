@@ -22,6 +22,10 @@ setup: doctor ## Check the toolchain and install git hooks
 doctor: ## Check Xcode, tools and signing identity
 	scripts/doctor.sh
 
+.PHONY: github-setup
+github-setup: ## One-time GitHub settings: squash only, branch protection, release environment
+	scripts/github-setup.sh
+
 ##@ Develop
 
 .PHONY: build
