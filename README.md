@@ -69,7 +69,7 @@ Composer, or have your agent run the brand skill) and the Greeter demo, and work
 | `make ci` | Everything CI runs; the definition of done |
 | `make logs` | Stream the app's unified logs |
 | `make release` | Universal, signed, notarized (with a Developer ID) DMG, dSYM, appcast in `dist/` |
-| `make release-dry-run` | The release build and DMG checks without signing secrets; CI runs it on release PRs |
+| `make release-dry-run` | The release build and DMG checks without signing secrets; CI runs it on a release PR marked ready |
 | `make sparkle-keys` | Create the Sparkle EdDSA key; write the public key to `Bundle/app.env` |
 | `make github-setup` | Squash-only merges, branch protection, `release` environment |
 | `make release-mas` / `make upload-mas` | Mac App Store `.pkg`, and its upload |
@@ -101,9 +101,9 @@ version.txt                current version, owned by release-please
 
 ## Releases
 
-release-please reads Conventional Commit PR titles on `main`, keeps a release PR with
-the next version and CHANGELOG, and tags the release when that PR is merged; the PR
-must first pass a release dry run. The publish job then builds, signs, notarizes,
+release-please reads Conventional Commit PR titles on `main`, keeps a draft release PR
+with the next version and CHANGELOG, and tags the release when that PR is merged. To
+release, mark it ready for review: that runs a release dry run, which must pass. The publish job then builds, signs, notarizes,
 checks and uploads the DMG to a draft release and publishes it; Sparkle picks it up
 from `releases/latest/download/appcast.xml`. One-time setup and details:
 [docs/RELEASING.md](docs/RELEASING.md).

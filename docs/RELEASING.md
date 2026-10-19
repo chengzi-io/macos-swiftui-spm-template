@@ -3,13 +3,15 @@
 ## How a release happens
 
 1. PRs are squash-merged into `main`; each PR title is a Conventional Commit.
-2. On every push to `main`, release-please updates a release PR: the next version in
-   `version.txt` and `.release-please-manifest.json`, and the new `CHANGELOG.md`
-   section. `feat` bumps the minor version and `fix` the patch while the version is
-   below 1.0 (`bump-minor-pre-major`); `chore`, `docs`, `ci` and the like release
-   nothing.
-3. The release PR must pass `Release dry run` (`make release-dry-run`): the universal
-   release build, ad-hoc signed, smoke-tested, packaged and checked as a DMG.
+2. On every push to `main`, release-please updates a release PR, opened as a draft: the
+   next version in `version.txt` and `.release-please-manifest.json`, and the new
+   `CHANGELOG.md` section. `feat` bumps the minor version and `fix` the patch while the
+   version is below 1.0 (`bump-minor-pre-major`); `chore`, `docs`, `ci` and the like
+   release nothing.
+3. To release, mark the release PR **Ready for review**. That starts `Release dry run`
+   (`make release-dry-run`): the universal release build, ad-hoc signed, smoke-tested,
+   packaged and checked as a DMG. Merge once it passes; a draft PR cannot merge, so the
+   dry run cannot be skipped.
 4. Merging the release PR makes release-please tag `vX.Y.Z` and create the GitHub
    Release with the changelog, as a **draft**: nobody sees it yet, and
    `releases/latest` still points at the previous version.
@@ -48,8 +50,10 @@ branches; private vulnerability reporting is on. The script prints the settings 
 reads back.
 
 `Release dry run` runs only on release-please's own PRs (branch `release-please--*` in
-this repository), and the other two checks skip them; a skipped required check counts
-as passed. The dry run is `make release-dry-run`: the universal release build, its
+this repository) once they are ready for review, and the other two checks skip them; a
+skipped required check counts as passed. release-please opens its PR as a draft, which
+cannot merge, so the dry run runs when you mean to release instead of on every push to
+`main`. The dry run is `make release-dry-run`: the universal release build, its
 smoke test, the DMG and the checks on it, ad-hoc signed because PRs get no signing
 secrets. Merging the release PR tags the release, so a release build that breaks shows
 up here instead of after the tag.

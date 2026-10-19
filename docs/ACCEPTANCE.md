@@ -96,7 +96,7 @@ plutil -p "$A/Contents/Info.plist" | grep ShortVersion   # => 0.1.1
 | 3 | F4 | 开一个标题为 `update stuff` 的 PR | `Validate PR title` 失败；改成 `docs: update readme` 后通过 |
 | 4 | F1 | 同一个 PR | `Lint, test, build` 在 `macos-26` 上通过，包括冒烟测试（runner 能否启动 GUI 应用是待验证项，失败时看 job 日志里 smoke 那一步） |
 | 5 | F2 | 等待 Dependabot 按周运行，或在 Insights → Dependency graph → Dependabot 里手动检查 | PR 标题形如 `chore(deps): bump …` / `ci: bump …` |
-| 6 | Q9 | 往 `main` 合并一个 `feat:` PR | release-please 开出 `chore(main): release 0.1.0` PR；该 PR 上 `Validate PR title` 和 `Lint, test, build` 显示 **skipped**，`Release dry run` 运行，通过后才能合并 |
+| 6 | Q9 | 往 `main` 合并一个 `feat:` PR | release-please 开出**草稿** PR `chore(main): release 0.1.0`，三个检查都显示 **skipped**，合并按钮不可用；再合并一个 PR 进 main，发版 PR 更新后演练仍不跑。点「Ready for review」后 `Release dry run` 开始运行，通过后才能合并 |
 | 7 | H1 | 合并前：完成本地第 17 项，提交公钥，执行 `gh secret set SPARKLE_ED_PRIVATE_KEY --env release` | — |
 | 8 | G5 | 合并发版 PR | 立刻出现 tag `v0.1.0` 和一个**草稿** Release，publish job 成功后才公开；Release 中有 CHANGELOG 和 ad-hoc 打开说明；资产包括 `.dmg`、`.dSYM.zip`、`appcast.xml`、`SHA256SUMS`；workflow artifact 中有 `dsym-v0.1.0` |
 | 9 | H1 | `curl -sL https://github.com/chengzi-io/macos-swiftui-spm-template/releases/latest/download/appcast.xml` | 显示 0.1.0 的条目 |

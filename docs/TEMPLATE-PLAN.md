@@ -118,7 +118,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | G7 | 发布说明 | release-please 的 CHANGELOG；ad-hoc 构建自动追加打开方式说明 | 🟡 |
 | G8 | dSYM 存档 | Release 资产 + 保留 90 天的 workflow artifact | ✅ 本地 / 🟡 CI |
 | G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SPARKLE_PUBLIC_KEY` 对得上 | ✅ 本地（含反例） |
-| G10 | 发版演练 | `make release-dry-run`：universal 构建、ad-hoc 签名、冒烟测试、DMG 和 G9 的 DMG 校验；CI 在 release-please 的 PR 上作为必需检查 `Release dry run` 运行 | ✅ 本地 / 🟡 CI |
+| G10 | 发版演练 | `make release-dry-run`：universal 构建、ad-hoc 签名、冒烟测试、DMG 和 G9 的 DMG 校验；CI 在 release-please 的 PR 上作为必需检查 `Release dry run` 运行。发版 PR 以草稿打开（`draft-pull-request`），草稿 PR 不能合并；点「Ready for review」才开始演练，所以只在准备发版时跑，不会每次合并进 main 都跑一遍 | ✅ 本地 / 🟡 CI |
 | H1 | Sparkle 自动更新 | `Sources/App/Updates.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
 | H2 | Homebrew Cask | `scripts/update-cask.sh`，通过 `vars.HOMEBREW_TAP` 启用 | 🟡 |
 | H3 | Mac App Store | `make release-mas` / `make upload-mas` | 🟡（构建链路已用替代身份验证） |
@@ -160,7 +160,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | ad-hoc 切换到 Developer ID 的首次更新 | 理论上靠 EdDSA 能通过，**尚未实测** |
 | `.icon` 在 macOS 14 和 26 上的显示 | macOS 15 已在本机验证；macOS 26 的 Liquid Glass 效果只在 Icon Composer 的预览里看过；macOS 14 未验证 |
 | 设计版 DMG | 深色模式下的标签颜色只有论坛报告，没有实测；发版 job 和发版演练里的 setup-python 步骤还没在真实 runner 上跑过 |
-| 草稿发版与发版演练 | 都只在本地验证过脚本部分。release-please 的 `draft` 加 `force-tag-creation`、草稿下 action 的 `release_created` 输出、`gh` 往草稿上传再公开、演练 job 在 release-please PR 上触发，都要等第一次真实发版才能确认。演练用 ad-hoc 签名，Developer ID 签名、hardened runtime、公证和 appcast 签名只在发版 job 里检查 |
+| 草稿发版与发版演练 | 都只在本地验证过脚本部分。release-please 的 `draft` 加 `force-tag-creation`、草稿下 action 的 `release_created` 输出、`gh` 往草稿上传再公开、演练 job 在 release-please PR 上触发、PR 标为 Ready 之后 release-please 再更新它时会不会改回草稿，都要等第一次真实发版才能确认。演练用 ad-hoc 签名，Developer ID 签名、hardened runtime、公证和 appcast 签名只在发版 job 里检查 |
 | DMG 卷图标 | 直接用 app 的 AppIcon.icns，只有 16–256 px。在 64、128 pt 下的渲染与全尺寸版逐字节相同（桌面图标最大就是 128 pt），画得比 128 pt 大时（Quick Look、放大的图标视图）会糊，512 pt 下实测可见。补全尺寸要加 `--standalone-icon-behavior all`，代价是每份 icns 多 0.8 MB，设计版 DMG 里有两份（实测 debug DMG 从 3.0 MB 涨到 4.7 MB），所以没加 |
 | 品牌 skill 的图标环节 | agent 只能写 SVG 和 `icon.json`，玻璃、高光以及深色、着色外观需要人在 Icon Composer 里调 |
 | SwiftUI Preview | 视图都在 library target 中，但 Preview 只能在 Xcode GUI 里确认，我没有实测 |
