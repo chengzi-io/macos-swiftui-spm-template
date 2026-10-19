@@ -89,7 +89,7 @@ Done. Review with \`git diff\`, then commit, for example:
   git add -A && git commit -m "chore: initialize $name from template"
 
 Next:
-  1. Replace the icon (Icon Composer, or the brand skill in .claude/skills/brand) and
+  1. Replace the icon (Icon Composer, or the brand skill in .agents/skills/brand) and
      the Greeter demo.
   2. make setup && make run
   3. One-time release setup: docs/RELEASING.md (make github-setup, GitHub App,

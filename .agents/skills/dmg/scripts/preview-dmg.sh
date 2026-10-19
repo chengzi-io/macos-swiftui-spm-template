@@ -5,7 +5,7 @@
 
 source "$(dirname "$0")/../../../../scripts/common.sh"
 
-here=.claude/skills/dmg/scripts
+here=.agents/skills/dmg/scripts
 app=${1:-$DEBUG_APP}
 [[ -d $app ]] || die "no app at $app; run make app"
 dmg=.build/dmg/preview.dmg

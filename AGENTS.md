@@ -26,6 +26,8 @@ Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks
   `Info.plist`, `App.entitlements`, `PrivacyInfo.xcprivacy`, `AppIcon.icon` (edit it in
   Icon Composer) and the accent color in `Assets.xcassets`.
 - `scripts/`: build, sign, notarize, package, publish. The Makefile only calls them.
+- `.agents/skills/`: agent skills; Codex and other agents read this directory. Claude
+  Code reads `.claude/skills/`, which links to each one: link a new skill the same way.
 - Add a target only for a real boundary (a separate domain, a reusable component),
   never ahead of need.
 
@@ -82,8 +84,8 @@ Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks
 The Greeter demo (`Greeting/`, `AppModel`, `ContentView`, `AppModelTests`) is a
 placeholder; replace it with the first real feature. Recipes for launch at login,
 networking, menu bar apps and crash reporting: [docs/RECIPES.md](docs/RECIPES.md). App
-icon design: [.claude/skills/brand/SKILL.md](.claude/skills/brand/SKILL.md). The DMG
-window has its own skill, `/dmg` ([.claude/skills/dmg](.claude/skills/dmg/SKILL.md)),
+icon design: [.agents/skills/brand/SKILL.md](.agents/skills/brand/SKILL.md). The DMG
+window has its own skill, `dmg` ([.agents/skills/dmg](.agents/skills/dmg/SKILL.md)),
 which only the user starts.
 
 ## Commits and releases

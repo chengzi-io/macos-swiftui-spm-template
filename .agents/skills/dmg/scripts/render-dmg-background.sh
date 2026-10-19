@@ -3,9 +3,9 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/../../../.."
-here=.claude/skills/dmg/scripts
+here=.agents/skills/dmg/scripts
 [[ -f Bundle/DMG/Background.swift ]] ||
-    { echo "error: no Bundle/DMG/Background.swift; copy .claude/skills/dmg/templates/ first" >&2; exit 1; }
+    { echo "error: no Bundle/DMG/Background.swift; copy .agents/skills/dmg/templates/ first" >&2; exit 1; }
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT

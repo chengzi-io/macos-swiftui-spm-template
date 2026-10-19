@@ -19,14 +19,14 @@ list or screenshot.
 
 Without `Bundle/DMG/settings.py`, `scripts/make-dmg.sh` (and so `make release`) builds a
 plain DMG; with it, the designed one. Delete `Bundle/DMG/` to go back. Scripts live in
-`.claude/skills/dmg/scripts/` and run from the repo root.
+`.agents/skills/dmg/scripts/` and run from the repo root.
 
 ## 1. Baseline
 
 ```bash
-mkdir -p Bundle/DMG && cp .claude/skills/dmg/templates/* Bundle/DMG/  # skip if Bundle/DMG exists
-.claude/skills/dmg/scripts/render-dmg-background.sh                 # → Bundle/DMG/background.png, @2x
-make app && .claude/skills/dmg/scripts/preview-dmg.sh               # → .build/dmg/dmg.png
+mkdir -p Bundle/DMG && cp .agents/skills/dmg/templates/* Bundle/DMG/  # skip if Bundle/DMG exists
+.agents/skills/dmg/scripts/render-dmg-background.sh                 # → Bundle/DMG/background.png, @2x
+make app && .agents/skills/dmg/scripts/preview-dmg.sh               # → .build/dmg/dmg.png
 ```
 
 The template is white paper and a small gray arrow: the baseline every variant must

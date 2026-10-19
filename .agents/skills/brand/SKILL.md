@@ -14,7 +14,7 @@ brief → icon; the brief keeps later assets consistent. The DMG window has its 
 | `docs/BRAND.md` | The brief: product, personality, motif, palette. Source for every asset |
 | `Bundle/AppIcon.icon/` | `icon.json` plus SVG layers; the build compiles it, Icon Composer edits it |
 
-Scripts below live in `.claude/skills/brand/scripts/` and run from the repo root.
+Scripts below live in `.agents/skills/brand/scripts/` and run from the repo root.
 
 ## 1. Brief
 
@@ -59,8 +59,8 @@ Edit `Bundle/AppIcon.icon` in place: `icon.json` plus `Assets/*.svg`. Keep its s
 Check every iteration:
 
 ```bash
-.claude/skills/brand/scripts/preview-icon.sh                       # → .build/brand/icon.png
-.claude/skills/brand/scripts/preview-icon.sh Bundle/AppIcon.icon .build/brand/icon-32.png 32
+.agents/skills/brand/scripts/preview-icon.sh                       # → .build/brand/icon.png
+.agents/skills/brand/scripts/preview-icon.sh Bundle/AppIcon.icon .build/brand/icon-32.png 32
 ```
 
 Look at both images: the 512 pt one for craft, the 32 pt one (Finder list and menu

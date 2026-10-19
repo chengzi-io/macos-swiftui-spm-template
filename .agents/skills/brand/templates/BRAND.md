@@ -1,7 +1,7 @@
 # Brand
 
 The source for the app icon and any later artwork. Written with the brand skill
-(`.claude/skills/brand`); update it before changing an asset.
+(`.agents/skills/brand`); update it before changing an asset.
 
 | | |
 | --- | --- |
