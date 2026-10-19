@@ -57,6 +57,11 @@ jobs:
           NOTARY_API_KEY_P8_BASE64: ${{ secrets.NOTARY_API_KEY_P8_BASE64 }}
         run: scripts/ci-keychain.sh setup
       - run: make lint test
+      # A designed DMG (Bundle/DMG) is built with dmgbuild, which needs Python 3.10+.
+      - uses: actions/setup-python@v7
+        if: ${{ hashFiles('Bundle/DMG/settings.py') != '' }}
+        with:
+          python-version: '3.13'
       - name: Build, sign, notarize, package
         env:
           NOTARY_KEY_ID: ${{ secrets.NOTARY_API_KEY_ID }}
