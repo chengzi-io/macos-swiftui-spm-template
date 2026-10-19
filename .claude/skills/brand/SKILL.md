@@ -1,23 +1,20 @@
 ---
 name: brand
-description: Design this app's brand assets - the Liquid Glass app icon (Bundle/AppIcon.icon, layered SVGs for Icon Composer) and a branded DMG installer window (Bundle/DMG). Use when the user asks for an app icon or logo, a DMG background or installer look, or wants the first download to look distinctive.
+description: Design this app's brand brief and Liquid Glass app icon (Bundle/AppIcon.icon, layered SVGs for Icon Composer). Use when the user asks for an app icon, a logo or a brand look.
 ---
 
 # Brand
 
-The DMG window and the app icon are the first two things a new user sees. Make them
-say what the product is and look like one brand. Work brief → icon → DMG; each step
-reads the brief, so the assets stay consistent.
+The app icon is the first thing a new user sees, and every later asset echoes it. Work
+brief → icon; the brief keeps later assets consistent. The DMG window has its own skill,
+`/dmg`, which only the user starts.
 
 | Output | What it is |
 | --- | --- |
-| `docs/BRAND.md` | The brief: promise, personality, motif, palette. Source for every asset |
+| `docs/BRAND.md` | The brief: product, personality, motif, palette. Source for every asset |
 | `Bundle/AppIcon.icon/` | `icon.json` plus SVG layers; the build compiles it, Icon Composer edits it |
-| `Bundle/DMG/` | `Background.swift` (design source), `background.png` and `@2x`, `settings.py` (layout) |
 
-The plain DMG stays the default. Once `Bundle/DMG/settings.py` exists,
-`scripts/make-dmg.sh` (and so `make release`) uses the design; delete `Bundle/DMG/` to go
-back. Scripts below live in `.claude/skills/brand/scripts/` and run from the repo root.
+Scripts below live in `.claude/skills/brand/scripts/` and run from the repo root.
 
 ## 1. Brief
 
@@ -73,48 +70,10 @@ Liquid Glass on macOS 26, flattened images on macOS 14 and 15. Then tell the use
 specular, and the dark and tinted appearances; you cannot drive that app. They save in
 place.
 
-## 3. DMG window
-
-```bash
-mkdir -p Bundle/DMG && cp .claude/skills/brand/templates/DMG/* Bundle/DMG/
-```
-
-`Background.swift` is a SwiftUI view rendered to an image. Rewrite its body for the
-brand; keep the struct name `DMGBackground` and its `size`, `appIcon` and `applications`
-constants. Those must match `window_rect` and `icon_locations` in `settings.py`: change
-them together.
-
-- Read top to bottom in three seconds: product name, the promise (eight words at most),
-  then the drag gesture from the app to Applications.
-- Use the palette from the brief and the icon's motif or shapes. A soft glow or shape
-  behind the app icon draws the eye to it.
-- Finder places the real icons and draws their labels. Keep a clear area around each
-  icon spot (128 pt icon, label below it) and keep it light: Finder always draws this
-  window in light mode, so labels are black.
-- The app's label is its file name, `APP_NAME` from `Bundle/app.env`, plus `.app` when
-  the user shows all extensions. Never name the app differently in the background: write
-  "Drag to Applications", or use `APP_NAME`.
-- A user's path bar or status bar can cover the bottom 25 pt; keep text above that.
-- No text under 11 pt, no app screenshots (too small to read), one language.
-
-Render and look at the real window:
-
-```bash
-.claude/skills/brand/scripts/render-dmg-background.sh   # → Bundle/DMG/background.png, @2x
-make app && .claude/skills/brand/scripts/preview-dmg.sh # → .build/brand/dmg.png
-```
-
-`preview-dmg.sh` mounts the DMG, opens it in Finder and screenshots the window, so the
-terminal needs Screen Recording permission. Without it, open `.build/brand/preview.dmg`
-and look yourself, or ask the user to.
-
-The designed DMG needs `python3` 3.10 or later for dmgbuild, which `scripts/make-dmg.sh`
-installs hash-pinned into `.build/`. Its first `make release` proves the release path.
-
-## 4. Finish
+## 3. Finish
 
 1. `make ci`.
-2. Show the user `.build/brand/icon.png`, `.build/brand/icon-32.png` and
-   `.build/brand/dmg.png`, and remind them to fine-tune the icon in Icon Composer.
-3. Commit `docs/BRAND.md`, `Bundle/AppIcon.icon` and `Bundle/DMG`, for example
-   `feat(brand): add icon and dmg design`.
+2. Show the user `.build/brand/icon.png` and `.build/brand/icon-32.png`, and remind them
+   to fine-tune the icon in Icon Composer.
+3. Commit `docs/BRAND.md` and `Bundle/AppIcon.icon`, for example
+   `feat(brand): add the app icon`.

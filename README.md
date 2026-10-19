@@ -20,8 +20,9 @@ development. Create a repository with **Use this template**, then follow
 - Sparkle 2 updates from GitHub Releases, EdDSA-signed.
 - English and Simplified Chinese string catalog, privacy manifest, accent color, and an
   Icon Composer app icon: Liquid Glass on macOS 26, flattened images on macOS 14–15.
-- A brand skill for coding agents (`.claude/skills/brand`): a brand brief, icon layers
-  for Icon Composer, and an optional designed DMG window with background and layout.
+- Two skills for coding agents: `brand` (`.claude/skills/brand`) writes a brand brief
+  and icon layers for Icon Composer; `/dmg` (`.claude/skills/dmg`, started by you only)
+  designs an optional DMG window with background and layout.
 - `make ci`: `swift format` lint, unit tests, debug `.app`, launch smoke test.
 - GitHub: CI on macOS runners, PR title check, release-please versioning and
   CHANGELOG, a publish job that uploads DMG, dSYM, appcast and checksums, Dependabot.

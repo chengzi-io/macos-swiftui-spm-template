@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Creates an unsigned DMG of an .app with an /Applications link.
 #   make-dmg.sh <app> <dmg>
-# With Bundle/DMG/settings.py (written by the brand skill, .claude/skills/brand) the
+# With Bundle/DMG/settings.py (written by the dmg skill, .claude/skills/dmg) the
 # Finder window gets that background and layout; without it the window is plain.
 
 source "$(dirname "$0")/common.sh"
