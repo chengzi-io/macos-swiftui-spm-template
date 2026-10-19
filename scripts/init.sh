@@ -89,7 +89,7 @@ Done. Review with \`git diff\`, then commit, for example:
   git add -A && git commit -m "chore: initialize $name from template"
 
 Next:
-  1. Replace Bundle/Assets.xcassets/AppIcon.appiconset and the Greeter demo.
+  1. Replace the icon (open Bundle/AppIcon.icon in Icon Composer) and the Greeter demo.
   2. make setup && make run
   3. One-time release setup: docs/RELEASING.md (make github-setup, GitHub App,
      make sparkle-keys, optional Developer ID).

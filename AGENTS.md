@@ -23,7 +23,8 @@ Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks
 - `Sources/AppCore/Resources/`: `Localizable.xcstrings` (en, zh-Hans) and package assets.
 - `Tests/AppCoreTests/`: Swift Testing.
 - `Bundle/`: packaging input, not SwiftPM resources. `app.env` (app identity),
-  `Info.plist`, `App.entitlements`, `PrivacyInfo.xcprivacy`, app icon and accent color.
+  `Info.plist`, `App.entitlements`, `PrivacyInfo.xcprivacy`, `AppIcon.icon` (edit it in
+  Icon Composer) and the accent color in `Assets.xcassets`.
 - `scripts/`: build, sign, notarize, package, publish. The Makefile only calls them.
 - Add a target only for a real boundary (a separate domain, a reusable component),
   never ahead of need.

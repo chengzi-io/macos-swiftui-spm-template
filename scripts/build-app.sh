@@ -77,8 +77,10 @@ done
 shopt -u nullglob
 ditto Bundle/PrivacyInfo.xcprivacy "$app/Contents/Resources/PrivacyInfo.xcprivacy"
 
-log "compile Bundle/Assets.xcassets"
-xcrun actool Bundle/Assets.xcassets \
+# AppIcon.icon (Icon Composer) becomes Liquid Glass on macOS 26; actool also bakes
+# flattened images for older systems into Assets.car, plus AppIcon.icns.
+log "compile Bundle/Assets.xcassets and Bundle/AppIcon.icon"
+xcrun actool Bundle/Assets.xcassets Bundle/AppIcon.icon \
     --compile "$app/Contents/Resources" \
     --platform macosx \
     --minimum-deployment-target "$min_macos" \

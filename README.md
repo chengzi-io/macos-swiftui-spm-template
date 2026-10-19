@@ -18,8 +18,8 @@ development. Create a repository with **Use this template**, then follow
 - App Sandbox; Developer ID signing, hardened runtime and notarization — or ad-hoc
   signing until you have a Developer ID.
 - Sparkle 2 updates from GitHub Releases, EdDSA-signed.
-- English and Simplified Chinese string catalog, app icon, accent color, privacy
-  manifest.
+- English and Simplified Chinese string catalog, privacy manifest, accent color, and an
+  Icon Composer app icon: Liquid Glass on macOS 26, flattened images on macOS 14–15.
 - `make ci`: `swift format` lint, unit tests, debug `.app`, launch smoke test.
 - GitHub: CI on macOS runners, PR title check, release-please versioning and
   CHANGELOG, a publish job that uploads DMG, dSYM, appcast and checksums, Dependabot.
@@ -46,8 +46,8 @@ make run     # build and launch the debug app
 `scripts/init.sh` writes the app identity into `Bundle/app.env`, points releases and
 updates at your repository, resets the version to `0.0.0`, updates LICENSE, README,
 CODEOWNERS and the issue templates, removes the template's own planning docs, and
-finally deletes itself. Then replace `Bundle/Assets.xcassets/AppIcon.appiconset` and
-the Greeter demo, and work through the one-time setup in
+finally deletes itself. Then replace the icon (open `Bundle/AppIcon.icon` in Icon
+Composer) and the Greeter demo, and work through the one-time setup in
 [docs/RELEASING.md](docs/RELEASING.md).
 
 <!-- template-only:end -->
@@ -81,7 +81,7 @@ Package.swift              targets, platforms, Swift settings, Sparkle
 Sources/App/               @main, scenes, commands, app delegate, updater
 Sources/AppCore/           views, models, services, Localizable.xcstrings
 Tests/AppCoreTests/        Swift Testing
-Bundle/                    app.env, Info.plist, entitlements, privacy manifest, icon
+Bundle/                    app.env, Info.plist, entitlements, privacy manifest, AppIcon.icon
 scripts/                   build, sign, notarize, package, publish
 .github/                   CI, PR title, release-please, Dependabot, templates
 version.txt                current version, owned by release-please
