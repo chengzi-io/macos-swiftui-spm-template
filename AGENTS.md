@@ -65,6 +65,7 @@ Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks
   a valid `.app`
 - add SwiftLint or SwiftFormat beside `swift format`, a DI container or a networking
   library
+- skip the git hooks (`--no-verify`, `LEFTHOOK=0`); fix what they report instead
 - commit certificates, `.p12`/`.p8` files or the Sparkle private key
 - edit `version.txt`, `.release-please-manifest.json` or `CHANGELOG.md` by hand;
   release-please owns them
