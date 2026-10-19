@@ -44,11 +44,12 @@
 | 28 | 文档 | 阅读 `AGENTS.md`、`README.md`、`docs/RELEASING.md`、`docs/RECIPES.md` | C5–C9、H4 都有说明；RECIPES 里的 Swift 片段能编译 | ✅ 片段已编译 |
 | 29 | A5 | `open -a "Icon Composer" Bundle/AppIcon.icon`（Icon Composer 在 Xcode 菜单 Open Developer Tool 里） | 左栏有两个 Group（segments、rind），右栏 Fill 为两色渐变；画布是 Liquid Glass 预览，底部能切换 Default、Dark、Mono | ✅（截图） |
 | 30 | A5 | `.claude/skills/brand/scripts/preview-icon.sh`，打开 `.build/brand/icon.png` | 本机系统的渲染结果：macOS 15 上是扁平图，与 Dock 里一致 | ✅ macOS 15 |
-| 31 | G3 | 没有 `Bundle/DMG/` 时：`make app && scripts/make-dmg.sh .build/app/Debug/SwiftUITemplate.app .build/brand/plain.dmg`，再挂载 | 卷里只有 `.app` 和 `Applications`，没有 `.background.tiff`；Finder 窗口是普通样式 | ✅ 卷内容 / 👀 窗口样式 |
-| 32 | G3 | 设计版 DMG：`mkdir -p Bundle/DMG && cp .claude/skills/brand/templates/DMG/* Bundle/DMG/ && .claude/skills/brand/scripts/render-dmg-background.sh && make app && .claude/skills/brand/scripts/preview-dmg.sh`，打开 `.build/brand/dmg.png`。验收完执行 `rm -rf Bundle/DMG` | 第一次运行会打印 `install dmgbuild into .build/dmgbuild-1.6.7`。截图中有浅橙渐变背景、标题「App Name」、箭头和虚线圈；应用图标和 Applications 位于背景预留的位置；标题栏显示应用图标 | ✅（终端需要「屏幕录制」权限） |
+| 31 | G3 | 没有 `Bundle/DMG/` 时：`make app && scripts/make-dmg.sh .build/app/Debug/SwiftUITemplate.app .build/dmg/plain.dmg`，再挂载 | 卷里只有 `.app` 和 `Applications`，没有 `.background.tiff`；Finder 窗口是普通样式 | ✅ 卷内容 / 👀 窗口样式 |
+| 32 | G3 | 设计版 DMG：`mkdir -p Bundle/DMG && cp .claude/skills/dmg/templates/* Bundle/DMG/ && .claude/skills/dmg/scripts/render-dmg-background.sh && make app && .claude/skills/dmg/scripts/preview-dmg.sh`，打开 `.build/dmg/dmg.png`。验收完执行 `rm -rf Bundle/DMG` | 第一次运行会打印 `install dmgbuild into .build/dmgbuild-1.6.7`。截图是 1320×856 的正常窗口（开着台前调度也一样）：白底，两个图标之间有一个灰色小箭头，没有文字；应用图标和 Applications 位于背景预留的位置；标题栏显示应用图标 | ✅（终端需要「屏幕录制」权限） |
 | 33 | G3 | 保留第 32 项的 `Bundle/DMG/` 执行 `make release`（临时公钥的做法见 §1.1），然后挂载 `dist/*.dmg`，对卷内的 `.app` 执行 `codesign --verify --deep --strict` | 日志中有 `package … with the Bundle/DMG design`；签名校验通过；`lipo` 显示 `x86_64 arm64` | ✅ |
-| 34 | A9 | 在 Claude Code 里说「用 brand skill 给这个 app 做品牌」 | agent 先问简报中缺的信息，提出 2–3 个概念供你选；之后产出 `docs/BRAND.md`、新的 `Bundle/AppIcon.icon` 图层和 `Bundle/DMG/`，并给出 `.build/brand/icon.png`、`icon-32.png`、`dmg.png` 三张预览图；`make ci` 通过 | ✅ 一个独立 agent 按 skill 为虚构产品「Lumen」完整跑过一遍（简报由我直接给出，未提交）；👀 设计效果 |
+| 34 | A10 | 在 Claude Code 里说「用 brand skill 给这个 app 做品牌」 | agent 先问简报中缺的信息，提出 2–3 个概念供你选；之后产出 `docs/BRAND.md` 和新的 `Bundle/AppIcon.icon` 图层，并给出 `.build/brand/icon.png`、`icon-32.png` 两张预览图；`make ci` 通过 | ✅ 一个独立 agent 按拆分前的 skill 为虚构产品「Lumen」完整跑过一遍（简报由我直接给出，未提交）；👀 设计效果 |
 | 35 | B5 | `make app`，把 `.app` 复制一份，删掉其中的 `Contents/Resources/Assets.car`，用 `codesign --force --sign -` 重新签名，再执行 `scripts/smoke.sh <副本>` | 报错 `has no Assets.car`，退出码 1 | ✅ |
+| 36 | A11 | 在 Claude Code 里说「美化一下 DMG」，再输入 `/dmg` | 前一句不会触发 dmg skill；`/dmg` 后 agent 复制模板并截出白底基线，从 `Bundle/AppIcon.icon` 取品牌色和图形，给出 `.build/dmg/a.png`、`b.png`、`c.png` 三个变体让你挑；选定后渲染并提交 `Bundle/DMG/` 的四个文件 | ✅ 模型可用的 skill 列表里只有 brand，没有 dmg；👀 完整流程 |
 
 ### 1.1 本地 Sparkle 端到端（第 22 项的复现步骤）
 
@@ -98,7 +99,7 @@ plutil -p "$A/Contents/Info.plist" | grep ShortVersion   # => 0.1.1
 | 10 | Q2 | 在另一台 Mac 上下载 DMG 并安装 | 首次被拦截；到「隐私与安全性 → 仍要打开」后可以运行 |
 | 11 | H1 | 合并一个 `fix:` PR，再合并它的发版 PR，得到 v0.1.1；在已安装的 0.1.0 中点「Check for Updates…」 | 发现 0.1.1，安装并重启后版本号正确 |
 | 12 | H2 | 设置 `vars.HOMEBREW_TAP` 和 `HOMEBREW_TAP_TOKEN` 后再发一个版本 | tap 仓库中出现 `Casks/swiftuitemplate.rb`；`brew audit --cask <tap>/swiftuitemplate` 通过 |
-| 13 | G3 | 在一个提交了 `Bundle/DMG/` 的项目里发版 | publish job 的日志中有 `install dmgbuild`；Release 里的 DMG 打开后带背景。如果 runner 的 python3 低于 3.10，会报错 `Bundle/DMG needs python3 3.10 or later` |
+| 13 | G3 | 在一个提交了 `Bundle/DMG/` 的项目里发版 | publish job 执行了 `actions/setup-python`（Python 3.13），日志中有 `install dmgbuild`；Release 里的 DMG 打开后带背景。没有 `Bundle/DMG/` 的项目里这一步显示 skipped |
 | 14 | A5 | 在 `macos-14` 和 `macos-26` runner 上渲染图标（可选，一次性 workflow：下载 `.app`，运行 `.claude/skills/brand/scripts/render-icon.swift`，上传 PNG） | 14 上是扁平图，26 上是 Liquid Glass |
 
 ## 3. Apple 证书和账号

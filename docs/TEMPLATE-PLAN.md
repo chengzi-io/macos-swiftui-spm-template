@@ -57,7 +57,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V19 | `.swift-format` 只写部分键（缩进、行宽）即可，其余取默认值 | B2 |
 | V20 | `plutil` 会把键名中的点当作路径分隔符，`com.apple.security.*` 这类键写不进去 | 改用 PlistBuddy |
 | V21 | Sparkle 的 `sign_update` / `generate_appcast --ed-key-file` 接受 base64 编码的 32 字节 Ed25519 种子 | 本地测试可以用 openssl 生成密钥，不碰 keychain |
-| V22 | Xcode 26.2 的 actool 直接接受 `.icon`，可与 `.xcassets` 同时编译。最低系统设为 14 时产出：Assets.car（含 Liquid Glass 分层资源和 16–1024 的扁平图）、只含 16–256 的 AppIcon.icns，以及 `CFBundleIconName` / `CFBundleIconFile`。一个真实的 Icon Composer 文件（react-native 仓库中的）和我们手写的文件在 macOS 15 上都显示正常；Icon Composer 1.2 能打开我们手写的文件 | A5 改用 `Bundle/AppIcon.icon` |
+| V22 | Xcode 26.2 的 actool 直接接受 `.icon`，可与 `.xcassets` 同时编译。最低系统设为 14 时产出：Assets.car（含 Liquid Glass 分层资源和 16–1024 的扁平图）、只含 16、32、128、256 px 四档的 AppIcon.icns（加 `--standalone-icon-behavior all` 才有全部 10 档，876 KB 对 62 KB），以及 `CFBundleIconName` / `CFBundleIconFile`。一个真实的 Icon Composer 文件（react-native 仓库中的）和我们手写的文件在 macOS 15 上都显示正常；Icon Composer 1.2 能打开我们手写的文件 | A5 改用 `Bundle/AppIcon.icon` |
 | V23 | dmgbuild 自己写 `.DS_Store`，不驱动 Finder。`window_rect` 的高度包含 28 pt 标题栏；`hide_extensions` 会在 .app 上写 FinderInfo，导致 `codesign --verify --strict` 失败；背景图配 `@2x.png` 时会自动合成 Retina TIFF；1.6.7 要求 Python ≥ 3.10（Xcode 自带的 python3 是 3.9.6） | 模板不用 `hide_extensions`；窗口高 428 pt；按哈希固定版本，装在 `.build/` 的 venv 里 |
 | V24 | 窗口所有者名称是本地化的（中文系统下 Finder 叫「访达」）；带背景图的 DMG 窗口中，Finder 的图标标签是黑字（DropDMG 论坛报告深色模式下也是如此，我只验证了浅色模式） | 预览脚本按 pid 找窗口；skill 要求标签区域保持浅色 |
 | V25 | actool 把编译交给常驻的 `ibtoold`，相对路径按 `ibtoold` 自己的工作目录解析。在第二个 checkout（如 worktree）里构建时，会写到甚至读到第一个 checkout 的文件 | `build-app.sh` 和 `preview-icon.sh` 都传绝对路径 |
@@ -82,8 +82,9 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | A6 | Info.plist / Entitlements / 隐私清单 | `Bundle/Info.plist`、`App.entitlements`、`PrivacyInfo.xcprivacy` | ✅ |
 | A7 | `.app` 打包脚本 | `scripts/build-app.sh`（debug / release / mas） | ✅ |
 | A8 | 本地运行与调试 | `make run`、`scripts/run.sh` | ✅ |
-| A9 | 品牌 skill | `.claude/skills/brand`：品牌简报、Icon Composer 图标图层、DMG 窗口设计，以及图标和 DMG 窗口的预览脚本 | ✅ |
 | A9 | 忽略规则与编辑器配置 | `.gitignore`、`.editorconfig` | ✅ |
+| A10 | 品牌 skill | `.claude/skills/brand`：品牌简报、Icon Composer 图标图层和图标预览脚本 | ✅ |
+| A11 | DMG skill | `.claude/skills/dmg`，只能由用户用 `/dmg` 启动：白底模板、从图标取一个品牌元素、渲染三个变体让用户挑，以及背景渲染和 Finder 窗口截图脚本 | ✅ 脚本 / 👀 完整流程 |
 | B1 | 编译严格度 | `Package.swift` 中的 `swiftSettings` | ✅ |
 | B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint` | ✅ |
 | B3 | Git hooks | `lefthook.yml`（pre-commit 格式化） | ✅ |
@@ -110,7 +111,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | F4 | PR 标题规范 | `.github/workflows/pr-title.yml` | 🟡 |
 | G1 | 代码签名 | `build-app.sh`：ad-hoc，或 Developer ID + runtime | ✅ ad-hoc / 🟡 Developer ID |
 | G2 | 公证 | `scripts/notarize.sh` | 🟡（无 `TEAM_ID` 时跳过，已验证） |
-| G3 | DMG | `scripts/package-dmg.sh`、`scripts/make-dmg.sh`：默认是普通窗口；存在 `Bundle/DMG/` 时用 dmgbuild 生成带背景和布局的窗口 | ✅ 本地 / 🟡 CI 上的设计版 |
+| G3 | DMG | `scripts/package-dmg.sh`、`scripts/make-dmg.sh`：默认是普通窗口；存在 `Bundle/DMG/` 时用 dmgbuild 生成带背景和布局的窗口，发版 job 这时会先装 Python 3.13 | ✅ 本地 / 🟡 CI 上的设计版 |
 | G4 | 版本号 | `version.txt` 加 `git rev-list --count HEAD` | ✅ |
 | G5 | Release 流水线 | `.github/workflows/release.yml`、`scripts/release.sh`、`publish-github.sh` | ✅ 本地 `make release` / 🟡 CI |
 | G6 | 密钥管理 | `scripts/ci-keychain.sh`、`release` environment、`docs/RELEASING.md` | 🟡 |
@@ -135,7 +136,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **A8**：`make run` 改用 `open` 启动（V15）；没有终端时日志写到 `.build/app/run.log`。
 - **C2**：`GreeterError` 不实现 `LocalizedError`（V9）。
 - **A5**：图标从 `.appiconset` 改为 Icon Composer 的 `.icon`（V22）。
-- **DMG 美化**：不作为默认，做成品牌 skill（A9）。模板默认仍是普通 DMG；skill 生成 `Bundle/DMG/` 后，发版自动使用设计版。
+- **DMG 美化**：不作为默认，做成单独的 DMG skill（A11），只能由用户启动。模板默认仍是普通 DMG；skill 生成 `Bundle/DMG/` 后，发版自动使用设计版。
 - **新增**：
   - `PrivacyInfo.xcprivacy` 随所有构建打包。
   - `ci-keychain.sh` 负责 CI 中证书的导入和清理。
@@ -154,7 +155,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | ad-hoc 发布的体验 | 首次打开要在系统设置里点「仍要打开」；每次更新签名都会变，权限和 keychain 访问可能需要重新授权；Homebrew 安装会被 Gatekeeper 拦截 |
 | ad-hoc 切换到 Developer ID 的首次更新 | 理论上靠 EdDSA 能通过，**尚未实测** |
 | `.icon` 在 macOS 14 和 26 上的显示 | macOS 15 已在本机验证；macOS 26 的 Liquid Glass 效果只在 Icon Composer 的预览里看过；macOS 14 未验证 |
-| 设计版 DMG | 深色模式下的标签颜色只有论坛报告，没有实测；CI 上的 python3 是否 ≥ 3.10 要等第一次发版才知道（不满足时会明确报错） |
+| 设计版 DMG | 深色模式下的标签颜色只有论坛报告，没有实测；发版 job 里的 setup-python 步骤还没在真实 runner 上跑过 |
+| DMG 卷图标 | 直接用 app 的 AppIcon.icns，只有 16–256 px。在 64、128 pt 下的渲染与全尺寸版逐字节相同（桌面图标最大就是 128 pt），画得比 128 pt 大时（Quick Look、放大的图标视图）会糊，512 pt 下实测可见。补全尺寸要加 `--standalone-icon-behavior all`，代价是每份 icns 多 0.8 MB，设计版 DMG 里有两份（实测 debug DMG 从 3.0 MB 涨到 4.7 MB），所以没加 |
 | 品牌 skill 的图标环节 | agent 只能写 SVG 和 `icon.json`，玻璃、高光以及深色、着色外观需要人在 Icon Composer 里调 |
 | SwiftUI Preview | 视图都在 library target 中，但 Preview 只能在 Xcode GUI 里确认，我没有实测 |
 | `make run` 输出到真实终端 | 机制已用文件路径验证；我的执行环境没有 tty，没能直接测试 |
