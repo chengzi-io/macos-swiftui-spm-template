@@ -19,7 +19,7 @@
 | 3 | 全链路 | `make ci` | lint 无输出；3 个测试通过；`==> smoke ok: .build/app/Debug/SwiftUITemplate.app` | ✅ |
 | 4 | A8 | 在终端里 `make run` | 窗口出现在**前台**；终端打印 `[app] launched version=0.0.0 … sandboxed=true`；按 Ctrl-C 后应用退出 | ✅ 无终端模式（日志写到 `.build/app/run.log`）和模拟 Ctrl-C；👀 真实终端输出 |
 | 5 | A4 | `make run ARGS="-AppleLanguages '(zh-Hans)'"` | 输入框占位符显示「名字」，按钮显示「打招呼」 | ✅（截图） |
-| 6 | A5 | 看 Dock 和 Finder 里的应用图标；看按钮颜色 | 橙色圆角方形加白色橙子切面；默认按钮是橙色 | ✅ 强调色 / 👀 图标 |
+| 6 | A5 | `make run` 后看 Dock 和 Finder 里的应用图标；看按钮颜色 | 橙色渐变圆角方形，上面是白色果皮环和 8 瓣浅色果肉，果肉有玻璃边缘高光；默认按钮是橙色 | ✅ 强调色；✅ 图标（用渲染脚本，同第 30 项）/ 👀 Dock |
 | 7 | C2 | 名字留空，点「Greet」 | 弹出 alert，提示 `Please enter a name.`（中文环境下为「请输入名字。」）；`make logs` 里出现 `greet failed: emptyName` | 👀 |
 | 8 | C3 | 输入 `Ada`，按回车 | 显示 `Hello, Ada!` | 👀 |
 | 9 | C4 | ⌘, → 在 Default name 中填 `Ada` → 退出 → `make run` | 输入框已预填 `Ada` | 👀 |
@@ -42,6 +42,13 @@
 | 26 | E5 | 在一个临时 clone 里：`scripts/init.sh --name MyApp --bundle-id com.example.myapp --display-name "My App" --copyright "Jane Doe" --repo acme/my-app --codeowner @jane`，然后 `make ci` | 改动涉及 app.env、LICENSE、README、CODEOWNERS、Issue 模板和 Makefile；init.sh 与两份模板文档被删除；`make ci` 通过，产物是 `MyApp.app`，bundle ID 为 `com.example.myapp` | ✅ |
 | 27 | E5 | 工作区不干净时运行 init | 报错 `commit or stash your changes first` | ✅ |
 | 28 | 文档 | 阅读 `AGENTS.md`、`README.md`、`docs/RELEASING.md`、`docs/RECIPES.md` | C5–C9、H4 都有说明；RECIPES 里的 Swift 片段能编译 | ✅ 片段已编译 |
+| 29 | A5 | `open -a "Icon Composer" Bundle/AppIcon.icon`（Icon Composer 在 Xcode 菜单 Open Developer Tool 里） | 左栏有两个 Group（segments、rind），右栏 Fill 为两色渐变；画布是 Liquid Glass 预览，底部能切换 Default、Dark、Mono | ✅（截图） |
+| 30 | A5 | `.claude/skills/brand/scripts/preview-icon.sh`，打开 `.build/brand/icon.png` | 本机系统的渲染结果：macOS 15 上是扁平图，与 Dock 里一致 | ✅ macOS 15 |
+| 31 | G3 | 没有 `Bundle/DMG/` 时：`make app && scripts/make-dmg.sh .build/app/Debug/SwiftUITemplate.app .build/brand/plain.dmg`，再挂载 | 卷里只有 `.app` 和 `Applications`，没有 `.background.tiff`；Finder 窗口是普通样式 | ✅ 卷内容 / 👀 窗口样式 |
+| 32 | G3 | 设计版 DMG：`mkdir -p Bundle/DMG && cp .claude/skills/brand/templates/DMG/* Bundle/DMG/ && .claude/skills/brand/scripts/render-dmg-background.sh && make app && .claude/skills/brand/scripts/preview-dmg.sh`，打开 `.build/brand/dmg.png`。验收完执行 `rm -rf Bundle/DMG` | 第一次运行会打印 `install dmgbuild into .build/dmgbuild-1.6.7`。截图中有浅橙渐变背景、标题「App Name」、箭头和虚线圈；应用图标和 Applications 位于背景预留的位置；标题栏显示应用图标 | ✅（终端需要「屏幕录制」权限） |
+| 33 | G3 | 保留第 32 项的 `Bundle/DMG/` 执行 `make release`（临时公钥的做法见 §1.1），然后挂载 `dist/*.dmg`，对卷内的 `.app` 执行 `codesign --verify --deep --strict` | 日志中有 `package … with the Bundle/DMG design`；签名校验通过；`lipo` 显示 `x86_64 arm64` | ✅ |
+| 34 | A9 | 在 Claude Code 里说「用 brand skill 给这个 app 做品牌」 | agent 先问简报中缺的信息，提出 2–3 个概念供你选；之后产出 `docs/BRAND.md`、新的 `Bundle/AppIcon.icon` 图层和 `Bundle/DMG/`，并给出 `.build/brand/icon.png`、`icon-32.png`、`dmg.png` 三张预览图；`make ci` 通过 | ✅ 一个独立 agent 按 skill 为虚构产品「Lumen」完整跑过一遍（简报由我直接给出，未提交）；👀 设计效果 |
+| 35 | B5 | `make app`，把 `.app` 复制一份，删掉其中的 `Contents/Resources/Assets.car`，用 `codesign --force --sign -` 重新签名，再执行 `scripts/smoke.sh <副本>` | 报错 `has no Assets.car`，退出码 1 | ✅ |
 
 ### 1.1 本地 Sparkle 端到端（第 22 项的复现步骤）
 
@@ -91,6 +98,8 @@ plutil -p "$A/Contents/Info.plist" | grep ShortVersion   # => 0.1.1
 | 10 | Q2 | 在另一台 Mac 上下载 DMG 并安装 | 首次被拦截；到「隐私与安全性 → 仍要打开」后可以运行 |
 | 11 | H1 | 合并一个 `fix:` PR，再合并它的发版 PR，得到 v0.1.1；在已安装的 0.1.0 中点「Check for Updates…」 | 发现 0.1.1，安装并重启后版本号正确 |
 | 12 | H2 | 设置 `vars.HOMEBREW_TAP` 和 `HOMEBREW_TAP_TOKEN` 后再发一个版本 | tap 仓库中出现 `Casks/swiftuitemplate.rb`；`brew audit --cask <tap>/swiftuitemplate` 通过 |
+| 13 | G3 | 在一个提交了 `Bundle/DMG/` 的项目里发版 | publish job 的日志中有 `install dmgbuild`；Release 里的 DMG 打开后带背景。如果 runner 的 python3 低于 3.10，会报错 `Bundle/DMG needs python3 3.10 or later` |
+| 14 | A5 | 在 `macos-14` 和 `macos-26` runner 上渲染图标（可选，一次性 workflow：下载 `.app`，运行 `.claude/skills/brand/scripts/render-icon.swift`，上传 PNG） | 14 上是扁平图，26 上是 Liquid Glass |
 
 ## 3. Apple 证书和账号
 
