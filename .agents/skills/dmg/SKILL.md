@@ -113,24 +113,30 @@ Made by an image model:
 1. Write the user a prompt to paste into ChatGPT, Gemini or another image model. The
    numbers below are for the template's geometry, checked in a real Finder window: a 3:2
    image is scaled to 660 pt wide (440 pt tall) and loses 20 pt at the top and bottom.
-   Recompute them if you moved the icons. Keep the band line only when code draws an
-   arrow over the art; a trail crosses the band.
+   Recompute them if you moved the icons. Pick how the art leads to Applications with
+   the scene, and write that choice as the Direction line: a code arrow over the art
+   (exact, but can look pasted onto painterly art), an arrow the model draws in the
+   scene's style, or a composition with no arrow.
 
    ```
    Background artwork for an app installer window. Landscape 3:2, 1536 × 1024 pixels.
-   Only the background: no window, title bar, app icons, folders, arrows, text, letters,
-   logos, signature or watermark.
+   Only the background: no window, title bar, app icons, folders, text, letters, logos,
+   signature or watermark.
    Scene: <one or two sentences>. Style: <style>. Colors: <hex colors>. Overall light, so
    black captions stay readable.
-   Direction: the picture leads the eye from the left area to the right area: <a trail
-   from the left area to the right area | small figures around the right area, all
-   facing its center at x 74%, y 50% | light that flows to the right>.
+   Direction: <one of:
+     No arrows. Keep the band between the two areas plain: x 38–62%, y 42–58%. An
+     arrow is added there later.
+     Draw one arrow in the scene's style inside x 40–60%, y 44–56%, pointing right,
+     from the left area to the right area.
+     No arrow shapes. The picture leads the eye from the left area to the right area:
+     <a trail from the left area to the right area | small figures around the right
+     area, all facing its center at x 74%, y 50% | light that flows to the right>.>
    Layout, in percent of width and height from the top-left corner:
    - Keep two areas plain and light, like empty paper: x 14–38%, y 32–73% and
      x 62–86%, y 32–73%. Icons and their captions go there later.
-   - Keep the band between them plain: x 38–62%, y 42–58%. An arrow goes there later.
-   - Detail can go anywhere else: the corners, the edges, around the right area, above
-     and below the band.
+   - Detail can go anywhere else: the corners, the edges, around the right area, and
+     above and below the middle (x 38–62%, y 42–58%).
    - The top and bottom 4% are cut off and the bottom 10% may be covered: nothing
      important there.
    ```
@@ -161,9 +167,9 @@ Made by an image model:
    ```
 
 4. Render and preview. Models add text, letters and signatures despite the prompt: look
-   for them. Models only roughly follow a direction: check that figures face
-   Applications and a trail ends there; if not, revise the prompt or draw an arrow over
-   the art. If the art crowds an icon or a label, move the icon spots, put a soft white
+   for them. Models only roughly follow a direction: check that the arrow points at
+   Applications, figures face it and a trail ends there; if not, revise the prompt or
+   draw an arrow over the art in code. If the art crowds an icon or a label, move the icon spots, put a soft white
    glow under the label, or write a revised prompt that says what to change and ask the
    user to generate again.
 
