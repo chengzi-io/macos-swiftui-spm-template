@@ -10,7 +10,8 @@ mkdir -p dist
 app=$(scripts/build-app.sh release)
 scripts/smoke.sh "$app"
 scripts/notarize.sh "$app"
-scripts/package-dmg.sh >/dev/null
+dmg=$(scripts/package-dmg.sh)
+scripts/verify-dmg.sh "$dmg"
 
 log "archive dSYM"
 ditto -c -k --keepParent .build/xcode/Build/Products/Release/App.dSYM "dist/$APP_NAME-$VERSION.dSYM.zip"

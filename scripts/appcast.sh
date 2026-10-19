@@ -32,4 +32,6 @@ if [[ -n ${SPARKLE_ED_PRIVATE_KEY:-} ]]; then
 else
     "$sparkle_bin/generate_appcast" --account "$BUNDLE_ID" "${args[@]}" "$tmp/updates"
 fi
+xcrun swift scripts/verify-appcast.swift dist/appcast.xml "$dmg" \
+    "$RELEASES_URL/download/v$VERSION/$(basename "$dmg")" "$SPARKLE_PUBLIC_KEY"
 echo "dist/appcast.xml"
