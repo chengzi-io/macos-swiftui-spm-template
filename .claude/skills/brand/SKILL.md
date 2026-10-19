@@ -30,8 +30,8 @@ user, in one message, only for what is still missing:
 - a motif they want (an object, a shape), or none.
 
 Propose two or three concepts in words (motif, palette, mood, one line each) and let the
-user pick before drawing anything. Write the pick to `docs/BRAND.md` from
-`templates/BRAND.md`.
+user pick before drawing anything. Write the pick, and why the others lost, to
+`docs/BRAND.md` from `templates/BRAND.md`.
 
 ## 2. App icon
 
@@ -48,10 +48,14 @@ Edit `Bundle/AppIcon.icon` in place: `icon.json` plus `Assets/*.svg`. Keep its s
   viewBox="0 0 1024 1024"`, transparent background, flat fills. Put each depth plane in
   its own group; the first group in `groups` is the frontmost. Set `"glass": true` on the
   layer that should catch the light.
-- Per group: `shadow` (`{"kind": "neutral", "opacity": 0.5}`) and `translucency`
-  (`{"enabled": true, "value": 0.4}`). Leave other glass parameters to Icon Composer.
+- Per group: `shadow` (`{"kind": "neutral", "opacity": 0.5}`; `"none"` for a glow) and
+  `translucency` (`{"enabled": true, "value": 0.4}`). Translucency lets the fill show
+  through: turn it off (`"enabled": false`) for a bright layer over a dark fill, or the
+  layer goes muddy. Leave other glass parameters to Icon Composer.
 - One idea and one strong silhouette, inside the central ~65% of the canvas. At most two
   colors plus white over the fill. No text, no thin lines under ~16 pt, no tiny detail.
+- Use opaque colors. A warm color at low opacity over a dark fill turns brown; for a soft
+  light use white at low opacity.
 - Never use SF Symbols (their license forbids app icons), Apple product imagery, or
   anyone else's logo.
 
@@ -63,10 +67,11 @@ Check every iteration:
 ```
 
 Look at both images: the 512 pt one for craft, the 32 pt one (Finder list and menu
-size) for whether the silhouette still reads. The preview shows what this Mac renders: Liquid Glass on macOS 26,
-flattened images on macOS 14 and 15. Then tell the user to open `Bundle/AppIcon.icon` in
-Icon Composer (Xcode › Open Developer Tool) to tune glass, specular, and the dark and
-tinted appearances; you cannot drive that app. They save in place.
+size) for whether the silhouette still reads. The preview shows what this Mac renders:
+Liquid Glass on macOS 26, flattened images on macOS 14 and 15. Then tell the user to open
+`Bundle/AppIcon.icon` in Icon Composer (Xcode › Open Developer Tool) to tune glass,
+specular, and the dark and tinted appearances; you cannot drive that app. They save in
+place.
 
 ## 3. DMG window
 
@@ -86,6 +91,9 @@ them together.
 - Finder places the real icons and draws their labels. Keep a clear area around each
   icon spot (128 pt icon, label below it) and keep it light: Finder always draws this
   window in light mode, so labels are black.
+- The app's label is its file name, `APP_NAME` from `Bundle/app.env`, plus `.app` when
+  the user shows all extensions. Never name the app differently in the background: write
+  "Drag to Applications", or use `APP_NAME`.
 - A user's path bar or status bar can cover the bottom 25 pt; keep text above that.
 - No text under 11 pt, no app screenshots (too small to read), one language.
 

@@ -21,6 +21,10 @@ what must survive any revision.
 
 Headline, supporting line, and the shapes or colors that tie it to the icon.
 
+## Concepts considered
+
+The concepts that lost, one line each, and why.
+
 ## Avoid
 
 What this brand never looks like.
