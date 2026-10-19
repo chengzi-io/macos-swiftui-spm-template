@@ -92,6 +92,7 @@ which only the user starts.
 ## Commits and releases
 
 Conventional Commits. PRs are squash-merged and the PR title becomes the commit on
-`main`; CI checks it. release-please turns `feat` and `fix` commits into a release PR;
-merging it tags `vX.Y.Z` and the release workflow publishes the DMG, dSYM and appcast.
-Details: [docs/RELEASING.md](docs/RELEASING.md).
+`main`; CI checks it. release-please turns `feat` and `fix` commits into a release PR,
+which must pass a release dry run; merging it tags `vX.Y.Z` with a draft release, and
+the release workflow attaches the DMG, dSYM and appcast, then publishes it. Details:
+[docs/RELEASING.md](docs/RELEASING.md).

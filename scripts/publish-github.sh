@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Uploads dist/ release artifacts to the GitHub Release <tag> that release-please
-# created. Ad-hoc builds get a note on how to open an app Gatekeeper cannot verify.
+# Uploads dist/ release artifacts to the draft GitHub Release <tag> that release-please
+# created, then publishes it. Until then nobody sees the release, and
+# releases/latest/download/appcast.xml still serves the previous version. Ad-hoc builds
+# get a note on how to open an app Gatekeeper cannot verify.
 # Needs GH_TOKEN with contents:write.
 
 source "$(dirname "$0")/common.sh"
@@ -30,4 +32,5 @@ if [[ -z ${TEAM_ID:-} ]]; then
 EOF
     gh release edit "$tag" --notes-file "$notes"
 fi
+gh release edit "$tag" --draft=false
 log "published $tag"

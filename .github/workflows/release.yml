@@ -68,7 +68,7 @@ jobs:
           NOTARY_ISSUER_ID: ${{ secrets.NOTARY_API_ISSUER_ID }}
           SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
         run: make release
-      - name: Upload release assets
+      - name: Upload assets and publish the draft release
         env:
           GH_TOKEN: ${{ github.token }}
         run: scripts/publish-github.sh "$TAG"

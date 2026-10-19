@@ -8,18 +8,24 @@
    section. `feat` bumps the minor version and `fix` the patch while the version is
    below 1.0 (`bump-minor-pre-major`); `chore`, `docs`, `ci` and the like release
    nothing.
-3. Merging the release PR makes release-please tag `vX.Y.Z` and create the GitHub
-   Release with the changelog.
-4. The `Publish macOS app` job checks out the tag and runs `make lint test` and
+3. The release PR must pass `Release dry run` (`make release-dry-run`): the universal
+   release build, ad-hoc signed, smoke-tested, packaged and checked as a DMG.
+4. Merging the release PR makes release-please tag `vX.Y.Z` and create the GitHub
+   Release with the changelog, as a **draft**: nobody sees it yet, and
+   `releases/latest` still points at the previous version.
+5. The `Publish macOS app` job checks out the tag and runs `make lint test` and
    `make release`, which:
    - builds `dist/<App>.app` (universal), signs it, smoke-tests it, notarizes it
      (Developer ID only);
-   - packages, signs and notarizes `dist/<App>-X.Y.Z.dmg`;
-   - zips the dSYM, writes `appcast.xml` (EdDSA-signed) and `SHA256SUMS`.
+   - packages, signs and notarizes `dist/<App>-X.Y.Z.dmg`, mounts it and smoke-tests
+     the app inside, with a Gatekeeper check when there is a Developer ID;
+   - zips the dSYM, writes `appcast.xml` (EdDSA-signed) and checks its URL, length and
+     signature against `SPARKLE_PUBLIC_KEY`, then writes `SHA256SUMS`.
 
-   It then uploads those files to the release, keeps the dSYM as a workflow artifact
-   for 90 days, and updates the Homebrew cask when a tap is configured.
-5. Installed apps read `releases/latest/download/appcast.xml`, find the new version
+   It then uploads those files to the draft and publishes it, keeps the dSYM as a
+   workflow artifact for 90 days, and updates the Homebrew cask when a tap is
+   configured.
+6. Installed apps read `releases/latest/download/appcast.xml`, find the new version
    and update through Sparkle.
 
 `CFBundleShortVersionString` comes from `version.txt`; `CFBundleVersion` is
@@ -140,9 +146,19 @@ Moving from ad-hoc to Developer ID keeps the same Sparkle key, so existing insta
 accept the first Developer ID update by its EdDSA signature. This transition has not
 been exercised yet; try it with a test build before relying on it.
 
-## Recovering from a bad release
+## Recovering from a failed or bad release
 
-Fix forward: merge a `fix:` PR and release again. To stop a broken update from
+A failed publish job leaves the release a draft: users see nothing, and Sparkle keeps
+offering the previous version. Read the job log, then:
+
+- The failure is outside the repository (a runner or network hiccup, Apple's notary
+  service, an expired certificate, a wrong secret): fix it and **Re-run failed jobs**.
+  The job rebuilds the same tag.
+- The tagged code is wrong: the tag cannot move, so delete the draft, merge a `fix:`
+  PR and release the next version. The skipped version keeps its tag and its
+  `CHANGELOG.md` section.
+
+A release that went out broken: fix forward, merge a `fix:` PR and release again. To stop a broken update from
 spreading meanwhile, mark the previous release as **Latest** on GitHub (edit release →
 Set as the latest release): `releases/latest/download/appcast.xml` then serves the
 previous appcast and Sparkle offers nothing newer. Never move or delete a published

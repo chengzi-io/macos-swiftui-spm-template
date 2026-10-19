@@ -102,9 +102,10 @@ version.txt                current version, owned by release-please
 ## Releases
 
 release-please reads Conventional Commit PR titles on `main`, keeps a release PR with
-the next version and CHANGELOG, and tags the release when that PR is merged. The
-publish job then builds, signs, notarizes and uploads the DMG; Sparkle picks it up from
-`releases/latest/download/appcast.xml`. One-time setup and details:
+the next version and CHANGELOG, and tags the release when that PR is merged; the PR
+must first pass a release dry run. The publish job then builds, signs, notarizes,
+checks and uploads the DMG to a draft release and publishes it; Sparkle picks it up
+from `releases/latest/download/appcast.xml`. One-time setup and details:
 [docs/RELEASING.md](docs/RELEASING.md).
 
 ## License
