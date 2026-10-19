@@ -79,9 +79,11 @@ ditto Bundle/PrivacyInfo.xcprivacy "$app/Contents/Resources/PrivacyInfo.xcprivac
 
 # AppIcon.icon (Icon Composer) becomes Liquid Glass on macOS 26; actool also bakes
 # flattened images for older systems into Assets.car, plus AppIcon.icns.
+# Absolute paths: actool hands the work to a long-lived ibtoold, which resolves relative
+# paths against its own working directory, possibly another checkout.
 log "compile Bundle/Assets.xcassets and Bundle/AppIcon.icon"
-xcrun actool Bundle/Assets.xcassets Bundle/AppIcon.icon \
-    --compile "$app/Contents/Resources" \
+xcrun actool "$ROOT/Bundle/Assets.xcassets" "$ROOT/Bundle/AppIcon.icon" \
+    --compile "$ROOT/$app/Contents/Resources" \
     --platform macosx \
     --minimum-deployment-target "$min_macos" \
     --app-icon AppIcon \

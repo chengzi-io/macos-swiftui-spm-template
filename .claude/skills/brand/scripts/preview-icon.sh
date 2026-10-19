@@ -9,6 +9,8 @@ icon=${1:-Bundle/AppIcon.icon}
 out=${2:-.build/brand/icon.png}
 points=${3:-512}
 [[ -f $icon/icon.json ]] || { echo "error: no icon.json in $icon" >&2; exit 1; }
+# actool's ibtoold daemon resolves relative paths against its own working directory.
+icon="$(cd "$(dirname "$icon")" && pwd)/$(basename "$icon")"
 here=$(cd "$(dirname "$0")" && pwd)
 
 tmp=$(mktemp -d)
