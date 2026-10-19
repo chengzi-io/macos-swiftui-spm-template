@@ -20,6 +20,8 @@ development. Create a repository with **Use this template**, then follow
 - Sparkle 2 updates from GitHub Releases, EdDSA-signed.
 - English and Simplified Chinese string catalog, privacy manifest, accent color, and an
   Icon Composer app icon: Liquid Glass on macOS 26, flattened images on macOS 14–15.
+- A brand skill for coding agents (`.claude/skills/brand`): a brand brief, icon layers
+  for Icon Composer, and an optional designed DMG window with background and layout.
 - `make ci`: `swift format` lint, unit tests, debug `.app`, launch smoke test.
 - GitHub: CI on macOS runners, PR title check, release-please versioning and
   CHANGELOG, a publish job that uploads DMG, dSYM, appcast and checksums, Dependabot.
@@ -47,7 +49,7 @@ make run     # build and launch the debug app
 updates at your repository, resets the version to `0.0.0`, updates LICENSE, README,
 CODEOWNERS and the issue templates, removes the template's own planning docs, and
 finally deletes itself. Then replace the icon (open `Bundle/AppIcon.icon` in Icon
-Composer) and the Greeter demo, and work through the one-time setup in
+Composer, or have your agent run the brand skill) and the Greeter demo, and work through the one-time setup in
 [docs/RELEASING.md](docs/RELEASING.md).
 
 <!-- template-only:end -->

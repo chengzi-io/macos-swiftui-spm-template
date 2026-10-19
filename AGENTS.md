@@ -81,7 +81,8 @@ Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks
 
 The Greeter demo (`Greeting/`, `AppModel`, `ContentView`, `AppModelTests`) is a
 placeholder; replace it with the first real feature. Recipes for launch at login,
-networking, menu bar apps and crash reporting: [docs/RECIPES.md](docs/RECIPES.md).
+networking, menu bar apps and crash reporting: [docs/RECIPES.md](docs/RECIPES.md). App
+icon and DMG window design: [.claude/skills/brand/SKILL.md](.claude/skills/brand/SKILL.md).
 
 ## Commits and releases
 
