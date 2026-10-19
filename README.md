@@ -69,6 +69,7 @@ Composer, or have your agent run the brand skill) and the Greeter demo, and work
 | `make ci` | Everything CI runs; the definition of done |
 | `make logs` | Stream the app's unified logs |
 | `make release` | Universal, signed, notarized (with a Developer ID) DMG, dSYM, appcast in `dist/` |
+| `make release-dry-run` | The release build and DMG checks without signing secrets; CI runs it on release PRs |
 | `make sparkle-keys` | Create the Sparkle EdDSA key; write the public key to `Bundle/app.env` |
 | `make github-setup` | Squash-only merges, branch protection, `release` environment |
 | `make release-mas` / `make upload-mas` | Mac App Store `.pkg`, and its upload |

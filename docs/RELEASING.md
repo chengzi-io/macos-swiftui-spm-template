@@ -36,12 +36,17 @@ make github-setup
 ```
 
 Squash merge only, with the PR title as the commit title; `main` requires a PR plus
-the `Validate PR title` and `Lint, test, build` checks; the workflow token is
-read-only; the `release` environment only runs from protected branches; private
-vulnerability reporting is on. The script prints the settings it reads back.
+the `Validate PR title`, `Lint, test, build` and `Release dry run` checks; the
+workflow token is read-only; the `release` environment only runs from protected
+branches; private vulnerability reporting is on. The script prints the settings it
+reads back.
 
-CI skips both checks on release-please's own PRs (branch `release-please--*` in this
-repository); a skipped required check counts as passed.
+`Release dry run` runs only on release-please's own PRs (branch `release-please--*` in
+this repository), and the other two checks skip them; a skipped required check counts
+as passed. The dry run is `make release-dry-run`: the universal release build, its
+smoke test, the DMG and the checks on it, ad-hoc signed because PRs get no signing
+secrets. Merging the release PR tags the release, so a release build that breaks shows
+up here instead of after the tag.
 
 ### 2. GitHub App for release-please
 

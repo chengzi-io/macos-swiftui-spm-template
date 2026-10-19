@@ -10,6 +10,10 @@ set -a
 # shellcheck source=../Bundle/app.env
 source Bundle/app.env
 set +a
+# The release dry run has no signing secrets: it builds as if TEAM_ID were empty.
+if [[ ${RELEASE_DRY_RUN:-} == 1 ]]; then
+    TEAM_ID=
+fi
 
 VERSION=$(tr -d '[:space:]' < version.txt)
 BUILD_NUMBER=$(git rev-list --count HEAD)
