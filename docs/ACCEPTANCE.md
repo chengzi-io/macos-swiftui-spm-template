@@ -31,7 +31,7 @@
 | 15 | B4 | `make test` | `Test run with 3 tests … passed` | ✅ |
 | 16 | E4 | `xed .`，打开 `Sources/AppCore/ContentView.swift`，看 Canvas | Preview 能渲染 | 👀 未验证 |
 | 17 | H1 | `make sparkle-keys`（会在登录 keychain 创建密钥，这本来就是发版的一次性步骤） | `Bundle/app.env` 中写入 `SPARKLE_PUBLIC_KEY=…`；终端打印导出私钥、设置 secret 的命令 | 🔑 没跑，会写 keychain |
-| 18 | G1–G8 | 完成 17 后执行 `make release` | `dist/` 下有 `SwiftUITemplate-0.0.0.dmg`、`.dSYM.zip`、`appcast.xml`、`SHA256SUMS`；日志里有 `smoke ok: dist/…` 和两行 `skipping notarization (ad-hoc build)` | ✅（我用 openssl 生成的临时密钥） |
+| 18 | G1–G8 | 完成 17 后执行 `make release` | `dist/` 下有 `SwiftUITemplate-0.0.0.dmg`、`.dSYM.zip`、`appcast.xml`、`SHA256SUMS`；日志里有 `smoke ok: dist/…`、`dmg ok: dist/…` 和两行 `skipping notarization (ad-hoc build)` | ✅（我用临时生成的密钥对） |
 | 19 | Q3 | `lipo -archs dist/SwiftUITemplate.app/Contents/MacOS/SwiftUITemplate` | `x86_64 arm64` | ✅ |
 | 20 | G1 | `codesign -dv dist/SwiftUITemplate.app 2>&1 \| grep flags` | ad-hoc 构建显示 `flags=0x2(adhoc)`，**不带** runtime（原因见 TEMPLATE-PLAN V12） | ✅ |
 | 21 | H1 | `cat dist/appcast.xml` | 包含 `sparkle:edSignature`，下载地址为 `…/releases/download/v0.0.0/SwiftUITemplate-0.0.0.dmg` | ✅ |
@@ -51,6 +51,9 @@
 | 35 | B5 | `make app`，把 `.app` 复制一份，删掉其中的 `Contents/Resources/Assets.car`，用 `codesign --force --sign -` 重新签名，再执行 `scripts/smoke.sh <副本>` | 报错 `has no Assets.car`，退出码 1 | ✅ |
 | 36 | A11 | 在 Claude Code 里说「美化一下 DMG」，再输入 `/dmg`（Codex 里是 `$dmg`） | 前一句不会触发 dmg skill；`/dmg` 后 agent 铺好白底默认窗口并截图，问你要默认、轻品牌还是标准品牌化；轻品牌给出 2–3 个变体截图（`.build/dmg/a.png` 等）；标准品牌化先用文字提 2–3 个场景，代码画不了的写出生图提示词，你把生成的图交回后放进 `Bundle/DMG/art.png` 再截图；选定后提交 `Bundle/DMG/` | ✅ Claude Code 和 Codex 的自动调用列表里都只有 brand（Codex 去掉 `agents/openai.yaml` 后会列出 dmg）；✅ 生图提示词里的区域坐标：按坐标画的色块图放进真实 Finder 窗口，图标、标签和箭头都落在预留区域内；👀 完整流程 |
 | 37 | A10/A11 | 分别从 `.agents/skills/...` 和 `.claude/skills/...` 两个路径运行 `render-dmg-background.sh` 与 `preview-icon.sh` | 两个路径都能跑；`.claude/skills/brand`、`.claude/skills/dmg` 是指向 `.agents/skills` 的符号链接 | ✅ 两条路径渲染出的图标逐字节相同 |
+| 38 | G9 | 第 18 项之后：`scripts/verify-dmg.sh dist/SwiftUITemplate-0.0.0.dmg`；再把 debug 包复制一份，用 `xattr -wx com.apple.FinderInfo 0000000000000000001000000000000000000000000000000000000000000000` 给它加上 Finder 标记，打成 DMG 后同样校验 | 前者输出卷内 app 的 `smoke ok` 和 `dmg ok`；后者报 `resource fork, Finder information, or similar detritus not allowed`，退出码 1（就是之前 `hide_extensions` 那个问题） | ✅ |
+| 39 | G9 | 第 18 项之后，换一把不匹配的私钥：`SPARKLE_ED_PRIVATE_KEY=<另一把私钥> scripts/appcast.sh` | `generate_appcast` 本身照常签名、不报错；随后的校验报 `is not signed with the key matching SPARKLE_PUBLIC_KEY`，退出码 1。错误的下载地址、长度和空公钥也都会报错 | ✅ |
+| 40 | G10 | `SPARKLE_PUBLIC_KEY` 已设置时执行 `make release-dry-run`；再在 `Bundle/app.env` 里临时填一个 `TEAM_ID` 重跑 | 最后一行是 `dry run: release build and DMG ok`，`dist/` 里只有 `.app` 和 `.dmg`；填了 `TEAM_ID` 时仍是 `identity: -`，并跳过公证 | ✅ |
 
 ### 1.1 本地 Sparkle 端到端（第 22 项的复现步骤）
 
@@ -88,20 +91,21 @@ plutil -p "$A/Contents/Info.plist" | grep ShortVersion   # => 0.1.1
 
 | # | 项 | 操作 | 预期 |
 |---|----|------|------|
-| 1 | F3 | `make github-setup` | 回读结果显示只允许 squash、标题取 PR_TITLE；必需检查为 `["Validate PR title","Lint, test, build"]`；workflow 权限 `read`；`release` environment 只允许受保护分支 |
+| 1 | F3 | `make github-setup` | 回读结果显示只允许 squash、标题取 PR_TITLE；必需检查为 `["Validate PR title","Lint, test, build","Release dry run"]`；workflow 权限 `read`；`release` environment 只允许受保护分支 |
 | 2 | Q10 | 按 `docs/RELEASING.md` 第 2 节创建 GitHub App，设置 `RELEASE_APP_CLIENT_ID` 和 `RELEASE_APP_PRIVATE_KEY` | — |
 | 3 | F4 | 开一个标题为 `update stuff` 的 PR | `Validate PR title` 失败；改成 `docs: update readme` 后通过 |
 | 4 | F1 | 同一个 PR | `Lint, test, build` 在 `macos-26` 上通过，包括冒烟测试（runner 能否启动 GUI 应用是待验证项，失败时看 job 日志里 smoke 那一步） |
 | 5 | F2 | 等待 Dependabot 按周运行，或在 Insights → Dependency graph → Dependabot 里手动检查 | PR 标题形如 `chore(deps): bump …` / `ci: bump …` |
-| 6 | Q9 | 往 `main` 合并一个 `feat:` PR | release-please 开出 `chore(main): release 0.1.0` PR；该 PR 上两个检查都显示 **skipped**，并且可以合并 |
+| 6 | Q9 | 往 `main` 合并一个 `feat:` PR | release-please 开出 `chore(main): release 0.1.0` PR；该 PR 上 `Validate PR title` 和 `Lint, test, build` 显示 **skipped**，`Release dry run` 运行，通过后才能合并 |
 | 7 | H1 | 合并前：完成本地第 17 项，提交公钥，执行 `gh secret set SPARKLE_ED_PRIVATE_KEY --env release` | — |
-| 8 | G5 | 合并发版 PR | 出现 tag `v0.1.0`；Release 中有 CHANGELOG 和 ad-hoc 打开说明；资产包括 `.dmg`、`.dSYM.zip`、`appcast.xml`、`SHA256SUMS`；workflow artifact 中有 `dsym-v0.1.0` |
+| 8 | G5 | 合并发版 PR | 立刻出现 tag `v0.1.0` 和一个**草稿** Release，publish job 成功后才公开；Release 中有 CHANGELOG 和 ad-hoc 打开说明；资产包括 `.dmg`、`.dSYM.zip`、`appcast.xml`、`SHA256SUMS`；workflow artifact 中有 `dsym-v0.1.0` |
 | 9 | H1 | `curl -sL https://github.com/chengzi-io/macos-swiftui-spm-template/releases/latest/download/appcast.xml` | 显示 0.1.0 的条目 |
 | 10 | Q2 | 在另一台 Mac 上下载 DMG 并安装 | 首次被拦截；到「隐私与安全性 → 仍要打开」后可以运行 |
 | 11 | H1 | 合并一个 `fix:` PR，再合并它的发版 PR，得到 v0.1.1；在已安装的 0.1.0 中点「Check for Updates…」 | 发现 0.1.1，安装并重启后版本号正确 |
 | 12 | H2 | 设置 `vars.HOMEBREW_TAP` 和 `HOMEBREW_TAP_TOKEN` 后再发一个版本 | tap 仓库中出现 `Casks/swiftuitemplate.rb`；`brew audit --cask <tap>/swiftuitemplate` 通过 |
-| 13 | G3 | 在一个提交了 `Bundle/DMG/` 的项目里发版 | publish job 执行了 `actions/setup-python`（Python 3.13），日志中有 `install dmgbuild`；Release 里的 DMG 打开后带背景。没有 `Bundle/DMG/` 的项目里这一步显示 skipped |
+| 13 | G3 | 在一个提交了 `Bundle/DMG/` 的项目里发版 | 发版 PR 上的 `Release dry run` 和 publish job 都执行了 `actions/setup-python`（Python 3.13），日志中有 `install dmgbuild`；Release 里的 DMG 打开后带背景。没有 `Bundle/DMG/` 的项目里这一步显示 skipped |
 | 14 | A5 | 在 `macos-14` 和 `macos-26` runner 上渲染图标（可选，一次性 workflow：下载 `.app`，运行 `.agents/skills/brand/scripts/render-icon.swift`，上传 PNG） | 14 上是扁平图，26 上是 Liquid Glass |
+| 15 | G5 | 让一次发版失败：发版前临时删掉 `SPARKLE_ED_PRIVATE_KEY` secret，合并发版 PR | publish job 失败，Release 停在草稿；`releases/latest/download/appcast.xml` 仍是上一版。恢复 secret 后点 Re-run failed jobs，同一个 tag 构建成功并公开 |
 
 ## 3. Apple 证书和账号
 

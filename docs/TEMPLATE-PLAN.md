@@ -7,7 +7,7 @@
 ## 目标
 
 - **开发**：用模板新建仓库 → 运行 `scripts/init.sh` → `make run` 出窗口 → 直接写业务代码。
-- **发布**：PR 以 squash 方式合并进 `main` → release-please 维护发版 PR → 合并后自动打 tag、创建 Release，CI 上传 DMG、dSYM、appcast → 已安装的应用通过 Sparkle 自动更新。
+- **发布**：PR 以 squash 方式合并进 `main` → release-please 维护发版 PR，它要先通过发版演练 → 合并后自动打 tag、创建草稿 Release → CI 构建、校验并上传 DMG、dSYM、appcast，然后公开 Release → 已安装的应用通过 Sparkle 自动更新。
 
 原则：纯 `Package.swift`，不提交 `.xcodeproj`；一个命令入口（Makefile）；每项都有可执行的验收方式；依赖尽量少；和 chengzi-io 其他模板以及 `github-repo-scaffold` skill 的约定保持一致。
 
@@ -113,10 +113,12 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | G2 | 公证 | `scripts/notarize.sh` | 🟡（无 `TEAM_ID` 时跳过，已验证） |
 | G3 | DMG | `scripts/package-dmg.sh`、`scripts/make-dmg.sh`：默认是普通窗口；存在 `Bundle/DMG/` 时用 dmgbuild 生成带背景和布局的窗口，发版 job 这时会先装 Python 3.13 | ✅ 本地 / 🟡 CI 上的设计版 |
 | G4 | 版本号 | `version.txt` 加 `git rev-list --count HEAD` | ✅ |
-| G5 | Release 流水线 | `.github/workflows/release.yml`、`scripts/release.sh`、`publish-github.sh` | ✅ 本地 `make release` / 🟡 CI |
+| G5 | Release 流水线 | `.github/workflows/release.yml`、`scripts/release.sh`、`publish-github.sh`；Release 先建为草稿，资产全部上传后才公开 | ✅ 本地 `make release` / 🟡 CI |
 | G6 | 密钥管理 | `scripts/ci-keychain.sh`、`release` environment、`docs/RELEASING.md` | 🟡 |
 | G7 | 发布说明 | release-please 的 CHANGELOG；ad-hoc 构建自动追加打开方式说明 | 🟡 |
 | G8 | dSYM 存档 | Release 资产 + 保留 90 天的 workflow artifact | ✅ 本地 / 🟡 CI |
+| G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SPARKLE_PUBLIC_KEY` 对得上 | ✅ 本地（含反例） |
+| G10 | 发版演练 | `make release-dry-run`：universal 构建、ad-hoc 签名、冒烟测试、DMG 和 G9 的 DMG 校验；CI 在 release-please 的 PR 上作为必需检查 `Release dry run` 运行 | ✅ 本地 / 🟡 CI |
 | H1 | Sparkle 自动更新 | `Sources/App/Updates.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
 | H2 | Homebrew Cask | `scripts/update-cask.sh`，通过 `vars.HOMEBREW_TAP` 启用 | 🟡 |
 | H3 | Mac App Store | `make release-mas` / `make upload-mas` | 🟡（构建链路已用替代身份验证） |
@@ -130,6 +132,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **G4 版本号**：来源从 git tag 改为 `version.txt`，由 release-please 维护。脚本不再要求 HEAD 正好在 tag 上，因为正式发布只走 CI，而 tag 由 release-please 创建。
 - **G5 发布触发**：不再由推 tag 触发，改为同一个 workflow 里 release-please 创建 Release 之后的 publish job。原因是 `GITHUB_TOKEN` 创建的 tag 不会触发其他 workflow。
 - **G7 发布说明**：从 `--generate-notes` 改为 release-please 生成的 CHANGELOG。
+- **G5 草稿发版**：Release 先公开、后传资产时，`releases/latest` 会立即指向一个还没有 appcast 的 Release：发版的十几分钟里所有更新检查都是 404，失败时一直 404。改为 release-please 建草稿（`draft` 加 `force-tag-creation`，否则 tag 要等公开才建，release-please 找不到上一版），资产传完再公开。
+- **G9、G10**：只在发版时才跑的步骤（universal 构建、Release 配置、DMG、公证、appcast）在打 tag 前没人检查。仓库内容类的问题由发版 PR 上的演练拦在合并前；密钥、证书和 Apple 服务类的问题合并前测不了，由草稿兜底。
 - **G1**：ad-hoc 发布不开 hardened runtime（V12）。
 - **B3**：没有 commit-msg 钩子（Q9）。**F4**：从 P2 提升为已实现。
 - **H1**：`SUFeedURL` 由 `RELEASES_URL` 推导；联网用 `network.client`，不用 Downloader XPC（Sparkle 文档建议这样做）。
@@ -155,7 +159,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | ad-hoc 发布的体验 | 首次打开要在系统设置里点「仍要打开」；每次更新签名都会变，权限和 keychain 访问可能需要重新授权；Homebrew 安装会被 Gatekeeper 拦截 |
 | ad-hoc 切换到 Developer ID 的首次更新 | 理论上靠 EdDSA 能通过，**尚未实测** |
 | `.icon` 在 macOS 14 和 26 上的显示 | macOS 15 已在本机验证；macOS 26 的 Liquid Glass 效果只在 Icon Composer 的预览里看过；macOS 14 未验证 |
-| 设计版 DMG | 深色模式下的标签颜色只有论坛报告，没有实测；发版 job 里的 setup-python 步骤还没在真实 runner 上跑过 |
+| 设计版 DMG | 深色模式下的标签颜色只有论坛报告，没有实测；发版 job 和发版演练里的 setup-python 步骤还没在真实 runner 上跑过 |
+| 草稿发版与发版演练 | 都只在本地验证过脚本部分。release-please 的 `draft` 加 `force-tag-creation`、草稿下 action 的 `release_created` 输出、`gh` 往草稿上传再公开、演练 job 在 release-please PR 上触发，都要等第一次真实发版才能确认。演练用 ad-hoc 签名，Developer ID 签名、hardened runtime、公证和 appcast 签名只在发版 job 里检查 |
 | DMG 卷图标 | 直接用 app 的 AppIcon.icns，只有 16–256 px。在 64、128 pt 下的渲染与全尺寸版逐字节相同（桌面图标最大就是 128 pt），画得比 128 pt 大时（Quick Look、放大的图标视图）会糊，512 pt 下实测可见。补全尺寸要加 `--standalone-icon-behavior all`，代价是每份 icns 多 0.8 MB，设计版 DMG 里有两份（实测 debug DMG 从 3.0 MB 涨到 4.7 MB），所以没加 |
 | 品牌 skill 的图标环节 | agent 只能写 SVG 和 `icon.json`，玻璃、高光以及深色、着色外观需要人在 Icon Composer 里调 |
 | SwiftUI Preview | 视图都在 library target 中，但 Preview 只能在 Xcode GUI 里确认，我没有实测 |
