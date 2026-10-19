@@ -51,7 +51,7 @@ Show the user the screenshot. Unless they already said which level they want, as
 | --- | --- |
 | Default | Nothing: finish here |
 | Light brand | A soft gradient in the icon's colors, and an arrow drawn from the icon's motif |
-| Full brand | An illustration or texture from the icon's world, a custom arrow, icon spots moved to fit the scene |
+| Full brand | An illustration or texture from the icon's world that leads to Applications, by its composition or a custom arrow; icon spots moved to fit the scene |
 
 ## 2. Read the brand
 
@@ -80,20 +80,41 @@ Propose two or three scenes from the icon's world, one line each; a pixel-art ca
 might become a pixel night landscape where paw prints lead to Applications. Say for each
 whether you draw it in code or it needs an image model, and let the user pick.
 
-Code draws well: shapes, lines, gradients, layered silhouettes, stars, dots; pixel art
-(rows of characters drawn as squares on whole points, so 1x and 2x stay crisp); grain
-from a seeded random generator, so 1x and 2x match. Code cannot draw painterly or
-hand-drawn art, shaded characters, or realistic texture and light: those need an image
-model.
+The scene leads the eye from the app to Applications, one of two ways:
 
-Drawn in code: write it in `Background.swift` and make variants as in step 3.
+- A connector between the icons: an arrow, paw prints, a row of dots, a path.
+- Composition: figures around Applications that point or move toward it, a trail from
+  the app to Applications, light that flows to the right. Grok Bot's window has no
+  arrow: six mascots with cursors circle the Applications folder, all pointing at it,
+  and the app sits far left to make room. With composition, drop the arrow.
+
+Code draws well: shapes, lines, gradients, layered silhouettes, stars, dots; flat
+figures placed around a spot and turned to face it; pixel art (rows of characters drawn
+as squares on whole points, so 1x and 2x stay crisp); grain from a seeded random
+generator, so 1x and 2x match. Code cannot draw painterly or hand-drawn art, shaded
+characters, or realistic texture and light: those need an image model.
+
+Drawn in code: write it in `Background.swift` and make variants as in step 3. Turn
+figures toward Applications from the constants, so they stay right when the icons move:
+
+```swift
+// Turns a view drawn pointing right (+x) so it points from `point` at `target`.
+func angle(from point: CGPoint, to target: CGPoint) -> Angle {
+    .radians(atan2(target.y - point.y, target.x - point.x))
+}
+
+Cursor()
+    .rotationEffect(angle(from: spot, to: Self.applications))
+    .position(spot)
+```
 
 Made by an image model:
 
 1. Write the user a prompt to paste into ChatGPT, Gemini or another image model. The
    numbers below are for the template's geometry, checked in a real Finder window: a 3:2
    image is scaled to 660 pt wide (440 pt tall) and loses 20 pt at the top and bottom.
-   Recompute them if you moved the icons.
+   Recompute them if you moved the icons. Keep the band line only when code draws an
+   arrow over the art; a trail crosses the band.
 
    ```
    Background artwork for an app installer window. Landscape 3:2, 1536 × 1024 pixels.
@@ -101,12 +122,15 @@ Made by an image model:
    logos, signature or watermark.
    Scene: <one or two sentences>. Style: <style>. Colors: <hex colors>. Overall light, so
    black captions stay readable.
+   Direction: the picture leads the eye from the left area to the right area: <a trail
+   from the left area to the right area | small figures around the right area, all
+   facing its center at x 74%, y 50% | light that flows to the right>.
    Layout, in percent of width and height from the top-left corner:
    - Keep two areas plain and light, like empty paper: x 14–38%, y 32–73% and
      x 62–86%, y 32–73%. Icons and their captions go there later.
    - Keep the band between them plain: x 38–62%, y 42–58%. An arrow goes there later.
-   - Put the detail in the corners, along the top above y 30% and along the bottom
-     below y 74%.
+   - Detail can go anywhere else: the corners, the edges, around the right area, above
+     and below the band.
    - The top and bottom 4% are cut off and the bottom 10% may be covered: nothing
      important there.
    ```
@@ -115,7 +139,7 @@ Made by an image model:
    `Bundle/DMG/art.png` (`sips -s format png <file> --out Bundle/DMG/art.png` converts a
    JPEG or WebP). It needs at least 1320 × 800 px after the crop; a smaller one blurs on
    Retina, so ask for a larger one.
-3. Draw it under the arrow in `Background.swift`:
+3. Draw it as the bottom layer in `Background.swift`:
 
    ```swift
    import AppKit
@@ -137,7 +161,9 @@ Made by an image model:
    ```
 
 4. Render and preview. Models add text, letters and signatures despite the prompt: look
-   for them. If the art crowds an icon or a label, move the icon spots, put a soft white
+   for them. Models only roughly follow a direction: check that figures face
+   Applications and a trail ends there; if not, revise the prompt or draw an arrow over
+   the art. If the art crowds an icon or a label, move the icon spots, put a soft white
    glow under the label, or write a revised prompt that says what to change and ask the
    user to generate again.
 
@@ -150,6 +176,7 @@ Made by an image model:
   picture stays in light mode (reported for dark mode too). Keep the area under each
   icon and label light; no dark full backgrounds.
 - No text, in the background or the art.
+- Lead the eye from the app to Applications: a connector, or the composition.
 - A user's path bar or status bar can cover the bottom 25 pt.
 - Draw brand shapes with `Shape` or `Path`, never an SF Symbol: their license forbids
   use in logos and other trademark use. No other brand's artwork or characters.
