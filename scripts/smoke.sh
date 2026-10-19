@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Smoke-tests a built .app (default: the debug build): signature, Info.plist,
-# resource bundle, then launches it and checks it is still alive after startup.
+# resource bundle, compiled assets, then launches it and checks it is still alive
+# after startup.
 # A missing resource bundle crashes the first render through Bundle.module.
 
 source "$(dirname "$0")/common.sh"
@@ -11,6 +12,10 @@ app=${1:-$DEBUG_APP}
 codesign --verify --deep --strict "$app"
 plutil -lint -s "$app/Contents/Info.plist"
 [[ -d "$app/Contents/Resources/App_AppCore.bundle" ]] || die "$app has no App_AppCore.bundle"
+# A missing icon or accent color fails nothing at runtime.
+for asset in Assets.car AppIcon.icns; do
+    [[ -f "$app/Contents/Resources/$asset" ]] || die "$app has no $asset"
+done
 
 output=$(mktemp)
 trap 'rm -f "$output"' EXIT
