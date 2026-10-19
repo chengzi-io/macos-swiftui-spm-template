@@ -83,8 +83,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | A7 | `.app` 打包脚本 | `scripts/build-app.sh`（debug / release / mas） | ✅ |
 | A8 | 本地运行与调试 | `make run`、`scripts/run.sh` | ✅ |
 | A9 | 忽略规则与编辑器配置 | `.gitignore`、`.editorconfig` | ✅ |
-| A10 | 品牌 skill | `.claude/skills/brand`：品牌简报、Icon Composer 图标图层和图标预览脚本 | ✅ |
-| A11 | DMG skill | `.claude/skills/dmg`，只能由用户用 `/dmg` 启动：白底模板、从图标取一个品牌元素、渲染三个变体让用户挑，以及背景渲染和 Finder 窗口截图脚本 | ✅ 脚本 / 👀 完整流程 |
+| A10 | 品牌 skill | `.agents/skills/brand`（`.claude/skills` 里是指向它的符号链接）：品牌简报、Icon Composer 图标图层和图标预览脚本 | ✅ |
+| A11 | DMG skill | `.agents/skills/dmg`，只能由用户启动（Claude Code 用 `disable-model-invocation`，Codex 用 `agents/openai.yaml`）：先铺白底默认窗口，再按用户选择做轻品牌或标准品牌化；代码画不了的插画写生图提示词，生成的图作为 `art.png` 垫在箭头下面。背景一律不放文字 | ✅ 脚本和提示词坐标 / 👀 完整流程 |
 | B1 | 编译严格度 | `Package.swift` 中的 `swiftSettings` | ✅ |
 | B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint` | ✅ |
 | B3 | Git hooks | `lefthook.yml`（pre-commit 格式化） | ✅ |
