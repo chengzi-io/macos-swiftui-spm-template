@@ -2,36 +2,54 @@
 
 ## How a release happens
 
-1. PRs are squash-merged into `main`; each PR title is a Conventional Commit.
-2. On every push to `main`, release-please updates a release PR, opened as a draft: the
-   next version in `version.txt` and `.release-please-manifest.json`, and the new
-   `CHANGELOG.md` section. `feat` bumps the minor version and `fix` the patch while the
-   version is below 1.0 (`bump-minor-pre-major`); `chore`, `docs`, `ci` and the like
-   release nothing.
-3. To release, mark the release PR **Ready for review**. That starts `Release dry run`
-   (`make release-dry-run`): the universal release build, ad-hoc signed, smoke-tested,
-   packaged and checked as a DMG. Merge once it passes; a draft PR cannot merge, so the
-   dry run cannot be skipped.
-4. Merging the release PR makes release-please tag `vX.Y.Z` and create the GitHub
-   Release with the changelog, as a **draft**: nobody sees it yet, and
-   `releases/latest` still points at the previous version.
-5. The `Publish macOS app` job checks out the tag and runs `make lint test` and
-   `make release`, which:
-   - builds `dist/<App>.app` (universal), signs it, smoke-tests it, notarizes it
-     (Developer ID only);
-   - packages, signs and notarizes `dist/<App>-X.Y.Z.dmg`, mounts it and smoke-tests
-     the app inside, with a Gatekeeper check when there is a Developer ID;
-   - zips the dSYM, writes `appcast.xml` (EdDSA-signed) and checks its URL, length and
-     signature against `SPARKLE_PUBLIC_KEY`, then writes `SHA256SUMS`.
+```mermaid
+flowchart TD
+    pr["your PR<br/>feat: … or fix: …"] -->|squash merge| main["main"]
+    main -->|release-please| rpr["release PR, a draft:<br/>next version, CHANGELOG.md"]
+    rpr -->|"you: Ready for review"| dry{{"Release dry run"}}
+    dry -->|fails| fix["fix it in another PR"]
+    fix --> main
+    dry -->|passes| merge["you: Squash and merge"]
+    merge --> tag["release-please: tag vX.Y.Z<br/>and a draft GitHub Release"]
+    tag --> job{{"Publish macOS app"}}
+    job -->|fails| hidden["stays a draft: users see nothing"]
+    job -->|passes| live["assets uploaded, release published"]
+    live --> users["installed apps update through Sparkle"]
+```
 
-   It then uploads those files to the draft and publishes it, keeps the dSYM as a
-   workflow artifact for 90 days, and updates the Homebrew cask when a tap is
-   configured.
-6. Installed apps read `releases/latest/download/appcast.xml`, find the new version
-   and update through Sparkle.
+- **Versions.** `feat` bumps the minor version and `fix` the patch while the version is
+  below 1.0 (`bump-minor-pre-major`); `chore`, `docs`, `ci` and the like release
+  nothing. release-please writes the version to `version.txt` and
+  `.release-please-manifest.json`. `CFBundleShortVersionString` comes from
+  `version.txt`; `CFBundleVersion` is `git rev-list --count HEAD`, which only grows on
+  `main` and is what Sparkle compares.
+- **Dry run.** `make release-dry-run`: the release build without the signing secrets,
+  which PRs never get. A draft PR cannot merge, so the dry run cannot be skipped, and
+  it runs only when you mean to release.
+- **Draft release.** Nobody sees it, and `releases/latest` keeps pointing at the
+  previous version, until the publish job has uploaded every asset.
 
-`CFBundleShortVersionString` comes from `version.txt`; `CFBundleVersion` is
-`git rev-list --count HEAD`, which only grows on `main` and is what Sparkle compares.
+The publish job checks out the tag and runs `make lint test`, then `make release`:
+
+```mermaid
+flowchart TB
+    subgraph both["make release and make release-dry-run"]
+        direction LR
+        app["release .app<br/>universal, signed"] --> smoke["smoke test"] --> notarize["notarize"] --> dmg["DMG"] --> check["check the DMG:<br/>mount, smoke test,<br/>Gatekeeper"]
+    end
+    subgraph only["make release only"]
+        direction LR
+        dsym["dSYM zip"] --> appcast["appcast.xml<br/>EdDSA-signed"] --> verify["check the appcast:<br/>URL, length, signature"] --> sums["SHA256SUMS"]
+    end
+    both --> only
+```
+
+Notarizing, signing the DMG and the Gatekeeper check need a Developer ID; the dry run
+signs ad-hoc. The appcast check uses `SPARKLE_PUBLIC_KEY`, the key installed apps
+trust. The job then uploads the DMG, dSYM zip, appcast and `SHA256SUMS` to the draft
+release and publishes it, keeps the dSYM as a workflow artifact for 90 days, and
+updates the Homebrew cask when a tap is configured. Installed apps read
+`releases/latest/download/appcast.xml`.
 
 ## One-time setup
 
@@ -43,20 +61,20 @@ Run these once per repository, after the first push of `main`.
 make github-setup
 ```
 
-Squash merge only, with the PR title as the commit title; `main` requires a PR plus
-the `Validate PR title`, `Lint, test, build` and `Release dry run` checks; the
-workflow token is read-only; the `release` environment only runs from protected
-branches; private vulnerability reporting is on. The script prints the settings it
-reads back.
+Squash merge only, with the PR title as the commit title; `main` requires a PR and the
+three checks below; the workflow token is read-only; the `release` environment only
+runs from protected branches; private vulnerability reporting is on. The script prints
+the settings it reads back.
 
-`Release dry run` runs only on release-please's own PRs (branch `release-please--*` in
-this repository) once they are ready for review, and the other two checks skip them; a
-skipped required check counts as passed. release-please opens its PR as a draft, which
-cannot merge, so the dry run runs when you mean to release instead of on every push to
-`main`. The dry run is `make release-dry-run`: the universal release build, its
-smoke test, the DMG and the checks on it, ad-hoc signed because PRs get no signing
-secrets. Merging the release PR tags the release, so a release build that breaks shows
-up here instead of after the tag.
+| Required check | Your PRs | Release PR, draft | Release PR, ready for review |
+| --- | --- | --- | --- |
+| `Validate PR title` | runs | skipped | skipped |
+| `Lint, test, build` | runs | skipped | skipped |
+| `Release dry run` | skipped | skipped | runs |
+
+A skipped required check counts as passed. release-please's PRs (branch
+`release-please--*` in this repository) change only the version and the changelog, so
+the dry run is the check they need, and a draft cannot merge whatever its checks say.
 
 ### 2. GitHub App for release-please
 
@@ -93,17 +111,16 @@ update again. Release builds fail while `SPARKLE_PUBLIC_KEY` is empty.
 Leave `TEAM_ID` empty in `Bundle/app.env`. Releases are ad-hoc signed, without the
 hardened runtime (its library validation would reject the embedded Sparkle framework)
 and without notarization. The publish job adds a note to the release explaining the
-first launch. What users see:
+first launch.
 
-- First launch is blocked by Gatekeeper. They open System Settings → Privacy &
-  Security and click **Open Anyway**, once.
-- Updates through Sparkle work: EdDSA proves the update came from you, and Sparkle
-  installs it without the Gatekeeper prompt. Verified locally with two ad-hoc,
-  sandboxed builds (0.1.0 → 0.1.1).
-- Every build has a new ad-hoc signature, so permissions granted in System Settings
-  (camera, screen recording, accessibility…) and keychain items may be asked for
-  again after an update.
-- Homebrew quarantines cask downloads, so a cask install is blocked the same way.
+| What users get | Ad-hoc (default) | Developer ID (4b) |
+| --- | --- | --- |
+| First launch | Blocked by Gatekeeper, once: System Settings → Privacy & Security → **Open Anyway** | Opens |
+| Updates through Sparkle | Work: EdDSA proves they came from you, and no Gatekeeper prompt | Work |
+| Permissions (camera, screen recording, accessibility…) and keychain items | May be asked for again after an update: every build has a new signature | Kept |
+| Homebrew cask | Quarantined, so blocked like the first launch | Installs |
+
+Ad-hoc updates were verified locally with two sandboxed builds (0.1.0 → 0.1.1).
 
 ### 4b. With a Developer ID
 
@@ -152,21 +169,22 @@ been exercised yet; try it with a test build before relying on it.
 
 ## Recovering from a failed or bad release
 
-A failed publish job leaves the release a draft: users see nothing, and Sparkle keeps
-offering the previous version. Read the job log, then:
+```mermaid
+flowchart TD
+    failed["publish job failed:<br/>the release is still a draft"] --> what{"what broke?"}
+    what -->|"outside the repository: runner, network,<br/>notary service, certificate, secret"| rerun["fix it, then<br/>Re-run failed jobs<br/>on the same tag"]
+    what -->|the tagged code| next["delete the draft,<br/>merge a fix: PR,<br/>release the next version"]
+    broken["a published release<br/>is broken"] --> latest["mark the previous release Latest"]
+    latest --> forward["merge a fix: PR,<br/>release again"]
+```
 
-- The failure is outside the repository (a runner or network hiccup, Apple's notary
-  service, an expired certificate, a wrong secret): fix it and **Re-run failed jobs**.
-  The job rebuilds the same tag.
-- The tagged code is wrong: the tag cannot move, so delete the draft, merge a `fix:`
-  PR and release the next version. The skipped version keeps its tag and its
-  `CHANGELOG.md` section.
-
-A release that went out broken: fix forward, merge a `fix:` PR and release again. To stop a broken update from
-spreading meanwhile, mark the previous release as **Latest** on GitHub (edit release →
-Set as the latest release): `releases/latest/download/appcast.xml` then serves the
-previous appcast and Sparkle offers nothing newer. Never move or delete a published
-tag.
+While the release is a draft, users see nothing and Sparkle keeps offering the previous
+version; read the job log to tell the two causes apart. A tag cannot move, so a code fix
+ships as the next version, and the skipped version keeps its tag and its `CHANGELOG.md`
+section. Marking the previous release **Latest** (edit release → Set as the latest
+release) makes `releases/latest/download/appcast.xml` serve the previous appcast, so
+Sparkle stops offering the broken update until the fix is out. Never move or delete a
+published tag.
 
 ## Symbolicating crashes
 
