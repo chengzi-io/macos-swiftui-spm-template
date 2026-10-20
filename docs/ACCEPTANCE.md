@@ -43,18 +43,22 @@
 | 27 | E5 | 工作区不干净时运行 init | 报错 `commit or stash your changes first` | ✅ |
 | 28 | 文档 | 阅读 `AGENTS.md`、`README.md`、`docs/DEVELOPMENT.md`、`docs/RELEASING.md`、`docs/RECIPES.md` | C5–C9、H4 都有说明；RECIPES 里的 Swift 片段能编译 | ✅ 片段已编译 |
 | 29 | A5 | `open -a "Icon Composer" Bundle/AppIcon.icon`（Icon Composer 在 Xcode 菜单 Open Developer Tool 里） | 左栏有两个 Group（segments、rind），右栏 Fill 为两色渐变；画布是 Liquid Glass 预览，底部能切换 Default、Dark、Mono | ✅（截图） |
-| 30 | A5 | `.agents/skills/brand/scripts/preview-icon.sh`，打开 `.build/brand/icon.png` | 本机系统的渲染结果：macOS 15 上是扁平图，与 Dock 里一致 | ✅ macOS 15 |
+| 30 | A5 | `.agents/skills/app-icon/scripts/check-icon.sh`，打开 `.build/app-icon/AppIcon-check.png` 和 `AppIcon-dock.png` | 第一张：macOS 26 的六种外观（深色外观下白色果皮环变成橙色，这是系统自动生成深色版的结果）、32 pt 三种外观，以及本机 Finder 图标（macOS 15 上是扁平图，与 Dock 里一致）。第二张：图标夹在 Safari、Notes、Photos、App Store 中间，128 pt 和 32 pt 各一行，Safari 不带替身箭头 | ✅ macOS 15 |
 | 31 | G3 | 没有 `Bundle/DMG/` 时：`make app && scripts/make-dmg.sh .build/app/Debug/SwiftUITemplate.app .build/dmg/plain.dmg`，再挂载 | 卷里只有 `.app` 和 `Applications`，没有 `.background.tiff`；Finder 窗口是普通样式 | ✅ 卷内容 / 👀 窗口样式 |
 | 32 | G3 | 设计版 DMG：`mkdir -p Bundle/DMG && cp .agents/skills/dmg/templates/* Bundle/DMG/ && .agents/skills/dmg/scripts/render-dmg-background.sh && make app && .agents/skills/dmg/scripts/preview-dmg.sh`，打开 `.build/dmg/dmg.png`。验收完执行 `rm -rf Bundle/DMG` | 第一次运行会打印 `install dmgbuild into .build/dmgbuild-1.6.7`。截图是 1320×856 的正常窗口（开着台前调度也一样）：白底，两个图标之间有一个灰色小箭头，没有文字；应用图标和 Applications 位于背景预留的位置；标题栏显示应用图标 | ✅（终端需要「屏幕录制」权限） |
 | 33 | G3 | 保留第 32 项的 `Bundle/DMG/` 执行 `make release`（临时公钥的做法见 §1.1），然后挂载 `dist/*.dmg`，对卷内的 `.app` 执行 `codesign --verify --deep --strict` | 日志中有 `package … with the Bundle/DMG design`；签名校验通过；`lipo` 显示 `x86_64 arm64` | ✅ |
-| 34 | A10 | 在 Claude Code 里说「用 brand skill 给这个 app 做品牌」 | agent 先问简报中缺的信息，提出 2–3 个概念供你选；之后产出 `docs/BRAND.md` 和新的 `Bundle/AppIcon.icon` 图层，并给出 `.build/brand/icon.png`、`icon-32.png` 两张预览图；`make ci` 通过 | ✅ 一个独立 agent 按拆分前的 skill 为虚构产品「Lumen」完整跑过一遍（简报由我直接给出，未提交）；👀 设计效果 |
+| 34 | A10 | 在 Claude Code 里说「给这个 app 做个图标」 | agent 一次问清缺的信息（用途、现成的 logo 或图片、颜色、两到四个你喜欢的已装应用）。没有素材时先出 6–8 个黑白构思（`.build/app-icon/concepts.png`）让你挑；再做两三个草稿放在 `.build/app-icon/`，每个都附 check 和 dock 两张图。你认可之前 `Bundle/AppIcon.icon` 不变；认可后替换，`make ci` 通过并提交。两轮都选不出时，agent 停下并建议走生图或找设计师 | 👀 完整流程未跑；脚本见第 37、42–45 项 |
 | 35 | B5 | `make app`，把 `.app` 复制一份，删掉其中的 `Contents/Resources/Assets.car`，用 `codesign --force --sign -` 重新签名，再执行 `scripts/smoke.sh <副本>` | 报错 `has no Assets.car`，退出码 1 | ✅ |
-| 36 | A11 | 在 Claude Code 里说「美化一下 DMG」，再输入 `/dmg`（Codex 里是 `$dmg`） | 前一句不会触发 dmg skill；`/dmg` 后 agent 铺好白底默认窗口并截图，问你要默认、轻品牌还是标准品牌化；轻品牌给出 2–3 个变体截图（`.build/dmg/a.png` 等）；标准品牌化先用文字提 2–3 个场景，代码画不了的写出生图提示词，你把生成的图交回后放进 `Bundle/DMG/art.png` 再截图；选定后提交 `Bundle/DMG/` | ✅ Claude Code 和 Codex 的自动调用列表里都只有 brand（Codex 去掉 `agents/openai.yaml` 后会列出 dmg）；✅ 生图提示词里的区域坐标：按坐标画的色块图放进真实 Finder 窗口，图标、标签和箭头都落在预留区域内；👀 完整流程 |
-| 37 | A10/A11 | 分别从 `.agents/skills/...` 和 `.claude/skills/...` 两个路径运行 `render-dmg-background.sh` 与 `preview-icon.sh` | 两个路径都能跑；`.claude/skills/brand`、`.claude/skills/dmg` 是指向 `.agents/skills` 的符号链接 | ✅ 两条路径渲染出的图标逐字节相同 |
+| 36 | A11 | 在 Claude Code 里说「美化一下 DMG」，再输入 `/dmg`（Codex 里是 `$dmg`） | 前一句不会触发 dmg skill；`/dmg` 后 agent 铺好白底默认窗口并截图，问你要默认、轻品牌还是标准品牌化；轻品牌给出 2–3 个变体截图（`.build/dmg/a.png` 等）；标准品牌化先用文字提 2–3 个场景，代码画不了的写出生图提示词，你把生成的图交回后放进 `Bundle/DMG/art.png` 再截图；选定后提交 `Bundle/DMG/` | ✅ Claude Code 和 Codex 的自动调用列表里都只有 app-icon（改名前是 brand；Codex 去掉 `agents/openai.yaml` 后会列出 dmg）；✅ 生图提示词里的区域坐标：按坐标画的色块图放进真实 Finder 窗口，图标、标签和箭头都落在预留区域内；👀 完整流程 |
+| 37 | A10/A11 | 分别从 `.agents/skills/...` 和 `.claude/skills/...` 两个路径运行 `render-dmg-background.sh`、`check-icon.sh` 与 `concepts.sh` | 两个路径都能跑；`.claude/skills/app-icon`、`.claude/skills/dmg` 是指向 `.agents/skills` 的符号链接 | ✅ |
 | 38 | G9 | 第 18 项之后：`scripts/verify-dmg.sh dist/SwiftUITemplate-0.0.0.dmg`；再把 debug 包复制一份，用 `xattr -wx com.apple.FinderInfo 0000000000000000001000000000000000000000000000000000000000000000` 给它加上 Finder 标记，打成 DMG 后同样校验 | 前者输出卷内 app 的 `smoke ok` 和 `dmg ok`；后者报 `resource fork, Finder information, or similar detritus not allowed`，退出码 1（就是之前 `hide_extensions` 那个问题） | ✅ |
 | 39 | G9 | 第 18 项之后，换一把不匹配的私钥：`SPARKLE_ED_PRIVATE_KEY=<另一把私钥> scripts/appcast.sh` | `generate_appcast` 本身照常签名、不报错；随后的校验报 `is not signed with the key matching SPARKLE_PUBLIC_KEY`，退出码 1。错误的下载地址、长度和空公钥也都会报错 | ✅ |
 | 40 | G10 | `SPARKLE_PUBLIC_KEY` 已设置时执行 `make release-dry-run`；再在 `Bundle/app.env` 里临时填一个 `TEAM_ID` 重跑 | 最后一行是 `dry run: release build and DMG ok`，`dist/` 里只有 `.app` 和 `.dmg`；填了 `TEAM_ID` 时仍是 `identity: -`，并跳过公证 | ✅ |
 | 41 | E6 | 把 `README.md`、`docs/DEVELOPMENT.md`、`docs/RELEASING.md` 里的 6 张 mermaid 图用 mermaid 11.4.1 渲染（浅色和深色主题） | 都能渲染，没有报错，也没有 `Unsupported markdown` 节点；文字不重叠 | ✅（本地 Chrome 截图） |
+| 42 | A10 | 对一个图层图片缺失的 `.icon`、一个有 5 个组的 `.icon` 分别运行 `check-icon.sh`；再传一个不存在的应用 | 依次报 `actool warned about …`、`actool rejected …`（`Too many visible groups`）、`no app at …`，退出码都是 1 | ✅ |
+| 43 | A10 | `image-layer.swift` 依次处理：浅色底的不透明 JPG；透明 PNG，指定 `300 700 300`；32 px 的小图；错误参数 | JPG：提示没有透明、已用 Vision 抠图，输出 1024 × 1024 带透明的图层（主体内部的白色部分被挖空，提示里已说明）；PNG：主体缩到 300 pt，中心在 (700, 300)；小图：提示放大了 24.6 倍；错误参数打印用法并退出 1。用前两张拼成的双组 `.icon` 通过 `check-icon.sh` | ✅ |
+| 44 | A10 | 在 `.build/app-icon/concepts/` 放 4 个黑色 SVG，运行 `concepts.sh`；再对空目录运行 | 生成 `concepts.png`，每个构思一大一小（128 pt、32 pt）并排；线条细的构思在 32 pt 下明显发糊；空目录报 `no .svg in …` | ✅ |
+| 45 | B5 | 临时移走 `Bundle/AppIcon.icon/Assets/rind.svg`，`make app`，再放回 | 构建失败，日志中有 `Icon export exited with status 255` 和 `actool warned`；放回后 `make app` 通过 | ✅ |
 
 ### 1.1 本地 Sparkle 端到端（第 22 项的复现步骤）
 
@@ -105,7 +109,7 @@ plutil -p "$A/Contents/Info.plist" | grep ShortVersion   # => 0.1.1
 | 11 | H1 | 合并一个 `fix:` PR，再合并它的发版 PR，得到 v0.1.1；在已安装的 0.1.0 中点「Check for Updates…」 | 发现 0.1.1，安装并重启后版本号正确 |
 | 12 | H2 | 设置 `vars.HOMEBREW_TAP` 和 `HOMEBREW_TAP_TOKEN` 后再发一个版本 | tap 仓库中出现 `Casks/swiftuitemplate.rb`；`brew audit --cask <tap>/swiftuitemplate` 通过 |
 | 13 | G3 | 在一个提交了 `Bundle/DMG/` 的项目里发版 | 发版 PR 上的 `Release dry run` 和 publish job 都执行了 `actions/setup-python`（Python 3.13），日志中有 `install dmgbuild`；Release 里的 DMG 打开后带背景。没有 `Bundle/DMG/` 的项目里这一步显示 skipped |
-| 14 | A5 | 在 `macos-14` 和 `macos-26` runner 上渲染图标（可选，一次性 workflow：下载 `.app`，运行 `.agents/skills/brand/scripts/render-icon.swift`，上传 PNG） | 14 上是扁平图，26 上是 Liquid Glass |
+| 14 | A5 | 在 `macos-14` 和 `macos-26` runner 上渲染图标（可选，一次性 workflow：下载 `.app`，运行 `.agents/skills/app-icon/scripts/render-icon.swift`，上传 PNG）。macOS 26 的效果本地已能用 ictool 看到，这一项只是在真机上确认 | 14 上是扁平图；26 上是 Liquid Glass，与第 30 项的 ictool 渲染一致 |
 | 15 | G5 | 让一次发版失败：发版前临时删掉 `SPARKLE_ED_PRIVATE_KEY` secret，合并发版 PR | publish job 失败，Release 停在草稿；`releases/latest/download/appcast.xml` 仍是上一版。恢复 secret 后点 Re-run failed jobs，同一个 tag 构建成功并公开 |
 | 16 | E6 | 在 GitHub 上打开 `README.md`、`docs/DEVELOPMENT.md`、`docs/RELEASING.md` | mermaid 图都渲染成图，和第 41 项的截图一致（浅色、深色模式） |
 

@@ -60,8 +60,12 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V22 | Xcode 26.2 的 actool 直接接受 `.icon`，可与 `.xcassets` 同时编译。最低系统设为 14 时产出：Assets.car（含 Liquid Glass 分层资源和 16–1024 的扁平图）、只含 16、32、128、256 px 四档的 AppIcon.icns（加 `--standalone-icon-behavior all` 才有全部 10 档，876 KB 对 62 KB），以及 `CFBundleIconName` / `CFBundleIconFile`。一个真实的 Icon Composer 文件（react-native 仓库中的）和我们手写的文件在 macOS 15 上都显示正常；Icon Composer 1.2 能打开我们手写的文件 | A5 改用 `Bundle/AppIcon.icon` |
 | V23 | dmgbuild 自己写 `.DS_Store`，不驱动 Finder。`window_rect` 的高度包含 28 pt 标题栏；`hide_extensions` 会在 .app 上写 FinderInfo，导致 `codesign --verify --strict` 失败；背景图配 `@2x.png` 时会自动合成 Retina TIFF；1.6.7 要求 Python ≥ 3.10（Xcode 自带的 python3 是 3.9.6） | 模板不用 `hide_extensions`；窗口高 428 pt；按哈希固定版本，装在 `.build/` 的 venv 里 |
 | V24 | 窗口所有者名称是本地化的（中文系统下 Finder 叫「访达」）；带背景图的 DMG 窗口中，Finder 的图标标签是黑字（DropDMG 论坛报告深色模式下也是如此，我只验证了浅色模式） | 预览脚本按 pid 找窗口；skill 要求标签区域保持浅色 |
-| V25 | actool 把编译交给常驻的 `ibtoold`，相对路径按 `ibtoold` 自己的工作目录解析。在第二个 checkout（如 worktree）里构建时，会写到甚至读到第一个 checkout 的文件 | `build-app.sh` 和 `preview-icon.sh` 都传绝对路径 |
+| V25 | actool 把编译交给常驻的 `ibtoold`，相对路径按 `ibtoold` 自己的工作目录解析。在第二个 checkout（如 worktree）里构建时，会写到甚至读到第一个 checkout 的文件 | `build-app.sh` 和 app-icon skill 的 `check-icon.sh` 都传绝对路径 |
 | V26 | mermaid 节点文字以「1. 」开头时会被当作 Markdown 列表，渲染成「Unsupported markdown: list」 | 图里的步骤编号用 ①②③ |
+| V27 | Icon Composer 1.2 自带命令行渲染器 `ictool`（`Icon Composer.app/Contents/Executables/ictool`），在 macOS 15 上也能渲染 macOS 26 的 Liquid Glass 效果，外观有 Default、Dark、TintedLight、TintedDark、ClearLight、ClearDark 六种。它不做校验：组超过 4 个、图层图片缺失时照样输出图片 | app-icon skill 用它出检查图，校验交给 actool |
+| V28 | actool 对超过 4 个组的 `.icon` 报错退出；图层引用的图片不存在时只给警告（`Icon export exited with status 255`），退出码为 0，而且不产出图标 | `build-app.sh` 和 `check-icon.sh` 都把 actool 的警告当错误 |
+| V29 | `.icon` 的图层可以是带透明的 PNG，actool 和 ictool 都能处理，玻璃效果照常。系统自带的 Vision（`VNGenerateForegroundInstanceMaskRequest`，macOS 14+）能从不透明的图里抠出主体，但会把主体内部与背景同色的部分一起挖掉（测试图里火箭的白色舷窗成了洞） | `image-layer.swift`：不透明的图才抠，并提醒检查 |
+| V30 | 玻璃效果下，用描边画的开放路径会沿弦多出一条淡线；同样的形状改成填充轮廓就没有。深色前景放在浅色底上，在 Dark 和 Tinted 外观里几乎看不见；浅色或饱和色前景在六种外观里都清楚 | 写进 app-icon skill 的作图规则 |
 
 ---
 
@@ -84,7 +88,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | A7 | `.app` 打包脚本 | `scripts/build-app.sh`（debug / release / mas） | ✅ |
 | A8 | 本地运行与调试 | `make run`、`scripts/run.sh` | ✅ |
 | A9 | 忽略规则与编辑器配置 | `.gitignore`、`.editorconfig` | ✅ |
-| A10 | 品牌 skill | `.agents/skills/brand`（`.claude/skills` 里是指向它的符号链接）：品牌简报、Icon Composer 图标图层和图标预览脚本 | ✅ |
+| A10 | App 图标 skill | `.agents/skills/app-icon`（`.claude/skills` 里是指向它的符号链接）。三条路：用户的 logo 或图片、agent 画 SVG 图层、写生图提示词让用户去生成。`check-icon.sh` 出两张检查图：一张是 ictool 渲染的 macOS 26 六种外观、32 pt 和本机 Finder 图标，另一张把图标放进已装应用中间的 Dock 行；`concepts.sh` 把黑白构思并排比较；`image-layer.swift` 把图片变成图层，不透明的图先用 Vision 抠图。草稿放在 `.build/app-icon`，用户认可后才替换 `Bundle/AppIcon.icon`；两轮都选不出就停下 | ✅ 脚本 / 👀 完整流程 |
 | A11 | DMG skill | `.agents/skills/dmg`，只能由用户启动（Claude Code 用 `disable-model-invocation`，Codex 用 `agents/openai.yaml`）：先铺白底默认窗口，再按用户选择做轻品牌或标准品牌化；代码画不了的插画写生图提示词，生成的图作为 `art.png` 垫在箭头下面。背景一律不放文字 | ✅ 脚本和提示词坐标 / 👀 完整流程 |
 | B1 | 编译严格度 | `Package.swift` 中的 `swiftSettings` | ✅ |
 | B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint` | ✅ |
@@ -142,6 +146,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **C2**：`GreeterError` 不实现 `LocalizedError`（V9）。
 - **A5**：图标从 `.appiconset` 改为 Icon Composer 的 `.icon`（V22）。
 - **文档体系**：README 原来既是模板说明又是开发文档，init 只删掉模板段落，剩下的开发文档对应用的使用者没用。改为按读者分开：模板的 README 只介绍模板，init 把它整个换成给应用使用者看的短页（介绍、安装、首次打开、更新）；开发文档移到 `docs/DEVELOPMENT.md`；AGENTS.md 加一节「Before init」，让 agent 在做应用相关的工作前先问名字和 bundle ID 并运行 init，init 时删掉这一节。发版流程、恢复步骤、构建链路和新项目步骤改为 mermaid 图加少量文字。
+- **品牌 skill 改为 app-icon skill**：只做图标，去掉品牌简报。agent 画出来的图标渲染质量没问题，弱点在构思，所以流程的重点放在先比较黑白构思、每轮都出六种外观和 Dock 对比图、草稿不经用户认可不替换、两轮选不出就停。原来让用户去 Icon Composer 看深色和着色效果，现在由 ictool 直接渲染。
 - **DMG 美化**：不作为默认，做成单独的 DMG skill（A11），只能由用户启动。模板默认仍是普通 DMG；skill 生成 `Bundle/DMG/` 后，发版自动使用设计版。
 - **新增**：
   - `PrivacyInfo.xcprivacy` 随所有构建打包。
@@ -160,11 +165,11 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | 漏写 `bundle: .module` 不会报错 | 已写进 AGENTS.md 的规则 |
 | ad-hoc 发布的体验 | 首次打开要在系统设置里点「仍要打开」；每次更新签名都会变，权限和 keychain 访问可能需要重新授权；Homebrew 安装会被 Gatekeeper 拦截 |
 | ad-hoc 切换到 Developer ID 的首次更新 | 理论上靠 EdDSA 能通过，**尚未实测** |
-| `.icon` 在 macOS 14 和 26 上的显示 | macOS 15 已在本机验证；macOS 26 的 Liquid Glass 效果只在 Icon Composer 的预览里看过；macOS 14 未验证 |
+| `.icon` 在 macOS 14 和 26 上的显示 | macOS 15 已在本机验证；macOS 26 的效果用 ictool（Icon Composer 自己的渲染器）看过，没在 macOS 26 真机上看过；macOS 14 未验证 |
 | 设计版 DMG | 深色模式下的标签颜色只有论坛报告，没有实测；发版 job 和发版演练里的 setup-python 步骤还没在真实 runner 上跑过 |
 | 草稿发版与发版演练 | 都只在本地验证过脚本部分。release-please 的 `draft` 加 `force-tag-creation`、草稿下 action 的 `release_created` 输出、`gh` 往草稿上传再公开、演练 job 在 release-please PR 上触发、PR 标为 Ready 之后 release-please 再更新它时会不会改回草稿，都要等第一次真实发版才能确认。演练用 ad-hoc 签名，Developer ID 签名、hardened runtime、公证和 appcast 签名只在发版 job 里检查 |
 | DMG 卷图标 | 直接用 app 的 AppIcon.icns，只有 16–256 px。在 64、128 pt 下的渲染与全尺寸版逐字节相同（桌面图标最大就是 128 pt），画得比 128 pt 大时（Quick Look、放大的图标视图）会糊，512 pt 下实测可见。补全尺寸要加 `--standalone-icon-behavior all`，代价是每份 icns 多 0.8 MB，设计版 DMG 里有两份（实测 debug DMG 从 3.0 MB 涨到 4.7 MB），所以没加 |
-| 品牌 skill 的图标环节 | agent 只能写 SVG 和 `icon.json`，玻璃、高光以及深色、着色外观需要人在 Icon Composer 里调 |
+| app-icon skill | 高光、模糊、光照、混合模式和按外观单独设置的取值格式没有核对，仍交给用户在 Icon Composer 里调。构思好不好取决于模型和用户的选择，skill 只能用对比和轮数上限把关。完整流程还没有真实跑过一遍 |
 | mermaid 图 | 只用 mermaid 11.4.1 在本地 Chrome 里渲染过（浅色、深色主题）；GitHub 上的渲染要 push 后确认 |
 | SwiftUI Preview | 视图都在 library target 中，但 Preview 只能在 Xcode GUI 里确认，我没有实测 |
 | `make run` 输出到真实终端 | 机制已用文件路径验证；我的执行环境没有 tty，没能直接测试 |
