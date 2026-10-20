@@ -57,7 +57,13 @@ EOF
 
 EOF
     fi
-    echo "  zap trash: \"~/Library/Containers/$BUNDLE_ID\""
+    # A sandboxed app leaves both directories behind.
+    cat <<EOF
+  zap trash: [
+    "~/Library/Application Scripts/$BUNDLE_ID",
+    "~/Library/Containers/$BUNDLE_ID",
+  ]
+EOF
     if [[ $unsigned == caveats ]]; then
         cat <<EOF
 
