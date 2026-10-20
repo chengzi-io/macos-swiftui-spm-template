@@ -206,31 +206,8 @@ minimum macOS, zap path) after every release. Preview it with
 
 ## Mac App Store (optional)
 
-A separate path that leaves the Developer ID release untouched. `APP_STORE=1` removes
-Sparkle at compile time (`Package.swift`, `#if !APP_STORE`); the App Store updates the
-app.
-
-1. Certificates: **Apple Distribution** and **Mac Installer Distribution** in your
-   login keychain. `TEAM_ID` set.
-2. App ID for the bundle identifier and a **Mac App Store** provisioning profile;
-   download it.
-3. Create the app record in App Store Connect.
-4. Build and upload:
-
-   ```bash
-   MAS_PROVISIONING_PROFILE=~/Downloads/MyApp.provisionprofile make release-mas
-   MAS_PROVISIONING_PROFILE=… NOTARY_KEY_PATH=AuthKey_X.p8 NOTARY_KEY_ID=X \
-     NOTARY_ISSUER_ID=<uuid> make upload-mas
-   ```
-
-   The build embeds the profile, adds the application and team identifier
-   entitlements, signs with Apple Distribution and wraps the app in
-   `dist/mas/<App>-X.Y.Z.pkg` signed with the installer certificate.
-5. Keep `Bundle/PrivacyInfo.xcprivacy` accurate (see [RECIPES.md](RECIPES.md)), then
-   submit for review in App Store Connect.
-
-This path has been checked up to signing with stand-in identities only; the first
-real submission is its acceptance test.
+The `mac-app-store` skill adds an App Store build, beside this release or instead of
+it. Only you start it: `/mac-app-store` in Claude Code, `$mac-app-store` in Codex.
 
 ## Beta channel (optional)
 

@@ -67,6 +67,8 @@ Skills live in `.agents/skills` (Codex and other agents), linked from `.claude/s
 - `dmg`: designs the DMG window, from plain to a branded illustration, and wires
   dmgbuild into the build when you start it. Only you start it: `/dmg` in Claude Code,
   `$dmg` in Codex.
+- `mac-app-store`: adds a Mac App Store build, beside the Sparkle release or instead of
+  it, and wires it into the build and the code. Only you start it.
 
 ## Commits and releases
 

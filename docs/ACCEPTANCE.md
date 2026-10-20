@@ -36,8 +36,8 @@
 | 20 | G1 | `codesign -dv dist/SwiftUITemplate.app 2>&1 \| grep flags` | ad-hoc 构建显示 `flags=0x2(adhoc)`，**不带** runtime（原因见 TEMPLATE-PLAN V12） | ✅ |
 | 21 | H1 | `cat dist/appcast.xml` | 包含 `sparkle:edSignature`，下载地址为 `…/releases/download/v0.0.0/SwiftUITemplate-0.0.0.dmg` | ✅ |
 | 22 | H1 | 本地 Sparkle 端到端（可选，见下面的 §1.1） | 0.1.0 自动更新到 0.1.1，更新后的应用正常启动 | ✅ |
-| 23 | H3 | `make release-mas` | 报错 `App Store builds need TEAM_ID`（不会落到 ad-hoc） | ✅ |
-| 24 | H3 | MAS 构建链路（用替代身份模拟） | `.app` 里没有 Sparkle、没有 `SU*` 键；带 `application-identifier` 和嵌入的 profile；`Package.resolved` 不被改动 | ✅ |
+| 23 | H3 | 模板默认：`grep -rn 'APP_STORE\|release-mas' Package.swift Sources scripts Makefile`，`make help` | grep 没有结果；`make help` 里没有 `release-mas` | ✅ |
+| 24 | H3 | 在两个临时 worktree 里按 `mac-app-store` skill 分别走「双渠道」（第 2、3a 步）和「只上 App Store」（第 2、3b 步），各跑 `make ci`；再用替代身份（假 `TEAM_ID`、假 profile、`find_identity` 返回 `-`）执行 `scripts/build-app.sh mas`，不设 profile 时也跑一次 | 双渠道改完后 `Package.swift`、`Sources/`、`Makefile` 与移出前的版本逐字相同；两种方案 `make ci` 都通过；mas 产物没有 Sparkle、没有 `SU*` 键，带 `application-identifier`、`team-identifier` 和嵌入的 profile，`lipo` 为 `x86_64 arm64`，`productbuild` 能打成 pkg；双渠道下 `Package.resolved` 不变，只上 App Store 时它被删除；没有 profile 时报 `set MAS_PROVISIONING_PROFILE`；第 3b 步的 grep 列出剩下要改的文档和配置 | ✅ |
 | 25 | H2 | `make release` 之后执行 `scripts/update-cask.sh print \| ruby -c` | `Syntax OK` | ✅ |
 | 26 | E5 | 在一个临时 clone 里：`scripts/init.sh --name MyApp --bundle-id com.example.myapp --display-name "My App" --copyright "Jane Doe" --repo acme/my-app --codeowner @jane`，然后 `make ci` | 改动涉及 app.env、LICENSE、README、AGENTS.md、CODEOWNERS、Issue 模板和 Makefile：README 整个换成「My App」的应用页面（介绍占位、从 `acme/my-app` 的 latest release 安装、首次打开、更新、开发文档链接），AGENTS.md 的「Before init」一节被删除；init.sh 与两份模板文档被删除；仓库里不再有指向它们的引用，剩下的 Markdown 相对链接都有效；`make ci` 通过，产物是 `MyApp.app`，bundle ID 为 `com.example.myapp` | ✅ |
 | 27 | E5 | 工作区不干净时运行 init | 报错 `commit or stash your changes first` | ✅ |
@@ -121,4 +121,4 @@ plutil -p "$A/Contents/Info.plist" | grep ShortVersion   # => 0.1.1
 | 2 | G2 | 本地：`NOTARY_PROFILE=notary make release` | 两次公证都是 `Accepted`，并完成 staple |
 | 3 | Q2 | 已安装的 ad-hoc 版本收到第一个 Developer ID 版本的更新 | 更新成功（**尚未验证**） |
 | 4 | G6 | 删掉某个 notary secret 后发版 | publish job 在 `ci-keychain.sh setup` 或公证步骤失败，不会退回 ad-hoc |
-| 5 | H3 | `MAS_PROVISIONING_PROFILE=… make release-mas`，然后 `make upload-mas` | 生成 `dist/mas/SwiftUITemplate-X.Y.Z.pkg`；构建出现在 App Store Connect 中 |
+| 5 | H3 | 用 `mac-app-store` skill 加入后：`MAS_PROVISIONING_PROFILE=… make release-mas`，然后 `make upload-mas` | 生成 `dist/mas/SwiftUITemplate-X.Y.Z.pkg`；构建出现在 App Store Connect 中 |

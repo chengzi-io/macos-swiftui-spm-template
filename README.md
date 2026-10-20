@@ -32,13 +32,14 @@ flowchart TB
 - English and Simplified Chinese string catalog, privacy manifest, accent color, and an
   Icon Composer app icon: Liquid Glass on macOS 26, flattened images on macOS 14–15.
 - Agent skills: `app-icon` makes the Liquid Glass icon from your logo, drawn layers or
-  an image-model prompt, and checks it in every appearance beside apps in your Dock;
-  `dmg`, started by you only, designs an optional DMG window.
+  an image-model prompt, and checks it in every appearance beside apps in your Dock.
+  Skills you start yourself add what not every app needs: `dmg` designs the DMG window,
+  `mac-app-store` adds an App Store build.
 - `make ci`: `swift format` lint, unit tests, debug `.app`, launch smoke test.
 - GitHub: CI on macOS runners, PR title check, release-please versioning and
   CHANGELOG, and a publish job that checks the DMG, dSYM, appcast and checksums and
   uploads them to a draft release before publishing it. Dependabot. Optional Homebrew
-  cask and Mac App Store package.
+  cask.
 
 ## Start a new app
 

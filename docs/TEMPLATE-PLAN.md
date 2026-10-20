@@ -18,7 +18,7 @@
 | # | 议题 | 决定 |
 |---|------|------|
 | Q1 | 最低 macOS 版本 | 14 |
-| Q2 | 分发渠道 | 以 Developer ID 为主（DMG + Sparkle）。暂时没有 Developer ID 时，`TEAM_ID` 留空即可：用 ad-hoc 签名、跳过公证，整条发布链路照常运行；有了证书后填上 `TEAM_ID` 和 secrets 即切换。MAS 走一条独立路径 |
+| Q2 | 分发渠道 | 以 Developer ID 为主（DMG + Sparkle）。暂时没有 Developer ID 时，`TEAM_ID` 留空即可：用 ad-hoc 签名、跳过公证，整条发布链路照常运行；有了证书后填上 `TEAM_ID` 和 secrets 即切换。MAS 不在模板里，由 `mac-app-store` skill 按需加入 |
 | Q3 | CPU 架构 | 通用二进制（arm64 + x86_64） |
 | Q4 | App Sandbox | 默认开启 |
 | Q5 | 打包实现 | 自写脚本（`scripts/`） |
@@ -39,7 +39,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V1 | `swift build` 只原样拷贝 `.xcassets`、`.xcstrings`，不编译 | 产出 `.app` 一律走 xcodebuild |
 | V2 | `swift build` 生成的 `Bundle.module` 只查 `.app` 根目录和构建机绝对路径 | 同上 |
 | V3 | `xcodebuild -scheme App` 会编译资源，生成的 accessor 优先查 `Bundle.main.resourceURL` | `scripts/build-app.sh` |
-| V4 | `ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO` 产出通用二进制和 dSYM | release 和 mas 配置 |
+| V4 | `ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO` 产出通用二进制和 dSYM | release 配置（mas 配置由 skill 加入） |
 | V5 | `actool --app-icon --accent-color` 产出 icns、Assets.car，以及含 `NSAccentColorName` 的 partial plist | 已采用 |
 | V6 | `swift test` 可以测 executable target；`xcodebuild test` 的本地化结果跟随机器语言 | 单测不断言文案 |
 | V7 | manifest 中的 `.treatAllWarnings(as: .error)` 生效 | B1 |
@@ -52,7 +52,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V14 | 只在 Info.plist 写 `CFBundleLocalizations`，包内的 zh-Hans 就能生效（截图确认） | A4 |
 | V15 | 从终端直接 exec 的 GUI 进程不会成为前台应用（开着台前调度时只出现在侧栏）；用 `open -n -W --env --stdout` 启动会激活应用；`OS_ACTIVITY_DT_MODE=YES` 让 Logger 输出到 stdout/stderr | `make run` 改用 `open` 启动 |
 | V16 | xcodebuild 构建包时，Debug 配置定义 `DEBUG`，Release 不定义 | Debug 构建不启动 updater |
-| V17 | `Context.environment["APP_STORE"]` 在 xcodebuild 下生效，能去掉 Sparkle；但依赖变空时 SwiftPM 会删除仓库里的 `Package.resolved` | MAS 构建在源码副本上进行 |
+| V17 | `Context.environment["APP_STORE"]` 在 xcodebuild 下生效，能去掉 Sparkle；但依赖变空时 SwiftPM 会删除仓库里的 `Package.resolved` | `mac-app-store` skill 的双渠道方案在源码副本上构建 MAS 版本 |
 | V18 | `actions/create-github-app-token@v3` 的输入是 `client-id`（`app-id` 已弃用）；actionlint 1.7.12 内置的元数据过时，会误报 | 保留 `client-id`；其余 workflow 用 actionlint 校验通过 |
 | V19 | `.swift-format` 只写部分键（缩进、行宽）即可，其余取默认值 | B2 |
 | V20 | `plutil` 会把键名中的点当作路径分隔符，`com.apple.security.*` 这类键写不进去 | 改用 PlistBuddy |
@@ -86,7 +86,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | A4 | 资源与本地化（en、zh-Hans） | `Sources/AppCore/Resources/Localizable.xcstrings` | ✅ |
 | A5 | App 图标与强调色 | `Bundle/AppIcon.icon`（Icon Composer 格式：两层 SVG 加渐变填充，自绘橙子切面）、`Bundle/Assets.xcassets`（强调色） | ✅ macOS 15 / 🟡 macOS 14、26 |
 | A6 | Info.plist / Entitlements / 隐私清单 | `Bundle/Info.plist`、`App.entitlements`、`PrivacyInfo.xcprivacy` | ✅ |
-| A7 | `.app` 打包脚本 | `scripts/build-app.sh`（debug / release / mas） | ✅ |
+| A7 | `.app` 打包脚本 | `scripts/build-app.sh`（debug / release） | ✅ |
 | A8 | 本地运行与调试 | `make run`、`scripts/run.sh` | ✅ |
 | A9 | 忽略规则与编辑器配置 | `.gitignore`、`.editorconfig` | ✅ |
 | A10 | App 图标 skill | `.agents/skills/app-icon`（`.claude/skills` 里是指向它的符号链接）。三条路：用户的 logo 或图片、agent 画 SVG 图层、写生图提示词让用户去生成。`check-icon.sh` 出两张检查图：一张是 ictool 渲染的 macOS 26 六种外观、32 pt 和本机 Finder 图标，另一张把图标放进已装应用中间的 Dock 行；`concepts.sh` 把黑白构思并排比较；`image-layer.swift` 把图片变成图层，不透明的图先用 Vision 抠图。草稿放在 `.build/app-icon`，用户认可后才替换 `Bundle/AppIcon.icon`；两轮都选不出就停下 | ✅ 脚本 / 👀 完整流程 |
@@ -126,7 +126,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SPARKLE_PUBLIC_KEY` 对得上 | ✅ 本地（含反例） |
 | H1 | Sparkle 自动更新 | `Sources/App/Updates.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
 | H2 | Homebrew Cask | `scripts/update-cask.sh`，通过 `vars.HOMEBREW_TAP` 启用 | 🟡 |
-| H3 | Mac App Store | `make release-mas` / `make upload-mas` | 🟡（构建链路已用替代身份验证） |
+| H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（`APP_STORE=1` 只在 MAS 构建里去掉 Sparkle）或只上 App Store（删掉 Sparkle 和 DMG 发布）；带 `release-mas.sh`、`build-app.sh` 的 mas 配置和 RELEASING 的一节 | 🟡（两种方案都在临时 worktree 里按 skill 走过一遍，签名用的是替代身份） |
 | H4 | 测试版通道 | `docs/RELEASING.md` | 📄 |
 
 ---
@@ -149,6 +149,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **A5**：图标从 `.appiconset` 改为 Icon Composer 的 `.icon`（V22）。
 - **文档体系**：README 原来既是模板说明又是开发文档，init 只删掉模板段落，剩下的开发文档对应用的使用者没用。改为按读者分开：模板的 README 只介绍模板，init 把它整个换成给应用使用者看的短页（介绍、安装、首次打开、更新）；开发文档移到 `docs/DEVELOPMENT.md`；AGENTS.md 加一节「Before init」，让 agent 在做应用相关的工作前先问名字和 bundle ID 并运行 init，init 时删掉这一节。发版流程、恢复步骤、构建链路和新项目步骤改为 mermaid 图加少量文字。
 - **品牌 skill 改为 app-icon skill**：只做图标，去掉品牌简报。agent 画出来的图标渲染质量没问题，弱点在构思，所以流程的重点放在先比较黑白构思、每轮都出六种外观和 Dock 对比图、草稿不经用户认可不替换、两轮选不出就停。原来让用户去 Icon Composer 看深色和着色效果，现在由 ictool 直接渲染。
+- **H3 Mac App Store：移进 skill**。原来模板默认带 `APP_STORE` 开关：`Package.swift` 按环境变量切换依赖，`Sources/` 里 7 处条件编译，`SettingsView` 的公开参数为它做成可选，`build-app.sh` 为它复制源码再构建。不上 App Store 的 app 也背着这些，而这条路只用替代身份验证过。现在模板只有 Sparkle 一条渠道；`mac-app-store` skill 在用户启动时按选择加入双渠道，或者只上 App Store：后者直接删掉 Sparkle 和 DMG 发布，用不着条件编译。
 - **DMG 美化**：不作为默认，做成单独的 DMG skill（A11），只能由用户启动。模板不为设计版做任何准备：原来模板的 `make-dmg.sh` 按 `Bundle/DMG/settings.py` 是否存在分两条路，发版 job 也按它决定装不装 Python；现在 dmgbuild 版的 `make-dmg.sh`、依赖清单和 setup-python 步骤都放在 skill 里，用户启动 skill 时才加进项目，和 `Bundle/DMG/` 一起提交，revert 那次提交就回到普通 DMG。
 - **skill 按独立项目写**：app-icon 和 dmg 两个 skill 的脚本都不再 source 模板的 `scripts/common.sh`，按 `$(dirname "$0")` 找 skill 自己的文件、按 `git rev-parse --show-toplevel` 找项目，在项目的任意子目录里都能运行；SKILL.md 开头写明各自对项目的要求（`Bundle/AppIcon.icon`、`Bundle/app.env`、`make app` 的产物路径、`scripts/make-dmg.sh` 的参数、发版 workflow），命令里的 skill 目录写成 `<skill>`。两个目录都可以原样搬到单独的仓库。
 - **新增**：

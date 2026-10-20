@@ -89,14 +89,6 @@ appcast: ## Generate dist/appcast.xml for the DMG
 release: ## Full release into dist/: app, notarization, DMG, dSYM, appcast, checksums
 	scripts/release.sh
 
-.PHONY: release-mas
-release-mas: ## Mac App Store .pkg in dist/mas/ (needs TEAM_ID, MAS_PROVISIONING_PROFILE)
-	scripts/release-mas.sh
-
-.PHONY: upload-mas
-upload-mas: ## Build the App Store .pkg and upload it to App Store Connect
-	scripts/release-mas.sh upload
-
 .PHONY: sparkle-keys
 sparkle-keys: ## Create the Sparkle EdDSA key and write its public half to Bundle/app.env
 	scripts/sparkle-keys.sh

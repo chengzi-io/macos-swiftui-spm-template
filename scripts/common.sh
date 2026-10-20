@@ -25,11 +25,11 @@ log() {
     echo "==> $*" >&2
 }
 
-# Prints the SHA-1 of the first valid identity for TEAM_ID whose name matches the
-# extended regex. Policy: codesigning (default) or basic (installer certificates).
+# Prints the SHA-1 of the first valid codesigning identity for TEAM_ID whose name
+# matches the extended regex.
 find_identity() {
-    local pattern=$1 policy=${2:-codesigning}
-    security find-identity -v -p "$policy" |
+    local pattern=$1
+    security find-identity -v -p codesigning |
         awk -v pattern="$pattern" -v team="($TEAM_ID)" '$0 ~ pattern && index($0, team) { print $2; exit }'
 }
 
