@@ -5,7 +5,8 @@
     make setup    # checks Xcode and tools, installs git hooks
     make ci       # what CI runs; must pass before a PR
 
-The pre-commit hook formats staged Swift files with `swift format`.
+The pre-commit hook formats staged Swift files with `swift format`. Commands,
+layout and how the app is built: [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md).
 
 ## Commit and PR titles
 
