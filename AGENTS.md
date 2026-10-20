@@ -100,10 +100,10 @@ Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks
 
 The Greeter demo (`Greeting/`, `AppModel`, `ContentView`, `AppModelTests`) is a
 placeholder; replace it with the first real feature. Recipes for launch at login,
-networking, menu bar apps and crash reporting: [docs/RECIPES.md](docs/RECIPES.md). App
-icon design: [.agents/skills/brand/SKILL.md](.agents/skills/brand/SKILL.md). The DMG
-window has its own skill, `dmg` ([.agents/skills/dmg](.agents/skills/dmg/SKILL.md)),
-which only the user starts.
+networking, menu bar apps and crash reporting: [docs/RECIPES.md](docs/RECIPES.md). The
+app icon has its skill, `app-icon`
+([.agents/skills/app-icon](.agents/skills/app-icon/SKILL.md)); the DMG window has `dmg`
+([.agents/skills/dmg](.agents/skills/dmg/SKILL.md)), which only the user starts.
 
 ## Commits and releases
 

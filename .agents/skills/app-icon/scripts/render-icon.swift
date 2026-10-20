@@ -8,7 +8,8 @@ guard args.count == 4, let points = Int(args[3]) else {
     FileHandle.standardError.write(Data("usage: render-icon.swift <path> <out.png> <points>\n".utf8))
     exit(1)
 }
-let path = URL(fileURLWithPath: args[1]).standardizedFileURL.path
+// Resolved, or a symlinked app (Safari on macOS 15) gets an alias badge.
+let path = URL(fileURLWithPath: args[1]).resolvingSymlinksInPath().path
 var rect = NSRect(x: 0, y: 0, width: points, height: points)
 let icon = NSWorkspace.shared.icon(forFile: path)
 guard let image = icon.cgImage(forProposedRect: &rect, context: nil, hints: nil),

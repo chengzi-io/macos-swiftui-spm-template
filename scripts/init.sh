@@ -120,8 +120,8 @@ Done. Review with \`git diff\`, then commit, for example:
 
 Next:
   1. make setup && make run
-  2. Replace the Greeter demo and the icon (Icon Composer, or the brand skill in
-     .agents/skills/brand), and say what the app does at the top of README.md.
+  2. Replace the Greeter demo and the icon (Icon Composer, or the app-icon skill in
+     .agents/skills/app-icon), and say what the app does at the top of README.md.
   3. One-time release setup: docs/RELEASING.md (make github-setup, GitHub App,
      make sparkle-keys, optional Developer ID).
 EOF

@@ -31,8 +31,9 @@ flowchart TB
 - Sparkle 2 updates from GitHub Releases, EdDSA-signed.
 - English and Simplified Chinese string catalog, privacy manifest, accent color, and an
   Icon Composer app icon: Liquid Glass on macOS 26, flattened images on macOS 14–15.
-- Agent skills: `brand` writes a brand brief and icon layers for Icon Composer; `dmg`,
-  started by you only, designs an optional DMG window.
+- Agent skills: `app-icon` makes the Liquid Glass icon from your logo, drawn layers or
+  an image-model prompt, and checks it in every appearance beside apps in your Dock;
+  `dmg`, started by you only, designs an optional DMG window.
 - `make ci`: `swift format` lint, unit tests, debug `.app`, launch smoke test.
 - GitHub: CI on macOS runners, PR title check, release-please versioning and
   CHANGELOG, a release dry run before tagging, and a publish job that checks and
@@ -46,7 +47,7 @@ flowchart TD
     t["① Use this template, clone"] --> i["② scripts/init.sh<br/>app name, bundle id"]
     i --> s["③ make setup, make run"]
     s --> f["④ replace the Greeter demo<br/>with your first feature"]
-    s --> b["⑤ replace the icon:<br/>Icon Composer or the brand skill"]
+    s --> b["⑤ replace the icon:<br/>Icon Composer or the app-icon skill"]
     f --> r["⑥ one-time release setup"]
     b --> r
     r --> first["⑦ first release:<br/>Ready for review, merge"]

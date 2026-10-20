@@ -77,8 +77,9 @@ Where code goes and the rules it follows: [AGENTS.md](../AGENTS.md).
 Skills live in `.agents/skills` (Codex and other agents), linked from `.claude/skills`
 (Claude Code).
 
-- `brand`: a brand brief and icon layers for Icon Composer. Agents start it when you
-  ask for an icon.
+- `app-icon`: the app icon, from your logo or image, as drawn layers, or through an
+  image-model prompt; it renders every appearance and sets the icon beside installed
+  apps. Agents start it when you ask for an icon.
 - `dmg`: designs the DMG window, from plain to a branded illustration. Only you start
   it: `/dmg` in Claude Code, `$dmg` in Codex.
 

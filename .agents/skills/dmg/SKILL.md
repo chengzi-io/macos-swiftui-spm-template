@@ -56,9 +56,8 @@ Show the user the screenshot. Unless they already said which level they want, as
 ## 2. Read the brand
 
 The brand is the app icon. Take the colors from `Bundle/AppIcon.icon/icon.json` (the
-`fill`) and its `Assets/*.svg`, look at the icon in `.build/dmg/dmg.png`, and read
-`docs/BRAND.md` if it exists. Pick the motif: a shape from the icon that still reads at
-30–60 pt.
+`fill`) and its layers in `Assets/`, and look at the icon in `.build/dmg/dmg.png`. Pick
+the motif: a shape from the icon that still reads at 30–60 pt.
 
 ## 3. Light brand
 
