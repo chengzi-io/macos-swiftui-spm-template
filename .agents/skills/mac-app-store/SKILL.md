@@ -103,7 +103,8 @@ Then do step 2, and 3a or 3b.
    	scripts/release-mas.sh upload
    ```
 
-5. Append `<skill>/wiring/releasing.md` to `docs/RELEASING.md`.
+5. In `docs/RELEASING.md`, replace the `## Mac App Store (optional)` section, which only
+   points to this skill, with `<skill>/wiring/releasing.md`.
 
 ## 3a. Both: compile Sparkle out of the App Store build
 

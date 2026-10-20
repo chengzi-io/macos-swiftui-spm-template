@@ -1,4 +1,3 @@
-
 ## Mac App Store
 
 `make release-mas` builds `dist/mas/<App>.app` without Sparkle (the App Store updates
