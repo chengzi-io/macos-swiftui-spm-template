@@ -1,10 +1,6 @@
 import Foundation
 
-public protocol Greeter {
-    func greet(_ name: String) async throws -> String
-}
-
-public enum GreeterError: Error {
+enum GreeterError: Error {
     case emptyName
 
     // Error types are nonisolated (Error is Sendable), so `LocalizedError` cannot
@@ -16,12 +12,10 @@ public enum GreeterError: Error {
     }
 }
 
-public struct LocalGreeter: Greeter {
-    public init() {}
-
-    public func greet(_ name: String) async throws -> String {
+struct Greeter {
+    func greet(_ name: String) throws(GreeterError) -> String {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { throw GreeterError.emptyName }
+        guard !trimmed.isEmpty else { throw .emptyName }
         return String(localized: "Hello, \(trimmed)!", bundle: .module)
     }
 }

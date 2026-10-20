@@ -2,30 +2,18 @@ import Testing
 
 @testable import AppCore
 
-private struct StubGreeter: Greeter {
-    let result: Result<String, GreeterError>
-
-    func greet(_ name: String) async throws -> String {
-        try result.get()
-    }
-}
-
-@Test func greetStoresGreeting() async {
-    let model = AppModel(greeter: StubGreeter(result: .success("hi")))
-    await model.greet()
-    #expect(model.greeting == "hi")
+@Test func greetStoresGreeting() {
+    let model = AppModel()
+    model.name = " Ada "
+    model.greet()
+    #expect(model.greeting?.contains("Ada") == true)
     #expect(model.errorMessage == nil)
 }
 
-@Test func greetSurfacesError() async {
-    let model = AppModel(greeter: StubGreeter(result: .failure(.emptyName)))
-    await model.greet()
+@Test func greetRejectsBlankName() {
+    let model = AppModel()
+    model.name = "  "
+    model.greet()
     #expect(model.greeting == nil)
     #expect(model.errorMessage != nil)
-}
-
-@Test func localGreeterRejectsBlankName() async {
-    await #expect(throws: GreeterError.emptyName) {
-        try await LocalGreeter().greet("  ")
-    }
 }

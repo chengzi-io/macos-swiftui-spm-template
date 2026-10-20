@@ -12,9 +12,9 @@ public struct ContentView: View {
             TextField(text: $model.name) {
                 Text("Name", bundle: .module)
             }
-            .onSubmit { Task { await model.greet() } }
+            .onSubmit { model.greet() }
             Button {
-                Task { await model.greet() }
+                model.greet()
             } label: {
                 Text("Greet", bundle: .module)
             }
@@ -43,5 +43,5 @@ public struct ContentView: View {
 
 #Preview {
     ContentView()
-        .environment(AppModel(greeter: LocalGreeter()))
+        .environment(AppModel())
 }

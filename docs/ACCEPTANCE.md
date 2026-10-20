@@ -16,7 +16,7 @@
 |---|----|-------------|------|----------|
 | 1 | E3 | `make doctor` | 每行 `ok`；最后一行 `warn TEAM_ID empty…` | ✅ |
 | 2 | B3 | `make setup` | 打印 `sync hooks: ✔️ (pre-commit)` | ✅ |
-| 3 | 全链路 | `make ci` | lint 无输出；3 个测试通过；`==> smoke ok: .build/app/Debug/SwiftUITemplate.app` | ✅ |
+| 3 | 全链路 | `make ci` | lint 无输出；2 个测试通过；`==> smoke ok: .build/app/Debug/SwiftUITemplate.app` | ✅ |
 | 4 | A8 | 在终端里 `make run` | 窗口出现在**前台**；终端打印 `[app] launched version=0.0.0 … sandboxed=true`；按 Ctrl-C 后应用退出 | ✅ 无终端模式（日志写到 `.build/app/run.log`）和模拟 Ctrl-C；👀 真实终端输出 |
 | 5 | A4 | `make run ARGS="-AppleLanguages '(zh-Hans)'"` | 输入框占位符显示「名字」，按钮显示「打招呼」 | ✅（截图） |
 | 6 | A5 | `make run` 后看 Dock 和 Finder 里的应用图标；看按钮颜色 | 橙色渐变圆角方形，上面是白色果皮环和 8 瓣浅色果肉，果肉有玻璃边缘高光；默认按钮是橙色 | ✅ 强调色；✅ 图标（用渲染脚本，同第 30 项）/ 👀 Dock |
@@ -28,7 +28,7 @@
 | 12 | B2/B3 | 新建一个 2 空格缩进的 `.swift` 文件并 `git add`，然后 `make lint`，再 `git commit` | `make lint` 报 `[Indentation]` 并失败；提交时钩子把它改成 4 空格并重新暂存 | ✅ |
 | 13 | B1 | 在任意函数里加一行 `let unused = 1`，然后 `make build` | 编译错误 `never used`（警告视为错误） | ✅ |
 | 14 | B5 | `make app && rm -rf .build/app/Debug/*.app/Contents/Resources/App_AppCore.bundle && make smoke` | 冒烟测试失败。如果先重新签名绕过静态检查，会看到 `Fatal error: unable to find bundle named App_AppCore` 和 `exited during startup` | ✅ |
-| 15 | B4 | `make test` | `Test run with 3 tests … passed` | ✅ |
+| 15 | B4 | `make test` | `Test run with 2 tests … passed` | ✅ |
 | 16 | E4 | `xed .`，打开 `Sources/AppCore/ContentView.swift`，看 Canvas | Preview 能渲染 | 👀 未验证 |
 | 17 | H1 | `make sparkle-keys`（会在登录 keychain 创建密钥，这本来就是发版的一次性步骤） | `Bundle/app.env` 中写入 `SPARKLE_PUBLIC_KEY=…`；终端打印导出私钥、设置 secret 的命令 | 🔑 没跑，会写 keychain |
 | 18 | G1–G8 | 完成 17 后执行 `make release` | `dist/` 下有 `SwiftUITemplate-0.0.0.dmg`、`.dSYM.zip`、`appcast.xml`、`SHA256SUMS`；日志里有 `smoke ok: dist/…`、`dmg ok: dist/…` 和两行 `skipping notarization (ad-hoc build)` | ✅（我用临时生成的密钥对） |

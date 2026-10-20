@@ -94,11 +94,11 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | B1 | 编译严格度 | `Package.swift` 中的 `swiftSettings` | ✅ |
 | B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint` | ✅ |
 | B3 | Git hooks | `lefthook.yml`（pre-commit 格式化） | ✅ |
-| B4 | 测试 | `Tests/AppCoreTests`（Swift Testing，3 个用例） | ✅ |
+| B4 | 测试 | `Tests/AppCoreTests`（Swift Testing，2 个用例） | ✅ |
 | B5 | `.app` 冒烟测试 | `scripts/smoke.sh`，同时用于 debug 包和 release 包；检查签名、Info.plist、资源包、`Assets.car` 和 `AppIcon.icns`，然后启动应用 | ✅ |
 | C1 | 日志 | `Sources/AppCore/Support/Log.swift`、`make logs` | ✅ |
 | C2 | 错误处理约定 | `AppModel` 示例 + AGENTS.md | ✅ |
-| C3 | 状态与依赖注入 | `AppModel` + `Greeter` 协议 + 测试 stub | ✅ |
+| C3 | 状态与依赖注入 | `AppModel` 用 `.environment` 注入；碰进程外资源（网络、文件、系统 API、时钟）的服务才写成协议，经初始化器注入，测试传 stub（RECIPES 的网络示例）；纯逻辑的 `Greeter` 是普通类型 | ✅ |
 | C4 | 本地持久化 | 设置页 `@AppStorage` 示例；Keychain / SwiftData 见 RECIPES | ✅ |
 | C5 | 开机启动 | `docs/RECIPES.md` | 📄 |
 | C6 | 网络 | `docs/RECIPES.md`，`network.client` 已开 | 📄 |
@@ -145,6 +145,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **H1**：`SUFeedURL` 由 `RELEASES_URL` 推导；联网用 `network.client`，不用 Downloader XPC（Sparkle 文档建议这样做）。
 - **A8**：`make run` 改用 `open` 启动（V15）；没有终端时日志写到 `.build/app/run.log`。
 - **C2**：`GreeterError` 不实现 `LocalizedError`（V9）。
+- **C3**：原来规定所有服务都是协议，`Greeter` 这种纯本地逻辑也套了协议、Live 实现和测试 stub，示例和「不加任务不需要的抽象」相矛盾。改为只有碰进程外资源的服务才抽协议；`Greeter` 改成普通类型，用 typed throws（`throws(GreeterError)`），`AppModel` 的测试直接用真实的 `Greeter`，同步调用。
 - **A5**：图标从 `.appiconset` 改为 Icon Composer 的 `.icon`（V22）。
 - **文档体系**：README 原来既是模板说明又是开发文档，init 只删掉模板段落，剩下的开发文档对应用的使用者没用。改为按读者分开：模板的 README 只介绍模板，init 把它整个换成给应用使用者看的短页（介绍、安装、首次打开、更新）；开发文档移到 `docs/DEVELOPMENT.md`；AGENTS.md 加一节「Before init」，让 agent 在做应用相关的工作前先问名字和 bundle ID 并运行 init，init 时删掉这一节。发版流程、恢复步骤、构建链路和新项目步骤改为 mermaid 图加少量文字。
 - **品牌 skill 改为 app-icon skill**：只做图标，去掉品牌简报。agent 画出来的图标渲染质量没问题，弱点在构思，所以流程的重点放在先比较黑白构思、每轮都出六种外观和 Dock 对比图、草稿不经用户认可不替换、两轮选不出就停。原来让用户去 Icon Composer 看深色和着色效果，现在由 ictool 直接渲染。

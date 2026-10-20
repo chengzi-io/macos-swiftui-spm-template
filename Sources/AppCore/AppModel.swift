@@ -7,21 +7,16 @@ public final class AppModel {
     public private(set) var greeting: String?
     public var errorMessage: String?
 
-    private let greeter: any Greeter
+    private let greeter = Greeter()
 
-    public init(greeter: any Greeter) {
-        self.greeter = greeter
-    }
+    public init() {}
 
-    public func greet() async {
+    public func greet() {
         do {
-            greeting = try await greeter.greet(name)
-        } catch let error as GreeterError {
+            greeting = try greeter.greet(name)
+        } catch {
             Log.ui.error("greet failed: \(String(describing: error), privacy: .public)")
             errorMessage = error.message
-        } catch {
-            Log.ui.error("greet failed: \(error.localizedDescription, privacy: .public)")
-            errorMessage = error.localizedDescription
         }
     }
 }

@@ -4,7 +4,7 @@ import SwiftUI
 @main
 struct MainApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @State private var model = AppModel(greeter: LocalGreeter())
+    @State private var model = AppModel()
     #if !APP_STORE
         @StateObject private var updates = Updates()
     #endif

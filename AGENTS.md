@@ -67,8 +67,11 @@ Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks
 - Logging: `Log.app` / `Log.ui` (`os.Logger`, subsystem = bundle identifier). Dynamic
   values stay private unless marked `privacy: .public`; never log tokens or personal
   data. `make logs` streams them.
-- State: `@Observable` models injected with `.environment(...)`. Services are protocols
-  passed through initializers; `Sources/App` builds the live ones, tests pass stubs.
+- State: `@Observable` models injected with `.environment(...)`. A service that reaches
+  outside the process (network, files, system APIs, the clock) is a protocol passed
+  through the model's initializer: `Sources/App` builds the live one, tests pass a stub
+  ([RECIPES](docs/RECIPES.md#networking) has one). Pure logic stays a plain type the
+  model calls directly, as `Greeter` is.
 - Tests: Swift Testing (`@Test`, `#expect`) on `AppCore` models and services.
   `swift test` does not compile asset or string catalogs, so unit tests never assert
   localized text or images; `make smoke` covers resources in the real `.app`.
@@ -88,12 +91,13 @@ Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks
 
 ## Add a feature
 
-1. Add `Sources/AppCore/<Feature>/` with the view, its `@Observable` model and a
-   service protocol plus its live implementation. `Greeting/` with `AppModel` and
-   `ContentView` is the pattern.
+1. Add `Sources/AppCore/<Feature>/` with the view and its `@Observable` model;
+   `Greeting/` with `AppModel` and `ContentView` is the pattern. Work that reaches
+   outside the process gets a service protocol and its live implementation.
 2. Add every user-facing string to `Localizable.xcstrings` in `en` and `zh-Hans`.
-3. Build the live service in `Sources/App/MainApp.swift` and inject it.
-4. Test the model with a stub service in `Tests/AppCoreTests/`.
+3. Build the model, and any live service it takes, in `Sources/App/MainApp.swift` and
+   inject it.
+4. Test the model in `Tests/AppCoreTests/`, with a stub for each service protocol.
 5. New capability (network, files, camera…)? Add the entitlement to
    `Bundle/App.entitlements` and any `NS…UsageDescription` to `Bundle/Info.plist`.
 6. `make ci`.
