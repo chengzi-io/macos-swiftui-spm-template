@@ -94,6 +94,11 @@ xcrun actool "$ROOT/Bundle/Assets.xcassets" "$ROOT/Bundle/AppIcon.icon" \
     cat "$tmp/actool.log" >&2
     die "actool failed"
 }
+# A layer whose image is missing is only a warning; actool exits 0 without the icon.
+if grep -q 'warning:' "$tmp/actool.log"; then
+    cat "$tmp/actool.log" >&2
+    die "actool warned"
+fi
 
 log "write Info.plist ($VERSION build $BUILD_NUMBER)"
 plist="$app/Contents/Info.plist"
