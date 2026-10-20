@@ -5,7 +5,8 @@
 #       Finder icon: on macOS 14 and 15 that is the flattened image actool bakes.
 #   .build/app-icon/<name>-dock.png   this Mac's icon between installed apps, at 128 pt
 #       and 32 pt.
-# Fails on anything actool rejects or warns about, as the app build does.
+# Fails on property names this Xcode ignores (lint-icon.swift) and on anything actool
+# rejects or warns about, as the app build does.
 #   check-icon.sh [path.icon] [app ...]    default apps: Safari, Notes, Photos, App Store
 
 source "$(dirname "$0")/../../../../scripts/common.sh"
@@ -28,6 +29,7 @@ ictool="$(xcode-select -p)/../Applications/Icon Composer.app/Contents/Executable
 # actool's ibtoold daemon resolves relative paths against its own working directory.
 icon="$(cd "$icon" && pwd)"
 name=$(basename "$icon" .icon)
+xcrun swift "$here/lint-icon.swift" "$icon/icon.json"
 out="$ROOT/.build/app-icon"
 renders="$out/$name"
 rm -rf "$renders"

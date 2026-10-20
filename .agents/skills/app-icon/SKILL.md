@@ -26,17 +26,45 @@ AppIcon.icon/
 - Canvas: 1024 × 1024 pt. A group in front casts a shadow on the groups behind it. Use
   two or three: the main shape behind, a smaller accent in front. actool rejects more
   than four.
-- `fill`: `{"solid": C}`, `{"linear-gradient": [C1, C2]}` (top to bottom) or
-  `{"automatic-gradient": C}`. Colors are strings such as
-  `"srgb:1.00000,0.67059,0.20000,1.00000"` (r, g, b, alpha) or `display-p3:…`.
-- Layer: `"glass": true` catches the light. Group: `shadow`
-  (`{"kind": "neutral", "opacity": 0.5}`) and `translucency`
-  (`{"enabled": true, "value": 0.4}`); turn translucency off for a bright layer over a
-  dark fill, or it goes muddy. The current `Bundle/AppIcon.icon` is a working example.
-- Icon Composer offers more (specular, blur, lighting, blend modes, values per
-  appearance). Their file format is unchecked here: leave them to the user in Icon
-  Composer.
 - macOS 14 and 15 show flattened images that actool bakes from the same file.
+
+### Properties
+
+Everything Icon Composer sets lives in `icon.json`; write it directly. `C` is a color
+string: `"srgb:1.00000,0.67059,0.20000,1.00000"` (r, g, b, alpha), `display-p3:…`, or
+`gray:1.00000,1.00000` (white, alpha). The current `Bundle/AppIcon.icon` is a working
+example.
+
+| Where | Property | Value | Effect |
+| --- | --- | --- | --- |
+| root | `fill` | `{"solid": C}`, `{"linear-gradient": [C1, C2]}` (top to bottom), `{"automatic-gradient": C}` | The background |
+| group | `shadow` | `{"kind": "neutral" \| "layer-color" \| "none", "opacity": 0–1}` | The shadow on the groups behind |
+| group | `translucency` | `{"enabled": true, "value": 0–1}` | Lets the fill show through; off for a bright layer over a dark fill, which goes muddy |
+| group | `specular` | `true` / `false` | The bright glass edge; off for a matte shape |
+| group | `blur-material` | `null` or 0–1 | Frosts what is behind the group |
+| group | `lighting` | `"combined"` / `"individual"` | Lights the group's layers as one shape, or each on its own |
+| group, layer | `blend-mode` | `"normal"`, `"screen"`, `"hard-light"`, `"plus-darker"`, `"darken"`… | How it mixes with what is behind |
+| group, layer | `opacity`, `hidden` | 0–1; `true` / `false` | |
+| group, layer | `position` | `{"scale": 1, "translation-in-points": [x, y]}`, y down | Moves or resizes without touching the image |
+| layer | `glass` | `true` / `false` | The layer catches the light |
+| layer | `fill` | as the root `fill` | Repaints the whole layer in one color or gradient, replacing the image's colors |
+
+Any property can differ by appearance: write `"<property>-specializations"` instead, a
+list of `{"value": …}` for the default and `{"appearance": "dark" | "tinted", "value": …}`
+entries. A darker background in Dark only:
+
+```json
+"fill-specializations" : [
+  { "value" : { "linear-gradient" : [ "srgb:1.00000,0.67059,0.20000,1.00000", "srgb:0.98039,0.40000,0.00000,1.00000" ] } },
+  { "appearance" : "dark", "value" : { "solid" : "srgb:0.16000,0.10000,0.05000,1.00000" } }
+]
+```
+
+Reach for them when the check (6) shows a problem: a layer that vanishes in Dark gets a
+`fill` for `dark`; a detail that turns to mush in Tinted gets `hidden` for `tinted`; a
+mark that sits off center gets a `position`. actool rejects bad values, and
+`check-icon.sh` rejects property names this Xcode ignores (a typo, or one from a newer
+Icon Composer).
 
 ## 1. Start
 
@@ -168,6 +196,6 @@ not tried, or a designer. Never put a draft the user has not approved into `Bund
 
 1. Replace `Bundle/AppIcon.icon` with the approved draft, old layer files included.
 2. `make ci`.
-3. Tell the user they can fine-tune glass, specular and the per-appearance looks in Icon
-   Composer (Xcode › Open Developer Tool) and save in place.
+3. Tell the user that Icon Composer (Xcode › Open Developer Tool) edits the same file, if
+   they want to tune it by hand; run `check-icon.sh` again after they save.
 4. Commit `Bundle/AppIcon.icon`, for example `feat(icon): add the app icon`.
