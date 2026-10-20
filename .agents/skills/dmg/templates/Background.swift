@@ -4,8 +4,8 @@ import SwiftUI
 // puts the app icon at (170, 200) and Applications at (490, 200) as 128 pt icons, with
 // Finder's labels under them; keep those spots clear. Finder always draws this window
 // in light mode, so labels stay black: keep the label areas light. A user's path or
-// status bar can cover the bottom 25 pt. Render it with
-// .agents/skills/dmg/scripts/render-dmg-background.sh.
+// status bar can cover the bottom 25 pt. Render it with the dmg skill's
+// scripts/render-dmg-background.sh.
 //
 // The default is deliberately plain: white paper and one small neutral arrow, so it
 // ships with any app and reads in one glance. Replace the body with the brand's palette

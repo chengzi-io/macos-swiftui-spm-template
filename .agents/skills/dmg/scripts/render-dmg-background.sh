@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Renders Bundle/DMG/Background.swift into Bundle/DMG/background.png and @2x.
+# Renders Bundle/DMG/Background.swift into Bundle/DMG/background.png and @2x. Runs from
+# anywhere inside the project.
 set -euo pipefail
 
-cd "$(dirname "$0")/../../../.."
-here=.agents/skills/dmg/scripts
+here=$(cd "$(dirname "$0")" && pwd)
+cd "$(git rev-parse --show-toplevel)"
 [[ -f Bundle/DMG/Background.swift ]] ||
-    { echo "error: no Bundle/DMG/Background.swift; copy .agents/skills/dmg/templates/ first" >&2; exit 1; }
+    { echo "error: no Bundle/DMG/Background.swift; copy the skill's templates/ there first" >&2; exit 1; }
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT

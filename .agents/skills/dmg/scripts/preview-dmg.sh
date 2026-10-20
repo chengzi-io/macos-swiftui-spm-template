@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
-# Builds a DMG with the Bundle/DMG design, opens it in Finder and screenshots the
-# window to .build/dmg/dmg.png. The terminal needs Screen Recording permission.
+# Builds a DMG with the Bundle/DMG design through the project's scripts/make-dmg.sh,
+# opens it in Finder and screenshots the window to .build/dmg/dmg.png. The terminal
+# needs Screen Recording permission. Runs from anywhere inside the project.
 #   preview-dmg.sh [app]    default: the debug app from `make app`
+set -euo pipefail
 
-source "$(dirname "$0")/../../../../scripts/common.sh"
+die() {
+    echo "error: $*" >&2
+    exit 1
+}
 
-here=.agents/skills/dmg/scripts
-app=${1:-$DEBUG_APP}
+here=$(cd "$(dirname "$0")" && pwd)
+cd "$(git rev-parse --show-toplevel)"
+# shellcheck source=/dev/null
+source Bundle/app.env
+grep -q dmgbuild scripts/make-dmg.sh || die "scripts/make-dmg.sh is the plain one; wire dmgbuild in first"
+
+app=${1:-.build/app/Debug/$APP_NAME.app}
 [[ -d $app ]] || die "no app at $app; run make app"
 dmg=.build/dmg/preview.dmg
 out=.build/dmg/dmg.png

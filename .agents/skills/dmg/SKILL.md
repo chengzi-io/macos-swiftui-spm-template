@@ -1,6 +1,6 @@
 ---
 name: dmg
-description: Design the DMG installer window (Bundle/DMG) - background and layout, from a plain default to a branded illustration. Renders the real Finder window for the user to judge.
+description: Design the DMG installer window (Bundle/DMG) - background and layout, from a plain default to a branded illustration. Wires dmgbuild into the project's build on first use and renders the real Finder window for the user to judge.
 disable-model-invocation: true
 ---
 
@@ -10,16 +10,33 @@ The DMG window is the first screen of the product a user sees: the app icon, an 
 the Applications folder. The app icon carries the brand; the background frames it. The
 background never has text: it is one image for every language, and the arrow needs none.
 
-## How the DMG is built
+## What this skill expects from the project
+
+It is written for apps made from macos-swiftui-spm-template:
+
+- `Bundle/app.env` sets `APP_NAME` and `APP_DISPLAY_NAME`; `Bundle/AppIcon.icon` is the
+  app icon.
+- `make app` builds the debug app at `.build/app/Debug/$APP_NAME.app`, with
+  `Contents/Resources/AppIcon.icns`.
+- `scripts/make-dmg.sh <app> <dmg>` makes the unsigned DMG and `scripts/package-dmg.sh`
+  signs and notarizes it; `scripts/common.sh` loads `Bundle/app.env` and defines `die`
+  and `log`.
+- `.github/workflows/release.yml` runs `make release` on a macOS runner.
+
+`<skill>` below is this skill's directory, for example `.agents/skills/dmg`. Its scripts
+run from anywhere inside the project.
+
+## How the designed DMG is built
+
+The project ships a plain window: its `scripts/make-dmg.sh` runs hdiutil on the app and
+an Applications link. Step 1 swaps in dmgbuild 1.6.7, which builds the window from
+`Bundle/DMG/`:
 
 ```
-scripts/make-dmg.sh <app> <dmg>   (make release runs it, then signs and notarizes the DMG)
-  without Bundle/DMG/settings.py: hdiutil, the app and an Applications link, plain window
-  with it, dmgbuild 1.6.7:
-    hdiutil create a blank image and attach it
-    copy the app, link Applications, write .VolumeIcon.icns from the app's AppIcon.icns,
-    copy background.png and @2x, write .DS_Store (window size, icon spots, background)
-    detach, shrink, convert to compressed UDZO
+hdiutil create a blank image and attach it
+copy the app, link Applications, write .VolumeIcon.icns from the app's AppIcon.icns,
+copy background.png and @2x, write .DS_Store (window size, icon spots, background)
+detach, shrink, convert to compressed UDZO
 ```
 
 | Input | Source | Change it here |
@@ -28,17 +45,44 @@ scripts/make-dmg.sh <app> <dmg>   (make release runs it, then signs and notarize
 | Background | `Bundle/DMG/Background.swift`, rendered to `background.png` and `@2x`; `art.png` when an image model made the art | Yes |
 | Layout | `window_rect`, `icon_size`, `text_size`, `icon_locations` in `Bundle/DMG/settings.py` | Yes, with the constants in `Background.swift` |
 | The rest of `settings.py` | `format`, `files`, `symlinks`, `icon`; no `hide_extensions` (it fails `codesign --strict`) | No |
-| `scripts/`, `.github/workflows/` | | No |
+| `scripts/make-dmg.sh`, `scripts/dmgbuild-requirements.txt`, the release workflow's Python step | Step 1 | No, after step 1 |
 
-Delete `Bundle/DMG/` to go back to the plain DMG. Scripts below live in
-`.agents/skills/dmg/scripts/` and run from the repo root.
+## 1. Wire dmgbuild into the build
 
-## 1. Default
+Once per project; skip it when `scripts/make-dmg.sh` already runs dmgbuild.
 
 ```bash
-mkdir -p Bundle/DMG && cp .agents/skills/dmg/templates/* Bundle/DMG/  # skip if Bundle/DMG exists
-.agents/skills/dmg/scripts/render-dmg-background.sh                 # → Bundle/DMG/background.png, @2x
-make app && .agents/skills/dmg/scripts/preview-dmg.sh               # → .build/dmg/dmg.png
+cp <skill>/wiring/make-dmg.sh scripts/make-dmg.sh
+cp <skill>/wiring/dmgbuild-requirements.txt scripts/dmgbuild-requirements.txt
+```
+
+dmgbuild needs `python3` 3.10 or later; the one Xcode installs is 3.9. On a Mac without
+a newer one, `scripts/make-dmg.sh` fails and says so: `brew install python`. On first use
+it installs dmgbuild, hash-pinned, into `.build/dmgbuild-1.6.7`.
+
+The release runner needs that Python too. In `.github/workflows/release.yml`, add this
+step to the publish job, before the step that runs `make release`:
+
+```yaml
+      # scripts/make-dmg.sh builds the DMG window with dmgbuild, which needs Python 3.10+.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+```
+
+Nothing else in CI changes. The release job builds from the committed PNGs and never
+renders `Background.swift`; PR CI (`make ci`) builds no DMG, so the preview is the check.
+
+If the user decides against a designed window, undo this step: restore
+`scripts/make-dmg.sh` and the workflow from git, and delete `Bundle/DMG/` and
+`scripts/dmgbuild-requirements.txt`.
+
+## 2. Default
+
+```bash
+mkdir -p Bundle/DMG && cp <skill>/templates/* Bundle/DMG/   # skip if Bundle/DMG exists
+<skill>/scripts/render-dmg-background.sh                    # → Bundle/DMG/background.png, @2x
+make app && <skill>/scripts/preview-dmg.sh                  # → .build/dmg/dmg.png
 ```
 
 White paper and a dark gray arrow. `preview-dmg.sh` mounts the DMG, opens it in Finder
@@ -53,13 +97,13 @@ Show the user the screenshot. Unless they already said which level they want, as
 | Light brand | A soft gradient in the icon's colors, and an arrow drawn from the icon's motif |
 | Full brand | An illustration or texture from the icon's world that leads to Applications, by its composition or a custom arrow; icon spots moved to fit the scene |
 
-## 2. Read the brand
+## 3. Read the brand
 
 The brand is the app icon. Take the colors from `Bundle/AppIcon.icon/icon.json` (the
 `fill`) and its layers in `Assets/`, and look at the icon in `.build/dmg/dmg.png`. Pick
 the motif: a shape from the icon that still reads at 30–60 pt.
 
-## 3. Light brand
+## 4. Light brand
 
 - Gradient: two or three of the icon's colors, mixed with 85–95% white so black labels
   read on every part of it.
@@ -73,7 +117,7 @@ preview, then keep the source as `.build/dmg/<letter>.swift` and the screenshot 
 and let them pick or adjust in plain words ("thinner arrow", "less color"). Copy the pick
 back to `Bundle/DMG/Background.swift` and render again.
 
-## 4. Full brand
+## 5. Full brand
 
 Propose two or three scenes from the icon's world, one line each; a pixel-art cat icon
 might become a pixel night landscape where paw prints lead to Applications. Say for each
@@ -93,7 +137,7 @@ as squares on whole points, so 1x and 2x stay crisp); grain from a seeded random
 generator, so 1x and 2x match. Code cannot draw painterly or hand-drawn art, shaded
 characters, or realistic texture and light: those need an image model.
 
-Drawn in code: write it in `Background.swift` and make variants as in step 3. Turn
+Drawn in code: write it in `Background.swift` and make variants as in step 4. Turn
 figures toward Applications from the constants, so they stay right when the icons move:
 
 ```swift
@@ -110,7 +154,7 @@ Cursor()
 Made by an image model:
 
 1. Write the user a prompt to paste into ChatGPT, Gemini or another image model. The
-   numbers below are for the template's geometry, checked in a real Finder window: a 3:2
+   numbers below are for the geometry in `templates/`, checked in a real Finder window: a 3:2
    image is scaled to 660 pt wide (440 pt tall) and loses 20 pt at the top and bottom.
    Recompute them if you moved the icons. Pick how the art leads to Applications with
    the scene, and write that choice as the Direction line: a code arrow over the art
@@ -186,18 +230,9 @@ Made by an image model:
 - Draw brand shapes with `Shape` or `Path`, never an SF Symbol: their license forbids
   use in logos and other trademark use. No other brand's artwork or characters.
 
-## 5. Python and CI
-
-dmgbuild needs `python3` 3.10 or later; the one Xcode installs is 3.9. On a Mac without
-a newer one, `scripts/make-dmg.sh` fails and says so: `brew install python`. On first use
-it installs dmgbuild, hash-pinned, into `.build/dmgbuild-1.6.7`.
-
-Nothing in CI needs changing. The release workflow sets up Python when
-`Bundle/DMG/settings.py` exists and builds from the committed PNGs; it never renders
-`Background.swift`. PR CI (`make ci`) builds no DMG: the preview is the check.
-
 ## 6. Finish
 
 1. Render once more, so the PNGs match `Background.swift`, and run `preview-dmg.sh`.
-2. Commit everything in `Bundle/DMG/`, for example
-   `feat(dmg): add a designed installer window`.
+2. Commit `Bundle/DMG/`, the two files in `scripts/` and the workflow step together, for
+   example `feat(dmg): add a designed installer window`. Reverting that commit brings
+   back the plain DMG.

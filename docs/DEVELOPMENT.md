@@ -79,8 +79,9 @@ Skills live in `.agents/skills` (Codex and other agents), linked from `.claude/s
 - `app-icon`: the app icon, from your logo or image, as drawn layers, or through an
   image-model prompt; it renders every appearance and sets the icon beside installed
   apps. Agents start it when you ask for an icon.
-- `dmg`: designs the DMG window, from plain to a branded illustration. Only you start
-  it: `/dmg` in Claude Code, `$dmg` in Codex.
+- `dmg`: designs the DMG window, from plain to a branded illustration, and wires
+  dmgbuild into the build when you start it. Only you start it: `/dmg` in Claude Code,
+  `$dmg` in Codex.
 
 ## Commits and releases
 

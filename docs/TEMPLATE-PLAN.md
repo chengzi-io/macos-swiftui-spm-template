@@ -90,7 +90,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | A8 | 本地运行与调试 | `make run`、`scripts/run.sh` | ✅ |
 | A9 | 忽略规则与编辑器配置 | `.gitignore`、`.editorconfig` | ✅ |
 | A10 | App 图标 skill | `.agents/skills/app-icon`（`.claude/skills` 里是指向它的符号链接）。三条路：用户的 logo 或图片、agent 画 SVG 图层、写生图提示词让用户去生成。`check-icon.sh` 出两张检查图：一张是 ictool 渲染的 macOS 26 六种外观、32 pt 和本机 Finder 图标，另一张把图标放进已装应用中间的 Dock 行；`concepts.sh` 把黑白构思并排比较；`image-layer.swift` 把图片变成图层，不透明的图先用 Vision 抠图。草稿放在 `.build/app-icon`，用户认可后才替换 `Bundle/AppIcon.icon`；两轮都选不出就停下 | ✅ 脚本 / 👀 完整流程 |
-| A11 | DMG skill | `.agents/skills/dmg`，只能由用户启动（Claude Code 用 `disable-model-invocation`，Codex 用 `agents/openai.yaml`）：先铺白底默认窗口，再按用户选择做轻品牌或标准品牌化；代码画不了的插画写生图提示词，生成的图作为 `art.png` 垫在箭头下面。背景一律不放文字 | ✅ 脚本和提示词坐标 / 👀 完整流程 |
+| A11 | DMG skill | `.agents/skills/dmg`，只能由用户启动（Claude Code 用 `disable-model-invocation`，Codex 用 `agents/openai.yaml`）：第一步把 dmgbuild 接进项目（用 `wiring/` 里的 dmgbuild 版 `make-dmg.sh` 替换模板的普通版，加上哈希锁定的依赖清单，在发版 job 里加 setup-python），再铺白底默认窗口，再按用户选择做轻品牌或标准品牌化；代码画不了的插画写生图提示词，生成的图作为 `art.png` 垫在箭头下面。背景一律不放文字 | ✅ 脚本和提示词坐标 / 👀 完整流程 |
 | B1 | 编译严格度 | `Package.swift` 中的 `swiftSettings` | ✅ |
 | B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint` | ✅ |
 | B3 | Git hooks | `lefthook.yml`（pre-commit 格式化） | ✅ |
@@ -117,7 +117,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | F4 | PR 标题规范 | `.github/workflows/pr-title.yml` | 🟡 |
 | G1 | 代码签名 | `build-app.sh`：ad-hoc，或 Developer ID + runtime | ✅ ad-hoc / 🟡 Developer ID |
 | G2 | 公证 | `scripts/notarize.sh` | 🟡（无 `TEAM_ID` 时跳过，已验证） |
-| G3 | DMG | `scripts/package-dmg.sh`、`scripts/make-dmg.sh`：默认是普通窗口；存在 `Bundle/DMG/` 时用 dmgbuild 生成带背景和布局的窗口，发版 job 这时会先装 Python 3.13 | ✅ 本地 / 🟡 CI 上的设计版 |
+| G3 | DMG | `scripts/package-dmg.sh`、`scripts/make-dmg.sh`：hdiutil 生成普通窗口。设计版完全由 dmg skill（A11）接入，模板里没有 dmgbuild、Python 和对应的 CI 步骤 | ✅ 本地 / 🟡 CI 上的设计版 |
 | G4 | 版本号 | `version.txt` 加 `git rev-list --count HEAD` | ✅ |
 | G5 | Release 流水线 | `.github/workflows/release.yml`、`scripts/release.sh`、`publish-github.sh`；Release 先建为草稿，资产全部上传后才公开 | ✅ 本地 `make release` / 🟡 CI |
 | G6 | 密钥管理 | `scripts/ci-keychain.sh`、`release` environment、`docs/RELEASING.md` | 🟡 |
@@ -148,7 +148,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **A5**：图标从 `.appiconset` 改为 Icon Composer 的 `.icon`（V22）。
 - **文档体系**：README 原来既是模板说明又是开发文档，init 只删掉模板段落，剩下的开发文档对应用的使用者没用。改为按读者分开：模板的 README 只介绍模板，init 把它整个换成给应用使用者看的短页（介绍、安装、首次打开、更新）；开发文档移到 `docs/DEVELOPMENT.md`；AGENTS.md 加一节「Before init」，让 agent 在做应用相关的工作前先问名字和 bundle ID 并运行 init，init 时删掉这一节。发版流程、恢复步骤、构建链路和新项目步骤改为 mermaid 图加少量文字。
 - **品牌 skill 改为 app-icon skill**：只做图标，去掉品牌简报。agent 画出来的图标渲染质量没问题，弱点在构思，所以流程的重点放在先比较黑白构思、每轮都出六种外观和 Dock 对比图、草稿不经用户认可不替换、两轮选不出就停。原来让用户去 Icon Composer 看深色和着色效果，现在由 ictool 直接渲染。
-- **DMG 美化**：不作为默认，做成单独的 DMG skill（A11），只能由用户启动。模板默认仍是普通 DMG；skill 生成 `Bundle/DMG/` 后，发版自动使用设计版。
+- **DMG 美化**：不作为默认，做成单独的 DMG skill（A11），只能由用户启动。模板不为设计版做任何准备：原来模板的 `make-dmg.sh` 按 `Bundle/DMG/settings.py` 是否存在分两条路，发版 job 也按它决定装不装 Python；现在 dmgbuild 版的 `make-dmg.sh`、依赖清单和 setup-python 步骤都放在 skill 里，用户启动 skill 时才加进项目，和 `Bundle/DMG/` 一起提交，revert 那次提交就回到普通 DMG。
+- **skill 按独立项目写**：dmg skill 的脚本不再 source 模板的 `scripts/common.sh`，按 `$(dirname "$0")` 找 skill 自己的文件、按 `git rev-parse --show-toplevel` 找项目；SKILL.md 开头写明它对项目的要求（`Bundle/app.env`、`make app` 的产物路径、`scripts/make-dmg.sh` 的参数、发版 workflow），整个目录可以搬到单独的仓库。
 - **新增**：
   - `PrivacyInfo.xcprivacy` 随所有构建打包。
   - `ci-keychain.sh` 负责 CI 中证书的导入和清理。
@@ -167,7 +168,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | ad-hoc 发布的体验 | 首次打开要在系统设置里点「仍要打开」；每次更新签名都会变，权限和 keychain 访问可能需要重新授权；Homebrew 安装会被 Gatekeeper 拦截 |
 | ad-hoc 切换到 Developer ID 的首次更新 | 理论上靠 EdDSA 能通过，**尚未实测** |
 | `.icon` 在 macOS 14 和 26 上的显示 | macOS 15 已在本机验证；macOS 26 的效果用 ictool（Icon Composer 自己的渲染器）看过，没在 macOS 26 真机上看过；macOS 14 未验证 |
-| 设计版 DMG | 深色模式下的标签颜色只有论坛报告，没有实测；发版 job 里的 setup-python 步骤还没在真实 runner 上跑过 |
+| 设计版 DMG | 深色模式下的标签颜色只有论坛报告，没有实测；skill 加进发版 job 的 setup-python 步骤还没在真实 runner 上跑过 |
 | 草稿发版 | 只在本地验证过脚本部分。release-please 的 `draft` 加 `force-tag-creation`、草稿下 action 的 `release_created` 输出、`gh` 往草稿上传再公开，都要等第一次真实发版才能确认。universal 构建、Developer ID 签名、hardened runtime、公证和 appcast 签名合并前都不检查，第一次运行就在 publish job 里 |
 | DMG 卷图标 | 直接用 app 的 AppIcon.icns，只有 16–256 px。在 64、128 pt 下的渲染与全尺寸版逐字节相同（桌面图标最大就是 128 pt），画得比 128 pt 大时（Quick Look、放大的图标视图）会糊，512 pt 下实测可见。补全尺寸要加 `--standalone-icon-behavior all`，代价是每份 icns 多 0.8 MB，设计版 DMG 里有两份（实测 debug DMG 从 3.0 MB 涨到 4.7 MB），所以没加 |
 | app-icon skill | lighting、混合模式和不透明度只核对了格式，没有逐项看渲染效果；属性名清单按 Icon Composer 1.2 整理，换新版 Xcode 时要补充。构思好不好取决于模型和用户的选择，skill 只能靠对比和轮数上限把关。完整流程还没有真实跑过一遍 |
