@@ -55,10 +55,11 @@
 | 39 | G9 | 第 18 项之后，换一把不匹配的私钥：`SPARKLE_ED_PRIVATE_KEY=<另一把私钥> scripts/appcast.sh` | `generate_appcast` 本身照常签名、不报错；随后的校验报 `is not signed with the key matching SPARKLE_PUBLIC_KEY`，退出码 1。错误的下载地址、长度和空公钥也都会报错 | ✅ |
 | 40 | G10 | `SPARKLE_PUBLIC_KEY` 已设置时执行 `make release-dry-run`；再在 `Bundle/app.env` 里临时填一个 `TEAM_ID` 重跑 | 最后一行是 `dry run: release build and DMG ok`，`dist/` 里只有 `.app` 和 `.dmg`；填了 `TEAM_ID` 时仍是 `identity: -`，并跳过公证 | ✅ |
 | 41 | E6 | 把 `README.md`、`docs/DEVELOPMENT.md`、`docs/RELEASING.md` 里的 6 张 mermaid 图用 mermaid 11.4.1 渲染（浅色和深色主题） | 都能渲染，没有报错，也没有 `Unsupported markdown` 节点；文字不重叠 | ✅（本地 Chrome 截图） |
-| 42 | A10 | 对一个图层图片缺失的 `.icon`、一个有 5 个组的 `.icon` 分别运行 `check-icon.sh`；再传一个不存在的应用 | 依次报 `actool warned about …`、`actool rejected …`（`Too many visible groups`）、`no app at …`，退出码都是 1 | ✅ |
+| 42 | A10 | 对一个图层图片缺失的 `.icon`、一个有 5 个组的 `.icon`、一个图层属性拼错成 `glas` 的 `.icon` 分别运行 `check-icon.sh`；再传一个不存在的应用 | 依次报 `actool warned about …`、`actool rejected …`（`Too many visible groups`）、`unknown property "glas"`、`no app at …`，退出码都是 1 | ✅ |
 | 43 | A10 | `image-layer.swift` 依次处理：浅色底的不透明 JPG；透明 PNG，指定 `300 700 300`；32 px 的小图；错误参数 | JPG：提示没有透明、已用 Vision 抠图，输出 1024 × 1024 带透明的图层（主体内部的白色部分被挖空，提示里已说明）；PNG：主体缩到 300 pt，中心在 (700, 300)；小图：提示放大了 24.6 倍；错误参数打印用法并退出 1。用前两张拼成的双组 `.icon` 通过 `check-icon.sh` | ✅ |
 | 44 | A10 | 在 `.build/app-icon/concepts/` 放 4 个黑色 SVG，运行 `concepts.sh`；再对空目录运行 | 生成 `concepts.png`，每个构思一大一小（128 pt、32 pt）并排；线条细的构思在 32 pt 下明显发糊；空目录报 `no .svg in …` | ✅ |
 | 45 | B5 | 临时移走 `Bundle/AppIcon.icon/Assets/rind.svg`，`make app`，再放回 | 构建失败，日志中有 `Icon export exited with status 255` 和 `actool warned`；放回后 `make app` 通过 | ✅ |
+| 46 | A10 | 复制模板图标，依次改：只在深色外观生效的深色底和白色果皮环；前组 `specular: false`、`blur-material: 0.8`；果肉层 `position` 缩到 0.7、上移 60；果皮环只在着色外观隐藏。每份都跑 `check-icon.sh`；再用 `lint-icon.swift` 检查 10 个公开仓库里的 `icon.json` | 都通过检查。深色外观下背景变深、果皮环保持白色；关掉 specular 后果肉的玻璃高光消失；果肉缩小并上移；着色外观下只剩果肉。公开文件里只有 VLC 因为 `refractivity` 不通过，其余 9 个通过 | ✅ |
 
 ### 1.1 本地 Sparkle 端到端（第 22 项的复现步骤）
 

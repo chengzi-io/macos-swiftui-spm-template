@@ -66,6 +66,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V28 | actool 对超过 4 个组的 `.icon` 报错退出；图层引用的图片不存在时只给警告（`Icon export exited with status 255`），退出码为 0，而且不产出图标 | `build-app.sh` 和 `check-icon.sh` 都把 actool 的警告当错误 |
 | V29 | `.icon` 的图层可以是带透明的 PNG，actool 和 ictool 都能处理，玻璃效果照常。系统自带的 Vision（`VNGenerateForegroundInstanceMaskRequest`，macOS 14+）能从不透明的图里抠出主体，但会把主体内部与背景同色的部分一起挖掉（测试图里火箭的白色舷窗成了洞） | `image-layer.swift`：不透明的图才抠，并提醒检查 |
 | V30 | 玻璃效果下，用描边画的开放路径会沿弦多出一条淡线；同样的形状改成填充轮廓就没有。深色前景放在浅色底上，在 Dark 和 Tinted 外观里几乎看不见；浅色或饱和色前景在六种外观里都清楚 | 写进 app-icon skill 的作图规则 |
+| V31 | Icon Composer 的其余设置都是 `icon.json` 里的普通属性。格式取自公开仓库里 Icon Composer 保存的 10 个文件（expo、VLC、Firefox iOS、CodeEdit、KeePassXC、Signal、UTM 等），再在模板图标上逐项修改、用 ictool 渲染核对：只在深色外观生效的底色和图层颜色、关掉 specular、blur-material、position（y 向下）、只在着色外观隐藏，都按预期生效；图层的 `fill` 会把整层改成一种颜色。lighting、混合模式和不透明度只核对了格式。actool 对错误取值（未知的混合模式和外观名，`fill`、`position` 里拼错的键）给警告；根、组、层这一级拼错的属性名则被静默忽略。VLC 的文件里有 Icon Composer 1.2 不认识的 `refractivity`，是新版本写的，这个 Xcode 同样会忽略 | skill 里列出属性表；`check-icon.sh` 先用 `lint-icon.swift` 检查属性名 |
 
 ---
 
@@ -169,7 +170,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | 设计版 DMG | 深色模式下的标签颜色只有论坛报告，没有实测；发版 job 和发版演练里的 setup-python 步骤还没在真实 runner 上跑过 |
 | 草稿发版与发版演练 | 都只在本地验证过脚本部分。release-please 的 `draft` 加 `force-tag-creation`、草稿下 action 的 `release_created` 输出、`gh` 往草稿上传再公开、演练 job 在 release-please PR 上触发、PR 标为 Ready 之后 release-please 再更新它时会不会改回草稿，都要等第一次真实发版才能确认。演练用 ad-hoc 签名，Developer ID 签名、hardened runtime、公证和 appcast 签名只在发版 job 里检查 |
 | DMG 卷图标 | 直接用 app 的 AppIcon.icns，只有 16–256 px。在 64、128 pt 下的渲染与全尺寸版逐字节相同（桌面图标最大就是 128 pt），画得比 128 pt 大时（Quick Look、放大的图标视图）会糊，512 pt 下实测可见。补全尺寸要加 `--standalone-icon-behavior all`，代价是每份 icns 多 0.8 MB，设计版 DMG 里有两份（实测 debug DMG 从 3.0 MB 涨到 4.7 MB），所以没加 |
-| app-icon skill | 高光、模糊、光照、混合模式和按外观单独设置的取值格式没有核对，仍交给用户在 Icon Composer 里调。构思好不好取决于模型和用户的选择，skill 只能用对比和轮数上限把关。完整流程还没有真实跑过一遍 |
+| app-icon skill | lighting、混合模式和不透明度只核对了格式，没有逐项看渲染效果；属性名清单按 Icon Composer 1.2 整理，换新版 Xcode 时要补充。构思好不好取决于模型和用户的选择，skill 只能靠对比和轮数上限把关。完整流程还没有真实跑过一遍 |
 | mermaid 图 | 只用 mermaid 11.4.1 在本地 Chrome 里渲染过（浅色、深色主题）；GitHub 上的渲染要 push 后确认 |
 | SwiftUI Preview | 视图都在 library target 中，但 Preview 只能在 Xcode GUI 里确认，我没有实测 |
 | `make run` 输出到真实终端 | 机制已用文件路径验证；我的执行环境没有 tty，没能直接测试 |
