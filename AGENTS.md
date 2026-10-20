@@ -2,8 +2,21 @@
 
 macOS SwiftUI app built from a pure Swift package: no `.xcodeproj`. `Package.swift`
 compiles the code; `scripts/` assembles, signs and ships the `.app`. Setup, the
-command table and the layout live in [README.md](README.md); this file is the rules
-of engagement.
+command table and the layout live in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md); this
+file is the rules of engagement.
+
+<!-- template-only:start -->
+## Before init
+
+`scripts/init.sh` has not run, so this repository is still the template and `README.md`
+describes the template. When the user asks for app work (a feature, an icon, a
+release), first ask for the app name and bundle identifier, run
+`scripts/init.sh --name <Name> --bundle-id <id>` on a clean tree, show the user the
+`git diff` and commit it as `chore: initialize <Name> from template`; then `make setup`
+and `make ci`. The one-time release setup in [docs/RELEASING.md](docs/RELEASING.md)
+needs the user's GitHub and Apple accounts, so it stays with them. When the user is
+changing the template itself, leave init alone. Init removes this section.
+<!-- template-only:end -->
 
 ## Gate commands
 
@@ -26,6 +39,9 @@ Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks
   `Info.plist`, `App.entitlements`, `PrivacyInfo.xcprivacy`, `AppIcon.icon` (edit it in
   Icon Composer) and the accent color in `Assets.xcassets`.
 - `scripts/`: build, sign, notarize, package, publish. The Makefile only calls them.
+- `README.md`: the app's page for the people who use it, what it does and how to
+  install it. Developer docs go in `docs/`: `DEVELOPMENT.md` (setup, commands, layout),
+  `RELEASING.md`, `RECIPES.md`.
 - `.agents/skills/`: agent skills; Codex and other agents read this directory. Claude
   Code reads `.claude/skills/`, which links to each one: link a new skill the same way.
 - Add a target only for a real boundary (a separate domain, a reusable component),

@@ -1,11 +1,22 @@
 # macos-swiftui-spm-template
 
-<!-- template-only:start -->
-AI-friendly macOS app template built on Swift Package Manager — pure `Package.swift`,
-no `.xcodeproj`, predictable layout, and AGENTS.md conventions for LLM-assisted
-development. Create a repository with **Use this template**, then follow
-[Start a new app](#start-a-new-app).
-<!-- template-only:end -->
+A macOS SwiftUI app template made for building with coding agents: a pure
+`Package.swift` with no `.xcodeproj`, one `make` entry point, the rules in
+[AGENTS.md](AGENTS.md), and a release pipeline that turns a merged PR into a signed DMG
+that installed copies update to.
+
+```mermaid
+flowchart TB
+    subgraph develop["develop"]
+        direction LR
+        code["you or your agent<br/>write code"] --> ci["make ci<br/>lint, test, .app, smoke"] --> pr["PR,<br/>squash merge"]
+    end
+    subgraph release["release"]
+        direction LR
+        rel["release PR<br/>dry run"] --> gh["GitHub Release<br/>DMG, appcast"] --> users["installed apps<br/>update via Sparkle"]
+    end
+    develop --> release
+```
 
 ## What you get
 
@@ -20,24 +31,30 @@ development. Create a repository with **Use this template**, then follow
 - Sparkle 2 updates from GitHub Releases, EdDSA-signed.
 - English and Simplified Chinese string catalog, privacy manifest, accent color, and an
   Icon Composer app icon: Liquid Glass on macOS 26, flattened images on macOS 14–15.
-- Two agent skills in `.agents/skills` (linked from `.claude/skills`): `brand` writes a
-  brand brief and icon layers for Icon Composer; `dmg`, started by you only (`/dmg` in
-  Claude Code, `$dmg` in Codex), designs an optional DMG window.
+- Agent skills: `brand` writes a brand brief and icon layers for Icon Composer; `dmg`,
+  started by you only, designs an optional DMG window.
 - `make ci`: `swift format` lint, unit tests, debug `.app`, launch smoke test.
 - GitHub: CI on macOS runners, PR title check, release-please versioning and
-  CHANGELOG, a publish job that uploads DMG, dSYM, appcast and checksums, Dependabot.
-  Optional Homebrew cask and Mac App Store package.
+  CHANGELOG, a release dry run before tagging, and a publish job that checks and
+  uploads the DMG, dSYM, appcast and checksums before publishing. Dependabot. Optional
+  Homebrew cask and Mac App Store package.
 
-## Requirements
-
-- Xcode 26 (Swift 6.2), selected with `xcode-select`
-- [lefthook](https://lefthook.dev) for git hooks: `brew install lefthook`
-- The app runs on macOS 14 or later
-
-<!-- template-only:start -->
 ## Start a new app
 
-After **Use this template** and cloning your repository:
+```mermaid
+flowchart TD
+    t["① Use this template, clone"] --> i["② scripts/init.sh<br/>app name, bundle id"]
+    i --> s["③ make setup, make run"]
+    s --> f["④ replace the Greeter demo<br/>with your first feature"]
+    s --> b["⑤ replace the icon:<br/>Icon Composer or the brand skill"]
+    f --> r["⑥ one-time release setup"]
+    b --> r
+    r --> first["⑦ first release:<br/>Ready for review, merge"]
+```
+
+Steps ①, ⑥ and ⑦ need your GitHub and Apple accounts; your agent can do ② to ⑤. You
+need Xcode 26 (Swift 6.2) and `brew install lefthook`; the app runs on macOS 14 or
+later.
 
 ```bash
 scripts/init.sh --name MyApp --bundle-id com.example.myapp \
@@ -47,66 +64,25 @@ make run     # build and launch the debug app
 ```
 
 `scripts/init.sh` writes the app identity into `Bundle/app.env`, points releases and
-updates at your repository, resets the version to `0.0.0`, updates LICENSE, README,
-CODEOWNERS and the issue templates, removes the template's own planning docs, and
-finally deletes itself. Then replace the icon (open `Bundle/AppIcon.icon` in Icon
-Composer, or have your agent run the brand skill) and the Greeter demo, and work through the one-time setup in
-[docs/RELEASING.md](docs/RELEASING.md).
+updates at your repository, resets the version to `0.0.0`, updates LICENSE, CODEOWNERS
+and the issue templates, and replaces this README with a short page for your app's
+users. It removes the template's own planning docs, then itself.
 
-<!-- template-only:end -->
+With an agent: open the repository in Claude Code, Codex or another agent that reads
+`AGENTS.md`, and describe the app. Before init has run, the agent asks for the name and
+bundle identifier and runs it first; then it builds features the way `AGENTS.md` sets
+out and finishes each with `make ci`.
 
-## Commands
+## Docs
 
-| Command | What it does |
-| --- | --- |
-| `make setup` | Check the toolchain and install git hooks |
-| `make doctor` | Check Xcode, tools and signing identity |
-| `make run` | Build and launch the debug `.app`; logs in the terminal, `ARGS="…"` go to the app |
-| `make app` | Build the debug `.app` (ad-hoc signed) into `.build/app/Debug/` |
-| `make test` | Unit tests (`swift test`) |
-| `make fmt` / `make lint` | Format / check formatting with `swift format` |
-| `make smoke` | Launch-test the debug `.app` (or `APP=path`) |
-| `make ci` | Everything CI runs; the definition of done |
-| `make logs` | Stream the app's unified logs |
-| `make release` | Universal, signed, notarized (with a Developer ID) DMG, dSYM, appcast in `dist/` |
-| `make release-dry-run` | The release build and DMG checks without signing secrets; CI runs it on a release PR marked ready |
-| `make sparkle-keys` | Create the Sparkle EdDSA key; write the public key to `Bundle/app.env` |
-| `make github-setup` | Squash-only merges, branch protection, `release` environment |
-| `make release-mas` / `make upload-mas` | Mac App Store `.pkg`, and its upload |
-
-`make help` lists everything.
-
-Try the Chinese UI with `make run ARGS="-AppleLanguages '(zh-Hans)'"`.
-
-## Layout
-
-```text
-Package.swift              targets, platforms, Swift settings, Sparkle
-Sources/App/               @main, scenes, commands, app delegate, updater
-Sources/AppCore/           views, models, services, Localizable.xcstrings
-Tests/AppCoreTests/        Swift Testing
-Bundle/                    app.env, Info.plist, entitlements, privacy manifest, AppIcon.icon
-scripts/                   build, sign, notarize, package, publish
-.github/                   CI, PR title, release-please, Dependabot, templates
-version.txt                current version, owned by release-please
-```
-
-## Editors
-
-- Xcode: `xed .` opens `Package.swift`. Its Run button starts the bare executable,
-  outside an `.app`: no bundle identifier, no sandbox, no Info.plist. Use it for quick
-  UI checks and SwiftUI previews; for the real app run `make run` and attach the
-  debugger (Debug › Attach to Process, or `lldb -n <AppName>`).
-- VS Code / Cursor: the Swift extension (sourcekit-lsp) works on the package as is.
-
-## Releases
-
-release-please reads Conventional Commit PR titles on `main`, keeps a draft release PR
-with the next version and CHANGELOG, and tags the release when that PR is merged. To
-release, mark it ready for review: that runs a release dry run, which must pass. The publish job then builds, signs, notarizes,
-checks and uploads the DMG to a draft release and publishes it; Sparkle picks it up
-from `releases/latest/download/appcast.xml`. One-time setup and details:
-[docs/RELEASING.md](docs/RELEASING.md).
+| File | What it covers | After init |
+| --- | --- | --- |
+| `README.md` | this page | replaced by your app's page |
+| `AGENTS.md` (`CLAUDE.md` points to it) | rules for agents, where code goes | kept |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | setup, commands, layout, how the app is built | kept |
+| [docs/RELEASING.md](docs/RELEASING.md) | the release flow, one-time setup, recovery | kept |
+| [docs/RECIPES.md](docs/RECIPES.md) | launch at login, networking, menu bar, crash reporting | kept |
+| `docs/TEMPLATE-PLAN.md`, `docs/ACCEPTANCE.md` | the template's own plan and checks (Chinese) | removed |
 
 ## License
 

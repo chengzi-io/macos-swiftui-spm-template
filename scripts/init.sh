@@ -72,14 +72,44 @@ drop_template_blocks() {
     printf '%s\n' "$content" >"$file"
 }
 
-log "update LICENSE, README, CODEOWNERS, issue templates"
+log "update LICENSE, CODEOWNERS, issue templates"
 sed -i '' "s|^Copyright (c) .*|Copyright (c) $year $holder|" LICENSE
-sed -i '' "1s|.*|# $display_name|" README.md
-drop_template_blocks README.md '<!-- template-only:start -->' '<!-- template-only:end -->'
 sed -i '' "s|@[A-Za-z0-9_/-]*|$codeowner|g" .github/CODEOWNERS
 sed -i '' "s|github.com/[^/]*/[^/]*/security|github.com/$repo/security|" .github/ISSUE_TEMPLATE/config.yml
 
-log "remove template-only files"
+# README.md is the app's page for its users; developer docs stay in docs/.
+log "replace README with a page for $display_name's users"
+cat >README.md <<EOF
+# $display_name
+
+<!-- What $display_name does and for whom, in a sentence or two; a screenshot helps.
+     This page is for people who use the app. Developer docs live in docs/. -->
+
+## Install
+
+Download the DMG from the [latest release](https://github.com/$repo/releases/latest),
+open it and drag $name to Applications. $display_name runs on macOS 14 or later.
+
+<!-- Delete this paragraph once TEAM_ID is set in Bundle/app.env: apps signed with a
+     Developer ID open without it. -->
+macOS blocks the first launch because the app is not notarized yet: open System
+Settings → Privacy & Security and click **Open Anyway**, once.
+
+To update, choose **Check for Updates…** in the app menu, or turn on **Automatically
+check for updates** in Settings.
+
+## Development
+
+Setup, commands and layout: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). How releases
+ship: [docs/RELEASING.md](docs/RELEASING.md).
+
+## License
+
+[MIT](LICENSE)
+EOF
+
+log "remove template-only files and sections"
+drop_template_blocks AGENTS.md '<!-- template-only:start -->' '<!-- template-only:end -->'
 drop_template_blocks Makefile '^# template-only:start' '^# template-only:end'
 rm -f docs/TEMPLATE-PLAN.md docs/ACCEPTANCE.md "$ROOT/scripts/init.sh"
 
@@ -89,9 +119,9 @@ Done. Review with \`git diff\`, then commit, for example:
   git add -A && git commit -m "chore: initialize $name from template"
 
 Next:
-  1. Replace the icon (Icon Composer, or the brand skill in .agents/skills/brand) and
-     the Greeter demo.
-  2. make setup && make run
+  1. make setup && make run
+  2. Replace the Greeter demo and the icon (Icon Composer, or the brand skill in
+     .agents/skills/brand), and say what the app does at the top of README.md.
   3. One-time release setup: docs/RELEASING.md (make github-setup, GitHub App,
      make sparkle-keys, optional Developer ID).
 EOF
