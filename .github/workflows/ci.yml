@@ -36,7 +36,8 @@ jobs:
     name: Release dry run
     # Merging a release-please PR tags the release, so its release path must work first.
     # The PR opens as a draft, which cannot merge; marking it ready for review starts the
-    # dry run, so it runs when you release rather than on every push to main.
+    # dry run, so it runs when you release rather than on every push to main. Until the
+    # PR merges, each release-please update to it runs the dry run again.
     # PRs get no signing secrets: ad-hoc signed, not notarized, no appcast.
     if: ${{ startsWith(github.head_ref, 'release-please--') && github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft }}
     runs-on: macos-26

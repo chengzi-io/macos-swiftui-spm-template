@@ -25,7 +25,9 @@ flowchart TD
   `main` and is what Sparkle compares.
 - **Dry run.** `make release-dry-run`: the release build without the signing secrets,
   which PRs never get. A draft PR cannot merge, so the dry run cannot be skipped, and
-  it runs only when you mean to release.
+  it runs only when you mean to release. Mark the PR ready when you are about to merge
+  it, and merge once the dry run passes: while it is ready, each merge into `main`
+  updates the PR and runs the dry run again, on macOS minutes.
 - **Draft release.** Nobody sees it, and `releases/latest` keeps pointing at the
   previous version, until the publish job has uploaded every asset.
 

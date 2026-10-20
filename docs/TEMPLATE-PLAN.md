@@ -119,7 +119,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | G7 | 发布说明 | release-please 的 CHANGELOG；ad-hoc 构建自动追加打开方式说明 | 🟡 |
 | G8 | dSYM 存档 | Release 资产 + 保留 90 天的 workflow artifact | ✅ 本地 / 🟡 CI |
 | G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SPARKLE_PUBLIC_KEY` 对得上 | ✅ 本地（含反例） |
-| G10 | 发版演练 | `make release-dry-run`：universal 构建、ad-hoc 签名、冒烟测试、DMG 和 G9 的 DMG 校验；CI 在 release-please 的 PR 上作为必需检查 `Release dry run` 运行。发版 PR 以草稿打开（`draft-pull-request`），草稿 PR 不能合并；点「Ready for review」才开始演练，所以只在准备发版时跑，不会每次合并进 main 都跑一遍 | ✅ 本地 / 🟡 CI |
+| G10 | 发版演练 | `make release-dry-run`：universal 构建、ad-hoc 签名、冒烟测试、DMG 和 G9 的 DMG 校验；CI 在 release-please 的 PR 上作为必需检查 `Release dry run` 运行。发版 PR 以草稿打开（`draft-pull-request`），草稿 PR 不能合并；点「Ready for review」才开始演练，所以只在准备发版时跑，不会每次合并进 main 都跑一遍。点了 Ready 却没合并时，之后每次合并进 main 都会更新发版 PR，演练会再跑一遍，所以要在合并前一刻再点 Ready | ✅ 本地 / 🟡 CI |
 | H1 | Sparkle 自动更新 | `Sources/App/Updates.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
 | H2 | Homebrew Cask | `scripts/update-cask.sh`，通过 `vars.HOMEBREW_TAP` 启用 | 🟡 |
 | H3 | Mac App Store | `make release-mas` / `make upload-mas` | 🟡（构建链路已用替代身份验证） |
