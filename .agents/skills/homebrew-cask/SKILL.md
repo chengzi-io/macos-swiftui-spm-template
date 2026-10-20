@@ -12,7 +12,7 @@ Sparkle (`auto_updates true`); Homebrew only installs it.
 
 ## What this skill expects from the project
 
-It is written for apps made from macos-swiftui-spm-template, after `scripts/init.sh`:
+It is written for apps made from macos-swiftui-spm-template, once its init has run:
 
 - `make release` writes `dist/$APP_NAME-$VERSION.dmg`. `.github/workflows/release.yml`
   has a `release-please` job and a `publish` job that publishes the GitHub Release, and

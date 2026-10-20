@@ -12,7 +12,7 @@ so the App Store build carries no Sparkle.
 
 ## What this skill expects from the project
 
-It is written for apps made from macos-swiftui-spm-template, after `scripts/init.sh`:
+It is written for apps made from macos-swiftui-spm-template, once its init has run:
 
 - `Package.swift` depends on Sparkle; `Sources/App/Updates.swift` wraps it,
   `Sources/App/MainApp.swift` adds the Check for Updates command and passes the update
