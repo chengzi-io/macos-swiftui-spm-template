@@ -1,12 +1,3 @@
-## Change type
-
-- [ ] `feat` — new behavior
-- [ ] `fix` — bug fix
-- [ ] `docs` — documentation only
-- [ ] `refactor` — no behavior change
-- [ ] `perf` — performance
-- [ ] `chore` — tooling, dependencies, CI
-
 ## Verification
 
 <!-- Commands you ran and what they showed, e.g. `make ci` passed. -->
