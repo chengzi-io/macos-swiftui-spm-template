@@ -72,12 +72,6 @@ jobs:
           name: dsym-${{ needs.release-please.outputs.tag_name }}
           path: dist/*.dSYM.zip
           retention-days: 90
-      - name: Update Homebrew cask
-        if: ${{ vars.HOMEBREW_TAP != '' }}
-        env:
-          HOMEBREW_TAP: ${{ vars.HOMEBREW_TAP }}
-          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-        run: scripts/update-cask.sh push
       - name: Remove signing credentials
         if: always()
         run: scripts/ci-keychain.sh cleanup

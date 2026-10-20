@@ -67,6 +67,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V29 | `.icon` 的图层可以是带透明的 PNG，actool 和 ictool 都能处理，玻璃效果照常。系统自带的 Vision（`VNGenerateForegroundInstanceMaskRequest`，macOS 14+）能从不透明的图里抠出主体，但会把主体内部与背景同色的部分一起挖掉（测试图里火箭的白色舷窗成了洞） | `image-layer.swift`：不透明的图才抠，并提醒检查 |
 | V30 | 玻璃效果下，用描边画的开放路径会沿弦多出一条淡线；同样的形状改成填充轮廓就没有。深色前景放在浅色底上，在 Dark 和 Tinted 外观里几乎看不见；浅色或饱和色前景在六种外观里都清楚 | 写进 app-icon skill 的作图规则 |
 | V31 | Icon Composer 的其余设置都是 `icon.json` 里的普通属性。格式取自公开仓库里 Icon Composer 保存的 10 个文件（expo、VLC、Firefox iOS、CodeEdit、KeePassXC、Signal、UTM 等），再在模板图标上逐项修改、用 ictool 渲染核对：只在深色外观生效的底色和图层颜色、关掉 specular、blur-material、position（y 向下）、只在着色外观隐藏，都按预期生效；图层的 `fill` 会把整层改成一种颜色。lighting、混合模式和不透明度只核对了格式。actool 对错误取值（未知的混合模式和外观名，`fill`、`position` 里拼错的键）给警告；根、组、层这一级拼错的属性名则被静默忽略。VLC 的文件里有 Icon Composer 1.2 不认识的 `refractivity`，是新版本写的，这个 Xcode 同样会忽略 | skill 里列出属性表；`check-icon.sh` 先用 `lint-icon.swift` 检查属性名 |
+| V32 | Homebrew 7.0：flight 块改成声明式的 `postflight_steps`（官方库拒收旧的 `postflight do`，第三方 tap 暂时还能用）；`depends_on macos:` 用裸 symbol 表示最低版本，`">= :sonoma"` 过不了 `brew style`；官方 cask 必须通过 Gatekeeper；第三方 tap 需要 Tap Trust，`brew install --cask owner/tap/token` 这种全名安装只信任这一个 cask；cask 的下载都带 quarantine。本地 tap 实测：`postflight_steps` 里 `run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/X.app"]` 在 Homebrew 的沙盒里能清掉 quarantine；`xattr -dr` 在属性不存在时也返回 0；`brew style` 只在 tap 里按 cask 规则检查 | `homebrew-cask` skill 的 cask 写法和检查步骤 |
 
 ---
 
@@ -125,7 +126,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | G8 | dSYM 存档 | Release 资产 + 保留 90 天的 workflow artifact | ✅ 本地 / 🟡 CI |
 | G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SPARKLE_PUBLIC_KEY` 对得上 | ✅ 本地（含反例） |
 | H1 | Sparkle 自动更新 | `Sources/App/Updates.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
-| H2 | Homebrew Cask | `scripts/update-cask.sh`，通过 `vars.HOMEBREW_TAP` 启用 | 🟡 |
+| H2 | Homebrew Cask | `.agents/skills/homebrew-cask`，只能由用户启动：每次发版由单独的 `homebrew` job 下载已公开的 DMG，生成 cask 推到用户的 tap。有 Developer ID 时是普通 cask（C）；ad-hoc 时用户二选一：caveats 提示「仍要打开」（A），或安装后清掉 quarantine（B），两种都在 README 加 `[!IMPORTANT]` 提醒 | 🟡（三种 cask 都过了 `brew style` 和 `brew audit`，A、B 用本地 tap 真装过；推到 GitHub 上的 tap 要 push 后验证） |
 | H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（`APP_STORE=1` 只在 MAS 构建里去掉 Sparkle）或只上 App Store（删掉 Sparkle 和 DMG 发布）；带 `release-mas.sh`、`build-app.sh` 的 mas 配置和 RELEASING 的一节 | 🟡（两种方案都在临时 worktree 里按 skill 走过一遍，签名用的是替代身份） |
 | H4 | 测试版通道 | `docs/RELEASING.md` | 📄 |
 
@@ -150,6 +151,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **文档体系**：README 原来既是模板说明又是开发文档，init 只删掉模板段落，剩下的开发文档对应用的使用者没用。改为按读者分开：模板的 README 只介绍模板，init 把它整个换成给应用使用者看的短页（介绍、安装、首次打开、更新）；开发文档移到 `docs/DEVELOPMENT.md`；AGENTS.md 加一节「Before init」，让 agent 在做应用相关的工作前先问名字和 bundle ID 并运行 init，init 时删掉这一节。发版流程、恢复步骤、构建链路和新项目步骤改为 mermaid 图加少量文字。
 - **品牌 skill 改为 app-icon skill**：只做图标，去掉品牌简报。agent 画出来的图标渲染质量没问题，弱点在构思，所以流程的重点放在先比较黑白构思、每轮都出六种外观和 Dock 对比图、草稿不经用户认可不替换、两轮选不出就停。原来让用户去 Icon Composer 看深色和着色效果，现在由 ictool 直接渲染。
 - **H3 Mac App Store：移进 skill**。原来模板默认带 `APP_STORE` 开关：`Package.swift` 按环境变量切换依赖，`Sources/` 里 7 处条件编译，`SettingsView` 的公开参数为它做成可选，`build-app.sh` 为它复制源码再构建。不上 App Store 的 app 也背着这些，而这条路只用替代身份验证过。现在模板只有 Sparkle 一条渠道；`mac-app-store` skill 在用户启动时按选择加入双渠道，或者只上 App Store：后者直接删掉 Sparkle 和 DMG 发布，用不着条件编译。
+- **H2 Homebrew：移进 skill**。原来 cask 步骤在 publish job 里、排在公开 Release 之后：失败时 Release 已经上线，job 却是红的；ad-hoc 时也照样推一个装上就被 Gatekeeper 拦下的 cask；`depends_on macos: ">= :sonoma"` 是 Homebrew 7 的 `brew style` 不认的旧写法（V32）。现在模板里没有 Homebrew；skill 把 cask 放进单独的 job，按 `TEAM_ID` 和 `HOMEBREW_UNSIGNED` 选 C、A 或 B，A、B 都要求 README 加 `[!IMPORTANT]` 提醒。
 - **DMG 美化**：不作为默认，做成单独的 DMG skill（A11），只能由用户启动。模板不为设计版做任何准备：原来模板的 `make-dmg.sh` 按 `Bundle/DMG/settings.py` 是否存在分两条路，发版 job 也按它决定装不装 Python；现在 dmgbuild 版的 `make-dmg.sh`、依赖清单和 setup-python 步骤都放在 skill 里，用户启动 skill 时才加进项目，和 `Bundle/DMG/` 一起提交，revert 那次提交就回到普通 DMG。
 - **skill 按独立项目写**：app-icon 和 dmg 两个 skill 的脚本都不再 source 模板的 `scripts/common.sh`，按 `$(dirname "$0")` 找 skill 自己的文件、按 `git rev-parse --show-toplevel` 找项目，在项目的任意子目录里都能运行；SKILL.md 开头写明各自对项目的要求（`Bundle/AppIcon.icon`、`Bundle/app.env`、`make app` 的产物路径、`scripts/make-dmg.sh` 的参数、发版 workflow），命令里的 skill 目录写成 `<skill>`。两个目录都可以原样搬到单独的仓库。
 - **新增**：
@@ -167,7 +169,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | 没有 XCUITest | 纯 SPM 无法建 UI Testing target；用冒烟测试 + 模型层测试 + 人工检查代替 |
 | Xcode Run 跑的是裸可执行文件 | 没有 bundle ID、不受 sandbox 限制；真实环境请用 `make run` 再附加调试器 |
 | 漏写 `bundle: .module` 不会报错 | 已写进 AGENTS.md 的规则 |
-| ad-hoc 发布的体验 | 首次打开要在系统设置里点「仍要打开」；每次更新签名都会变，权限和 keychain 访问可能需要重新授权；Homebrew 安装会被 Gatekeeper 拦截 |
+| ad-hoc 发布的体验 | 首次打开要在系统设置里点「仍要打开」；每次更新签名都会变，权限和 keychain 访问可能需要重新授权；Homebrew（`homebrew-cask` skill）要么首次打开被拦，要么由 cask 清掉 quarantine |
 | ad-hoc 切换到 Developer ID 的首次更新 | 理论上靠 EdDSA 能通过，**尚未实测** |
 | `.icon` 在 macOS 14 和 26 上的显示 | macOS 15 已在本机验证；macOS 26 的效果用 ictool（Icon Composer 自己的渲染器）看过，没在 macOS 26 真机上看过；macOS 14 未验证 |
 | 设计版 DMG | 深色模式下的标签颜色只有论坛报告，没有实测；skill 加进发版 job 的 setup-python 步骤还没在真实 runner 上跑过 |

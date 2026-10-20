@@ -108,7 +108,8 @@ networking, menu bar apps and crash reporting: [docs/RECIPES.md](docs/RECIPES.md
 
 Skills in `.agents/skills/`: `app-icon` makes the app icon. Skills that change the build
 or the release start only when the user asks for them by name: `dmg` designs the DMG
-window, `mac-app-store` adds an App Store build.
+window, `mac-app-store` adds an App Store build, `homebrew-cask` publishes to a Homebrew
+tap.
 
 ## Commits and releases
 

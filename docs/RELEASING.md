@@ -42,9 +42,8 @@ flowchart TB
 Notarizing, signing the DMG and the Gatekeeper check need a Developer ID; without one
 they are skipped. The appcast check uses `SPARKLE_PUBLIC_KEY`, the key installed apps
 trust. The job then uploads the DMG, dSYM zip, appcast and `SHA256SUMS` to the draft
-release and publishes it, keeps the dSYM as a workflow artifact for 90 days, and
-updates the Homebrew cask when a tap is configured. Installed apps read
-`releases/latest/download/appcast.xml`.
+release and publishes it, and keeps the dSYM as a workflow artifact for 90 days.
+Installed apps read `releases/latest/download/appcast.xml`.
 
 ## One-time setup
 
@@ -112,7 +111,7 @@ first launch.
 | First launch | Blocked by Gatekeeper, once: System Settings → Privacy & Security → **Open Anyway** | Opens |
 | Updates through Sparkle | Work: EdDSA proves they came from you, and no Gatekeeper prompt | Work |
 | Permissions (camera, screen recording, accessibility…) and keychain items | May be asked for again after an update: every build has a new signature | Kept |
-| Homebrew cask | Quarantined, so blocked like the first launch | Installs |
+| Homebrew cask (`homebrew-cask` skill) | Blocked at first launch, or the cask clears the quarantine flag: you pick, and README.md says so | Installs |
 
 Ad-hoc updates were verified locally with two sandboxed builds (0.1.0 → 0.1.1).
 
@@ -194,15 +193,8 @@ The dSYM matches by UUID, so the executable being renamed to `<App>` does not ma
 
 ## Homebrew cask (optional)
 
-1. Create `<owner>/homebrew-tap` with a `Casks/` directory.
-2. Create a fine-grained token with Contents read and write on that repository only.
-3. `gh variable set HOMEBREW_TAP --body <owner>/homebrew-tap` and
-   `gh secret set HOMEBREW_TAP_TOKEN --env release`.
-
-The publish job then writes `Casks/<app>.rb` (version, sha256, `auto_updates true`,
-minimum macOS, zap path) after every release. Preview it with
-`scripts/update-cask.sh print` after `make release`. Users install with
-`brew install --cask <owner>/tap/<app>`. Useful only with a Developer ID (see 4a).
+The `homebrew-cask` skill makes every release update a cask in your Homebrew tap. Only
+you start it: `/homebrew-cask` in Claude Code, `$homebrew-cask` in Codex.
 
 ## Mac App Store (optional)
 

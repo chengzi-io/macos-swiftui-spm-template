@@ -38,7 +38,7 @@
 | 22 | H1 | 本地 Sparkle 端到端（可选，见下面的 §1.1） | 0.1.0 自动更新到 0.1.1，更新后的应用正常启动 | ✅ |
 | 23 | H3 | 模板默认：`grep -rn 'APP_STORE\|release-mas' Package.swift Sources scripts Makefile`，`make help` | grep 没有结果；`make help` 里没有 `release-mas` | ✅ |
 | 24 | H3 | 在两个临时 worktree 里按 `mac-app-store` skill 分别走「双渠道」（第 2、3a 步）和「只上 App Store」（第 2、3b 步），各跑 `make ci`；再用替代身份（假 `TEAM_ID`、假 profile、`find_identity` 返回 `-`）执行 `scripts/build-app.sh mas`，不设 profile 时也跑一次 | 双渠道改完后 `Package.swift`、`Sources/`、`Makefile` 与移出前的版本逐字相同；两种方案 `make ci` 都通过；mas 产物没有 Sparkle、没有 `SU*` 键，带 `application-identifier`、`team-identifier` 和嵌入的 profile，`lipo` 为 `x86_64 arm64`，`productbuild` 能打成 pkg；双渠道下 `Package.resolved` 不变，只上 App Store 时它被删除；没有 profile 时报 `set MAS_PROVISIONING_PROFILE`；第 3b 步的 grep 列出剩下要改的文档和配置 | ✅ |
-| 25 | H2 | `make release` 之后执行 `scripts/update-cask.sh print \| ruby -c` | `Syntax OK` | ✅ |
+| 25 | H2 | 模板默认：`grep -rn 'HOMEBREW\|update-cask' scripts .github`。再在临时 worktree 里按 `homebrew-cask` skill 接入（`update-cask.sh`、`app.env`、`homebrew` job），`make release` 之后分别生成 C（临时填 `TEAM_ID`）、A（`caveats`）、B（`xattr`）三种 cask，以及 `TEAM_ID` 和 `HOMEBREW_UNSIGNED` 都空的情况；三种 cask 放进本地 tap 跑 `brew style`、`brew audit --cask`；A、B 从本地 HTTP 服务装到临时 `--appdir` | grep 没有结果；都空时报 `set HOMEBREW_UNSIGNED`；三种 cask 的 `ruby -c`、`brew style`、`brew audit` 都通过；`release.yml` 里的 `homebrew` job 依赖 release-please 和 publish；B 装好的 app 没有 `com.apple.quarantine`；A 装好的 app 带 quarantine，安装输出里有 caveats | ✅ |
 | 26 | E5 | 在一个临时 clone 里：`scripts/init.sh --name MyApp --bundle-id com.example.myapp --display-name "My App" --copyright "Jane Doe" --repo acme/my-app --codeowner @jane`，然后 `make ci` | 改动涉及 app.env、LICENSE、README、AGENTS.md、CODEOWNERS、Issue 模板和 Makefile：README 整个换成「My App」的应用页面（介绍占位、从 `acme/my-app` 的 latest release 安装、首次打开、更新、开发文档链接），AGENTS.md 的「Before init」一节被删除；init.sh 与两份模板文档被删除；仓库里不再有指向它们的引用，剩下的 Markdown 相对链接都有效；`make ci` 通过，产物是 `MyApp.app`，bundle ID 为 `com.example.myapp` | ✅ |
 | 27 | E5 | 工作区不干净时运行 init | 报错 `commit or stash your changes first` | ✅ |
 | 28 | 文档 | 阅读 `AGENTS.md`、`README.md`、`docs/DEVELOPMENT.md`、`docs/RELEASING.md`、`docs/RECIPES.md` | C5–C9、H4 都有说明；RECIPES 里的 Swift 片段能编译 | ✅ 片段已编译 |
@@ -107,7 +107,7 @@ plutil -p "$A/Contents/Info.plist" | grep ShortVersion   # => 0.1.1
 | 9 | H1 | `curl -sL https://github.com/chengzi-io/macos-swiftui-spm-template/releases/latest/download/appcast.xml` | 显示 0.1.0 的条目 |
 | 10 | Q2 | 在另一台 Mac 上下载 DMG 并安装 | 首次被拦截；到「隐私与安全性 → 仍要打开」后可以运行 |
 | 11 | H1 | 合并一个 `fix:` PR，再合并它的发版 PR，得到 v0.1.1；在已安装的 0.1.0 中点「Check for Updates…」 | 发现 0.1.1，安装并重启后版本号正确 |
-| 12 | H2 | 设置 `vars.HOMEBREW_TAP` 和 `HOMEBREW_TAP_TOKEN` 后再发一个版本 | tap 仓库中出现 `Casks/swiftuitemplate.rb`；`brew audit --cask <tap>/swiftuitemplate` 通过 |
+| 12 | H2 | 用 `homebrew-cask` skill 接入、设置 `HOMEBREW_TAP_TOKEN` 后再发一个版本 | Release 公开后 `homebrew` job 运行，tap 仓库中出现 `Casks/swiftuitemplate.rb`；`brew install --cask <owner>/<tap>/swiftuitemplate` 能装上；故意填错 token 时只有 `homebrew` job 失败，Release 照常公开，修好后单独重跑这个 job |
 | 13 | G3 | 在一个用 dmg skill 加了设计版的项目里发版 | publish job 执行了 `actions/setup-python`（Python 3.13），日志中有 `install dmgbuild`；Release 里的 DMG 打开后带背景。模板默认的 `release.yml` 里没有这一步 |
 | 14 | A5 | 在 `macos-14` 和 `macos-26` runner 上渲染图标（可选，一次性 workflow：下载 `.app`，运行 `.agents/skills/app-icon/scripts/render-icon.swift`，上传 PNG）。macOS 26 的效果本地已能用 ictool 看到，这一项只是在真机上确认 | 14 上是扁平图；26 上是 Liquid Glass，与第 30 项的 ictool 渲染一致 |
 | 15 | G5 | 让一次发版失败：发版前临时删掉 `SPARKLE_ED_PRIVATE_KEY` secret，合并发版 PR | publish job 失败，Release 停在草稿；`releases/latest/download/appcast.xml` 仍是上一版。恢复 secret 后点 Re-run failed jobs，同一个 tag 构建成功并公开 |
