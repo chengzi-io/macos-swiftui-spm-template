@@ -34,8 +34,8 @@ flowchart TB
 - Agent skills: `app-icon` makes the Liquid Glass icon from your logo, drawn layers or
   an image-model prompt, and checks it in every appearance beside apps in your Dock.
   Skills you start yourself add what not every app needs: `dmg` designs the DMG window,
-  `mac-app-store` adds an App Store build, `homebrew-cask` publishes to your Homebrew
-  tap.
+  `mac-app-store` adds an App Store build, `homebrew-cask` puts the app on Homebrew,
+  in the official repository or your own tap.
 - `make ci`: `swift format` lint, unit tests, debug `.app`, launch smoke test.
 - GitHub: CI on macOS runners, PR title check, release-please versioning and
   CHANGELOG, and a publish job that checks the DMG, dSYM, appcast and checksums and

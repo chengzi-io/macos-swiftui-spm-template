@@ -111,7 +111,7 @@ first launch.
 | First launch | Blocked by Gatekeeper, once: System Settings → Privacy & Security → **Open Anyway** | Opens |
 | Updates through Sparkle | Work: EdDSA proves they came from you, and no Gatekeeper prompt | Work |
 | Permissions (camera, screen recording, accessibility…) and keychain items | May be asked for again after an update: every build has a new signature | Kept |
-| Homebrew cask (`homebrew-cask` skill) | Blocked at first launch, or the cask clears the quarantine flag: you pick, and README.md says so | Installs |
+| Homebrew cask (`homebrew-cask` skill) | Own tap only: blocked at first launch, or the cask clears the quarantine flag; you pick, and README.md says so | Installs, and can go to the official `homebrew/cask` |
 
 Ad-hoc updates were verified locally with two sandboxed builds (0.1.0 → 0.1.1).
 
@@ -193,8 +193,10 @@ The dSYM matches by UUID, so the executable being renamed to `<App>` does not ma
 
 ## Homebrew cask (optional)
 
-The `homebrew-cask` skill makes every release update a cask in your Homebrew tap. Only
-you start it: `/homebrew-cask` in Claude Code, `$homebrew-cask` in Codex.
+The `homebrew-cask` skill puts the app on Homebrew. The official `homebrew/cask` takes
+apps with a Developer ID from notable repositories and updates the cask by itself; your
+own tap takes any build, and every release updates it. Only you start it:
+`/homebrew-cask` in Claude Code, `$homebrew-cask` in Codex.
 
 ## Mac App Store (optional)
 

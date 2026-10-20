@@ -69,8 +69,10 @@ Skills live in `.agents/skills` (Codex and other agents), linked from `.claude/s
   `$dmg` in Codex.
 - `mac-app-store`: adds a Mac App Store build, beside the Sparkle release or instead of
   it, and wires it into the build and the code. Only you start it.
-- `homebrew-cask`: publishes each release to your Homebrew tap, with a plain cask for a
-  Developer ID and a choice of two for ad-hoc builds. Only you start it.
+- `homebrew-cask`: puts the app on Homebrew: in the official `homebrew/cask`, which
+  needs a Developer ID and a notable repository and then updates the cask by itself, or
+  in your own tap, which every release updates and which also takes ad-hoc builds. Only
+  you start it.
 
 ## Commits and releases
 
