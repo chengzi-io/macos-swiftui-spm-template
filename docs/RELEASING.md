@@ -5,12 +5,8 @@
 ```mermaid
 flowchart TD
     pr["your PR<br/>feat: … or fix: …"] -->|squash merge| main["main"]
-    main -->|release-please| rpr["release PR, a draft:<br/>next version, CHANGELOG.md"]
-    rpr -->|"you: Ready for review"| dry{{"Release dry run"}}
-    dry -->|fails| fix["fix it in another PR"]
-    fix --> main
-    dry -->|passes| merge["you: Squash and merge"]
-    merge --> tag["release-please: tag vX.Y.Z<br/>and a draft GitHub Release"]
+    main -->|release-please| rpr["release PR:<br/>next version, CHANGELOG.md"]
+    rpr -->|"you: Squash and merge"| tag["release-please: tag vX.Y.Z<br/>and a draft GitHub Release"]
     tag --> job{{"Publish macOS app"}}
     job -->|fails| hidden["stays a draft: users see nothing"]
     job -->|passes| live["assets uploaded, release published"]
@@ -23,31 +19,28 @@ flowchart TD
   `.release-please-manifest.json`. `CFBundleShortVersionString` comes from
   `version.txt`; `CFBundleVersion` is `git rev-list --count HEAD`, which only grows on
   `main` and is what Sparkle compares.
-- **Dry run.** `make release-dry-run`: the release build without the signing secrets,
-  which PRs never get. A draft PR cannot merge, so the dry run cannot be skipped, and
-  it runs only when you mean to release. Mark the PR ready when you are about to merge
-  it, and merge once the dry run passes: while it is ready, each merge into `main`
-  updates the PR and runs the dry run again, on macOS minutes.
 - **Draft release.** Nobody sees it, and `releases/latest` keeps pointing at the
-  previous version, until the publish job has uploaded every asset.
+  previous version, until the publish job has uploaded every asset. The release-only
+  steps (universal build, notarization, DMG, appcast) first run in that job; when one
+  fails, the release stays a draft ([Recovering](#recovering-from-a-failed-or-bad-release)).
 
 The publish job checks out the tag and runs `make lint test`, then `make release`:
 
 ```mermaid
 flowchart TB
-    subgraph both["make release and make release-dry-run"]
+    subgraph package["app and DMG"]
         direction LR
         app["release .app<br/>universal, signed"] --> smoke["smoke test"] --> notarize["notarize"] --> dmg["DMG"] --> check["check the DMG:<br/>mount, smoke test,<br/>Gatekeeper"]
     end
-    subgraph only["make release only"]
+    subgraph feed["update feed"]
         direction LR
         dsym["dSYM zip"] --> appcast["appcast.xml<br/>EdDSA-signed"] --> verify["check the appcast:<br/>URL, length, signature"] --> sums["SHA256SUMS"]
     end
-    both --> only
+    package --> feed
 ```
 
-Notarizing, signing the DMG and the Gatekeeper check need a Developer ID; the dry run
-signs ad-hoc. The appcast check uses `SPARKLE_PUBLIC_KEY`, the key installed apps
+Notarizing, signing the DMG and the Gatekeeper check need a Developer ID; without one
+they are skipped. The appcast check uses `SPARKLE_PUBLIC_KEY`, the key installed apps
 trust. The job then uploads the DMG, dSYM zip, appcast and `SHA256SUMS` to the draft
 release and publishes it, keeps the dSYM as a workflow artifact for 90 days, and
 updates the Homebrew cask when a tap is configured. Installed apps read
@@ -64,19 +57,18 @@ make github-setup
 ```
 
 Squash merge only, with the PR title as the commit title; `main` requires a PR and the
-three checks below; the workflow token is read-only; the `release` environment only
-runs from protected branches; private vulnerability reporting is on. The script prints
-the settings it reads back.
+two checks below; the workflow token is read-only; the `release` environment only runs
+from protected branches; private vulnerability reporting is on. The script prints the
+settings it reads back.
 
-| Required check | Your PRs | Release PR, draft | Release PR, ready for review |
-| --- | --- | --- | --- |
-| `Validate PR title` | runs | skipped | skipped |
-| `Lint, test, build` | runs | skipped | skipped |
-| `Release dry run` | skipped | skipped | runs |
+| Required check | Your PRs | Release PR |
+| --- | --- | --- |
+| `Validate PR title` | runs | skipped |
+| `Lint, test, build` | runs | skipped |
 
 A skipped required check counts as passed. release-please's PRs (branch
 `release-please--*` in this repository) change only the version and the changelog, so
-the dry run is the check they need, and a draft cannot merge whatever its checks say.
+they skip both.
 
 ### 2. GitHub App for release-please
 

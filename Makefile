@@ -89,10 +89,6 @@ appcast: ## Generate dist/appcast.xml for the DMG
 release: ## Full release into dist/: app, notarization, DMG, dSYM, appcast, checksums
 	scripts/release.sh
 
-.PHONY: release-dry-run
-release-dry-run: ## Release build and DMG checks without signing secrets (CI on release PRs)
-	RELEASE_DRY_RUN=1 scripts/release.sh
-
 .PHONY: release-mas
 release-mas: ## Mac App Store .pkg in dist/mas/ (needs TEAM_ID, MAS_PROVISIONING_PROFILE)
 	scripts/release-mas.sh

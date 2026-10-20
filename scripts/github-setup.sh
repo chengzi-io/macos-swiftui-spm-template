@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # One-time GitHub settings for this repository (needs `gh` with admin rights):
 #   - squash merge only, commit title = PR title (release-please reads it)
-#   - main protected: PR required, "Validate PR title", "Lint, test, build" and
-#     "Release dry run" required, no force push or deletion; reviews required only
-#     with two or more pushers
+#   - main protected: PR required, "Validate PR title" and "Lint, test, build"
+#     required, no force push or deletion; reviews required only with two or more
+#     pushers
 #   - default workflow token read-only
 #   - `release` environment limited to protected branches (the publish job)
 #   - private vulnerability reporting on
@@ -30,7 +30,7 @@ gh api --method PUT "repos/$repo/branches/$branch/protection" --input - >/dev/nu
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": ["Validate PR title", "Lint, test, build", "Release dry run"]
+    "contexts": ["Validate PR title", "Lint, test, build"]
   },
   "enforce_admins": true,
   "required_pull_request_reviews": {

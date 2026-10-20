@@ -13,7 +13,7 @@ flowchart TB
     end
     subgraph release["release"]
         direction LR
-        rel["release PR<br/>dry run"] --> gh["GitHub Release<br/>DMG, appcast"] --> users["installed apps<br/>update via Sparkle"]
+        rel["release PR<br/>version, CHANGELOG"] --> gh["GitHub Release<br/>DMG, appcast"] --> users["installed apps<br/>update via Sparkle"]
     end
     develop --> release
 ```
@@ -36,9 +36,9 @@ flowchart TB
   `dmg`, started by you only, designs an optional DMG window.
 - `make ci`: `swift format` lint, unit tests, debug `.app`, launch smoke test.
 - GitHub: CI on macOS runners, PR title check, release-please versioning and
-  CHANGELOG, a release dry run before tagging, and a publish job that checks and
-  uploads the DMG, dSYM, appcast and checksums before publishing. Dependabot. Optional
-  Homebrew cask and Mac App Store package.
+  CHANGELOG, and a publish job that checks the DMG, dSYM, appcast and checksums and
+  uploads them to a draft release before publishing it. Dependabot. Optional Homebrew
+  cask and Mac App Store package.
 
 ## Start a new app
 
@@ -50,7 +50,7 @@ flowchart TD
     s --> b["⑤ replace the icon:<br/>Icon Composer or the app-icon skill"]
     f --> r["⑥ one-time release setup"]
     b --> r
-    r --> first["⑦ first release:<br/>Ready for review, merge"]
+    r --> first["⑦ first release:<br/>merge the release PR"]
 ```
 
 Steps ①, ⑥ and ⑦ need your GitHub and Apple accounts; your agent can do ② to ⑤. You

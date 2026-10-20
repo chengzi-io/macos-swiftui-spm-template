@@ -108,7 +108,6 @@ app icon has its skill, `app-icon`
 ## Commits and releases
 
 Conventional Commits. PRs are squash-merged and the PR title becomes the commit on
-`main`; CI checks it. release-please turns `feat` and `fix` commits into a draft release
-PR; marking it ready for review runs a release dry run, which must pass. Merging it tags
-`vX.Y.Z` with a draft release, and the release workflow attaches the DMG, dSYM and
-appcast, then publishes it. Details: [docs/RELEASING.md](docs/RELEASING.md).
+`main`; CI checks it. release-please turns `feat` and `fix` commits into a release PR.
+Merging it tags `vX.Y.Z` with a draft release, and the release workflow attaches the
+DMG, dSYM and appcast, then publishes it. Details: [docs/RELEASING.md](docs/RELEASING.md).
