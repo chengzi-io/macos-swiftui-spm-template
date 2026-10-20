@@ -39,9 +39,9 @@
 | 23 | H3 | `make release-mas` | 报错 `App Store builds need TEAM_ID`（不会落到 ad-hoc） | ✅ |
 | 24 | H3 | MAS 构建链路（用替代身份模拟） | `.app` 里没有 Sparkle、没有 `SU*` 键；带 `application-identifier` 和嵌入的 profile；`Package.resolved` 不被改动 | ✅ |
 | 25 | H2 | `make release` 之后执行 `scripts/update-cask.sh print \| ruby -c` | `Syntax OK` | ✅ |
-| 26 | E5 | 在一个临时 clone 里：`scripts/init.sh --name MyApp --bundle-id com.example.myapp --display-name "My App" --copyright "Jane Doe" --repo acme/my-app --codeowner @jane`，然后 `make ci` | 改动涉及 app.env、LICENSE、README、CODEOWNERS、Issue 模板和 Makefile；init.sh 与两份模板文档被删除；`make ci` 通过，产物是 `MyApp.app`，bundle ID 为 `com.example.myapp` | ✅ |
+| 26 | E5 | 在一个临时 clone 里：`scripts/init.sh --name MyApp --bundle-id com.example.myapp --display-name "My App" --copyright "Jane Doe" --repo acme/my-app --codeowner @jane`，然后 `make ci` | 改动涉及 app.env、LICENSE、README、AGENTS.md、CODEOWNERS、Issue 模板和 Makefile：README 整个换成「My App」的应用页面（介绍占位、从 `acme/my-app` 的 latest release 安装、首次打开、更新、开发文档链接），AGENTS.md 的「Before init」一节被删除；init.sh 与两份模板文档被删除；仓库里不再有指向它们的引用，剩下的 Markdown 相对链接都有效；`make ci` 通过，产物是 `MyApp.app`，bundle ID 为 `com.example.myapp` | ✅ |
 | 27 | E5 | 工作区不干净时运行 init | 报错 `commit or stash your changes first` | ✅ |
-| 28 | 文档 | 阅读 `AGENTS.md`、`README.md`、`docs/RELEASING.md`、`docs/RECIPES.md` | C5–C9、H4 都有说明；RECIPES 里的 Swift 片段能编译 | ✅ 片段已编译 |
+| 28 | 文档 | 阅读 `AGENTS.md`、`README.md`、`docs/DEVELOPMENT.md`、`docs/RELEASING.md`、`docs/RECIPES.md` | C5–C9、H4 都有说明；RECIPES 里的 Swift 片段能编译 | ✅ 片段已编译 |
 | 29 | A5 | `open -a "Icon Composer" Bundle/AppIcon.icon`（Icon Composer 在 Xcode 菜单 Open Developer Tool 里） | 左栏有两个 Group（segments、rind），右栏 Fill 为两色渐变；画布是 Liquid Glass 预览，底部能切换 Default、Dark、Mono | ✅（截图） |
 | 30 | A5 | `.agents/skills/brand/scripts/preview-icon.sh`，打开 `.build/brand/icon.png` | 本机系统的渲染结果：macOS 15 上是扁平图，与 Dock 里一致 | ✅ macOS 15 |
 | 31 | G3 | 没有 `Bundle/DMG/` 时：`make app && scripts/make-dmg.sh .build/app/Debug/SwiftUITemplate.app .build/dmg/plain.dmg`，再挂载 | 卷里只有 `.app` 和 `Applications`，没有 `.background.tiff`；Finder 窗口是普通样式 | ✅ 卷内容 / 👀 窗口样式 |
@@ -54,6 +54,7 @@
 | 38 | G9 | 第 18 项之后：`scripts/verify-dmg.sh dist/SwiftUITemplate-0.0.0.dmg`；再把 debug 包复制一份，用 `xattr -wx com.apple.FinderInfo 0000000000000000001000000000000000000000000000000000000000000000` 给它加上 Finder 标记，打成 DMG 后同样校验 | 前者输出卷内 app 的 `smoke ok` 和 `dmg ok`；后者报 `resource fork, Finder information, or similar detritus not allowed`，退出码 1（就是之前 `hide_extensions` 那个问题） | ✅ |
 | 39 | G9 | 第 18 项之后，换一把不匹配的私钥：`SPARKLE_ED_PRIVATE_KEY=<另一把私钥> scripts/appcast.sh` | `generate_appcast` 本身照常签名、不报错；随后的校验报 `is not signed with the key matching SPARKLE_PUBLIC_KEY`，退出码 1。错误的下载地址、长度和空公钥也都会报错 | ✅ |
 | 40 | G10 | `SPARKLE_PUBLIC_KEY` 已设置时执行 `make release-dry-run`；再在 `Bundle/app.env` 里临时填一个 `TEAM_ID` 重跑 | 最后一行是 `dry run: release build and DMG ok`，`dist/` 里只有 `.app` 和 `.dmg`；填了 `TEAM_ID` 时仍是 `identity: -`，并跳过公证 | ✅ |
+| 41 | E6 | 把 `README.md`、`docs/DEVELOPMENT.md`、`docs/RELEASING.md` 里的 6 张 mermaid 图用 mermaid 11.4.1 渲染（浅色和深色主题） | 都能渲染，没有报错，也没有 `Unsupported markdown` 节点；文字不重叠 | ✅（本地 Chrome 截图） |
 
 ### 1.1 本地 Sparkle 端到端（第 22 项的复现步骤）
 
@@ -106,6 +107,7 @@ plutil -p "$A/Contents/Info.plist" | grep ShortVersion   # => 0.1.1
 | 13 | G3 | 在一个提交了 `Bundle/DMG/` 的项目里发版 | 发版 PR 上的 `Release dry run` 和 publish job 都执行了 `actions/setup-python`（Python 3.13），日志中有 `install dmgbuild`；Release 里的 DMG 打开后带背景。没有 `Bundle/DMG/` 的项目里这一步显示 skipped |
 | 14 | A5 | 在 `macos-14` 和 `macos-26` runner 上渲染图标（可选，一次性 workflow：下载 `.app`，运行 `.agents/skills/brand/scripts/render-icon.swift`，上传 PNG） | 14 上是扁平图，26 上是 Liquid Glass |
 | 15 | G5 | 让一次发版失败：发版前临时删掉 `SPARKLE_ED_PRIVATE_KEY` secret，合并发版 PR | publish job 失败，Release 停在草稿；`releases/latest/download/appcast.xml` 仍是上一版。恢复 secret 后点 Re-run failed jobs，同一个 tag 构建成功并公开 |
+| 16 | E6 | 在 GitHub 上打开 `README.md`、`docs/DEVELOPMENT.md`、`docs/RELEASING.md` | mermaid 图都渲染成图，和第 41 项的截图一致（浅色、深色模式） |
 
 ## 3. Apple 证书和账号
 

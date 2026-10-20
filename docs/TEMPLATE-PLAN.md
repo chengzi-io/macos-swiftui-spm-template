@@ -61,6 +61,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V23 | dmgbuild 自己写 `.DS_Store`，不驱动 Finder。`window_rect` 的高度包含 28 pt 标题栏；`hide_extensions` 会在 .app 上写 FinderInfo，导致 `codesign --verify --strict` 失败；背景图配 `@2x.png` 时会自动合成 Retina TIFF；1.6.7 要求 Python ≥ 3.10（Xcode 自带的 python3 是 3.9.6） | 模板不用 `hide_extensions`；窗口高 428 pt；按哈希固定版本，装在 `.build/` 的 venv 里 |
 | V24 | 窗口所有者名称是本地化的（中文系统下 Finder 叫「访达」）；带背景图的 DMG 窗口中，Finder 的图标标签是黑字（DropDMG 论坛报告深色模式下也是如此，我只验证了浅色模式） | 预览脚本按 pid 找窗口；skill 要求标签区域保持浅色 |
 | V25 | actool 把编译交给常驻的 `ibtoold`，相对路径按 `ibtoold` 自己的工作目录解析。在第二个 checkout（如 worktree）里构建时，会写到甚至读到第一个 checkout 的文件 | `build-app.sh` 和 `preview-icon.sh` 都传绝对路径 |
+| V26 | mermaid 节点文字以「1. 」开头时会被当作 Markdown 列表，渲染成「Unsupported markdown: list」 | 图里的步骤编号用 ①②③ |
 
 ---
 
@@ -102,9 +103,9 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | E1 | 命令单一入口 | `Makefile`（`make help`） | ✅ |
 | E2 | AI 约定 | `AGENTS.md`、`CLAUDE.md` | ✅ |
 | E3 | 环境自检 | `make doctor` | ✅ |
-| E4 | IDE 支持 | README「Editors」一节 | ✅（Preview 需在 Xcode 中人工确认） |
+| E4 | IDE 支持 | `docs/DEVELOPMENT.md`「Editors」一节 | ✅（Preview 需在 Xcode 中人工确认） |
 | E5 | 模板初始化 | `scripts/init.sh`、`make init` | ✅ |
-| E6 | 项目文档 | `README.md`、`docs/RELEASING.md`、`.github/SECURITY.md`、`.github/CONTRIBUTING.md` | ✅ |
+| E6 | 项目文档 | `README.md`（模板首页，init 把它换成应用自己的页面）、`docs/DEVELOPMENT.md`、`docs/RELEASING.md`、`docs/RECIPES.md`、`.github/SECURITY.md`、`.github/CONTRIBUTING.md`；流程用 mermaid 图加少量文字 | ✅ 本地渲染 / 🟡 GitHub 上的渲染 |
 | F1 | PR CI | `.github/workflows/ci.yml` | 🟡 |
 | F2 | 依赖更新 | `.github/dependabot.yml` | 🟡 |
 | F3 | 仓库治理 | PR 模板、CODEOWNERS、Issue 模板、`make github-setup` | 🟡 |
@@ -140,6 +141,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **A8**：`make run` 改用 `open` 启动（V15）；没有终端时日志写到 `.build/app/run.log`。
 - **C2**：`GreeterError` 不实现 `LocalizedError`（V9）。
 - **A5**：图标从 `.appiconset` 改为 Icon Composer 的 `.icon`（V22）。
+- **文档体系**：README 原来既是模板说明又是开发文档，init 只删掉模板段落，剩下的开发文档对应用的使用者没用。改为按读者分开：模板的 README 只介绍模板，init 把它整个换成给应用使用者看的短页（介绍、安装、首次打开、更新）；开发文档移到 `docs/DEVELOPMENT.md`；AGENTS.md 加一节「Before init」，让 agent 在做应用相关的工作前先问名字和 bundle ID 并运行 init，init 时删掉这一节。发版流程、恢复步骤、构建链路和新项目步骤改为 mermaid 图加少量文字。
 - **DMG 美化**：不作为默认，做成单独的 DMG skill（A11），只能由用户启动。模板默认仍是普通 DMG；skill 生成 `Bundle/DMG/` 后，发版自动使用设计版。
 - **新增**：
   - `PrivacyInfo.xcprivacy` 随所有构建打包。
@@ -163,6 +165,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | 草稿发版与发版演练 | 都只在本地验证过脚本部分。release-please 的 `draft` 加 `force-tag-creation`、草稿下 action 的 `release_created` 输出、`gh` 往草稿上传再公开、演练 job 在 release-please PR 上触发、PR 标为 Ready 之后 release-please 再更新它时会不会改回草稿，都要等第一次真实发版才能确认。演练用 ad-hoc 签名，Developer ID 签名、hardened runtime、公证和 appcast 签名只在发版 job 里检查 |
 | DMG 卷图标 | 直接用 app 的 AppIcon.icns，只有 16–256 px。在 64、128 pt 下的渲染与全尺寸版逐字节相同（桌面图标最大就是 128 pt），画得比 128 pt 大时（Quick Look、放大的图标视图）会糊，512 pt 下实测可见。补全尺寸要加 `--standalone-icon-behavior all`，代价是每份 icns 多 0.8 MB，设计版 DMG 里有两份（实测 debug DMG 从 3.0 MB 涨到 4.7 MB），所以没加 |
 | 品牌 skill 的图标环节 | agent 只能写 SVG 和 `icon.json`，玻璃、高光以及深色、着色外观需要人在 Icon Composer 里调 |
+| mermaid 图 | 只用 mermaid 11.4.1 在本地 Chrome 里渲染过（浅色、深色主题）；GitHub 上的渲染要 push 后确认 |
 | SwiftUI Preview | 视图都在 library target 中，但 Preview 只能在 Xcode GUI 里确认，我没有实测 |
 | `make run` 输出到真实终端 | 机制已用文件路径验证；我的执行环境没有 tty，没能直接测试 |
 | Developer ID、公证、MAS、所有 GitHub 侧流程 | 需要证书或 push 后才能验收，见 ACCEPTANCE.md |
