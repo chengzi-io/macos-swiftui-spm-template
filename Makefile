@@ -51,7 +51,7 @@ lint: ## Check formatting (fails on any finding)
 	swift format lint --strict --recursive --parallel $(SWIFT_PATHS)
 
 .PHONY: app
-app: ## Build the debug .app (ad-hoc signed)
+app: ## Build the debug .app in .build/app/Debug (ad-hoc signed)
 	scripts/build-app.sh debug
 
 .PHONY: run

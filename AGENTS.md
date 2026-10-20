@@ -1,9 +1,9 @@
 # AGENTS.md
 
 macOS SwiftUI app built from a pure Swift package: no `.xcodeproj`. `Package.swift`
-compiles the code; `scripts/` assembles, signs and ships the `.app`. Setup, the
-command table and the layout live in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md); this
-file is the rules of engagement.
+compiles the code; `scripts/` assembles, signs and ships the `.app`. Setup and the
+layout live in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md), the commands in `make help`;
+this file is the rules of engagement.
 
 <!-- template-only:start -->
 ## Before init

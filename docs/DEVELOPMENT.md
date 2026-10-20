@@ -27,23 +27,8 @@ checks. `make app` and `make release` run the whole chain.
 
 ## Commands
 
-| Command | What it does |
-| --- | --- |
-| `make setup` | Check the toolchain and install git hooks |
-| `make doctor` | Check Xcode, tools and signing identity |
-| `make run` | Build and launch the debug `.app`; logs in the terminal, `ARGS="…"` go to the app |
-| `make app` | Build the debug `.app` (ad-hoc signed) into `.build/app/Debug/` |
-| `make test` | Unit tests (`swift test`) |
-| `make fmt` / `make lint` | Format / check formatting with `swift format` |
-| `make smoke` | Launch-test the debug `.app` (or `APP=path`) |
-| `make ci` | Everything CI runs; the definition of done |
-| `make logs` | Stream the app's unified logs |
-| `make release` | Universal, signed, notarized (with a Developer ID) DMG, dSYM, appcast in `dist/` |
-| `make sparkle-keys` | Create the Sparkle EdDSA key; write the public key to `Bundle/app.env` |
-| `make github-setup` | Squash-only merges, branch protection, `release` environment |
-| `make release-mas` / `make upload-mas` | Mac App Store `.pkg`, and its upload |
-
-`make help` lists everything.
+`make help` lists every target. `make ci` runs everything CI runs; it is the definition
+of done.
 
 Try the Chinese UI with `make run ARGS="-AppleLanguages '(zh-Hans)'"`.
 
