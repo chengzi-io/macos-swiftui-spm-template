@@ -7,11 +7,17 @@
 #       and 32 pt.
 # Fails on property names this Xcode ignores (lint-icon.swift) and on anything actool
 # rejects or warns about, as the app build does.
+# Runs from anywhere inside the project; paths are relative to its root.
 #   check-icon.sh [path.icon] [app ...]    default apps: Safari, Notes, Photos, App Store
+set -euo pipefail
 
-source "$(dirname "$0")/../../../../scripts/common.sh"
+die() {
+    echo "error: $*" >&2
+    exit 1
+}
 
-here=.agents/skills/app-icon/scripts
+here=$(cd "$(dirname "$0")" && pwd)
+cd "$(git rev-parse --show-toplevel)"
 icon=${1:-Bundle/AppIcon.icon}
 [[ -f $icon/icon.json ]] || die "no icon.json in $icon"
 if [[ $# -gt 1 ]]; then
@@ -30,7 +36,7 @@ ictool="$(xcode-select -p)/../Applications/Icon Composer.app/Contents/Executable
 icon="$(cd "$icon" && pwd)"
 name=$(basename "$icon" .icon)
 xcrun swift "$here/lint-icon.swift" "$icon/icon.json"
-out="$ROOT/.build/app-icon"
+out="$PWD/.build/app-icon"
 renders="$out/$name"
 rm -rf "$renders"
 mkdir -p "$renders"

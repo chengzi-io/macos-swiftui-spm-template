@@ -9,8 +9,18 @@ The icon has to hold up next to the best icons in the user's Dock, in every appe
 and at 32 pt. A weak icon is worse than the template's, so nothing replaces
 `Bundle/AppIcon.icon` until the user has seen the draft beside other apps and approved it.
 
-Scripts live in `.agents/skills/app-icon/scripts/` and run from the repo root. Drafts and
-renders go in `.build/app-icon/`.
+## What this skill expects from the project
+
+It is written for apps made from macos-swiftui-spm-template:
+
+- The icon is `Bundle/AppIcon.icon`; the app build compiles it with actool and fails on
+  its warnings, and `make ci` builds and smoke-tests the app.
+- `README.md` and `Bundle/app.env` say what the app does and what it is called.
+- Xcode 26 is selected, with Icon Composer: its `ictool` renders the checks.
+
+`<skill>` below is this skill's directory, for example `.agents/skills/app-icon`. Its
+scripts run from anywhere inside the project and take paths relative to the project
+root. Drafts and renders go in `.build/app-icon/`.
 
 ## How the icon works
 
@@ -92,7 +102,7 @@ user, in one message, only for what is still missing:
 - **PNG or JPG**:
 
   ```bash
-  xcrun swift .agents/skills/app-icon/scripts/image-layer.swift <image> \
+  xcrun swift <skill>/scripts/image-layer.swift <image> \
       .build/app-icon/a.icon/Assets/<layer>.png [size=640] [x=512] [y=512]
   ```
 
@@ -113,7 +123,7 @@ Draw six to eight concepts as black marks on a transparent 1024 canvas,
 `.build/app-icon/concepts/<letter>-<idea>.svg`, and render them:
 
 ```bash
-.agents/skills/app-icon/scripts/concepts.sh    # → .build/app-icon/concepts.png
+<skill>/scripts/concepts.sh    # → .build/app-icon/concepts.png
 ```
 
 - Every concept is a different idea, not a variation of one. Find it in what is specific
@@ -168,7 +178,7 @@ the model.
 ## 6. Check
 
 ```bash
-.agents/skills/app-icon/scripts/check-icon.sh .build/app-icon/a.icon [/Applications/<App>.app ...]
+<skill>/scripts/check-icon.sh .build/app-icon/a.icon [/Applications/<App>.app ...]
 ```
 
 - `.build/app-icon/a-check.png`: macOS 26 in all six appearances (ictool, Icon

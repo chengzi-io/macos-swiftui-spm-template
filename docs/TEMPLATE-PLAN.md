@@ -149,7 +149,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **文档体系**：README 原来既是模板说明又是开发文档，init 只删掉模板段落，剩下的开发文档对应用的使用者没用。改为按读者分开：模板的 README 只介绍模板，init 把它整个换成给应用使用者看的短页（介绍、安装、首次打开、更新）；开发文档移到 `docs/DEVELOPMENT.md`；AGENTS.md 加一节「Before init」，让 agent 在做应用相关的工作前先问名字和 bundle ID 并运行 init，init 时删掉这一节。发版流程、恢复步骤、构建链路和新项目步骤改为 mermaid 图加少量文字。
 - **品牌 skill 改为 app-icon skill**：只做图标，去掉品牌简报。agent 画出来的图标渲染质量没问题，弱点在构思，所以流程的重点放在先比较黑白构思、每轮都出六种外观和 Dock 对比图、草稿不经用户认可不替换、两轮选不出就停。原来让用户去 Icon Composer 看深色和着色效果，现在由 ictool 直接渲染。
 - **DMG 美化**：不作为默认，做成单独的 DMG skill（A11），只能由用户启动。模板不为设计版做任何准备：原来模板的 `make-dmg.sh` 按 `Bundle/DMG/settings.py` 是否存在分两条路，发版 job 也按它决定装不装 Python；现在 dmgbuild 版的 `make-dmg.sh`、依赖清单和 setup-python 步骤都放在 skill 里，用户启动 skill 时才加进项目，和 `Bundle/DMG/` 一起提交，revert 那次提交就回到普通 DMG。
-- **skill 按独立项目写**：dmg skill 的脚本不再 source 模板的 `scripts/common.sh`，按 `$(dirname "$0")` 找 skill 自己的文件、按 `git rev-parse --show-toplevel` 找项目；SKILL.md 开头写明它对项目的要求（`Bundle/app.env`、`make app` 的产物路径、`scripts/make-dmg.sh` 的参数、发版 workflow），整个目录可以搬到单独的仓库。
+- **skill 按独立项目写**：app-icon 和 dmg 两个 skill 的脚本都不再 source 模板的 `scripts/common.sh`，按 `$(dirname "$0")` 找 skill 自己的文件、按 `git rev-parse --show-toplevel` 找项目，在项目的任意子目录里都能运行；SKILL.md 开头写明各自对项目的要求（`Bundle/AppIcon.icon`、`Bundle/app.env`、`make app` 的产物路径、`scripts/make-dmg.sh` 的参数、发版 workflow），命令里的 skill 目录写成 `<skill>`。两个目录都可以原样搬到单独的仓库。
 - **新增**：
   - `PrivacyInfo.xcprivacy` 随所有构建打包。
   - `ci-keychain.sh` 负责 CI 中证书的导入和清理。
