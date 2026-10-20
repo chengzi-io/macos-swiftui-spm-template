@@ -148,7 +148,7 @@ Add `About %@`, `Settings…` and `Quit` to `Localizable.xcstrings` in `en` and
 activate the app. Apple plans to deprecate `activate(ignoringOtherApps:)` (its
 documentation lists macOS 27), but Swift warns only once the deployment target reaches
 that release; `activate()` alone still leaves windows in the Stage Manager strip now
-and then.
+and then. This was checked on macOS 15.7 with Stage Manager, not on macOS 26 or later.
 
 An item that opens the main window is optional. Add it to `MenuBarMenu` as the first
 group, its title in the catalog, when people come back to a window from the menu bar;
