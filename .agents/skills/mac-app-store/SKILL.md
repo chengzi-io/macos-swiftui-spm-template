@@ -6,6 +6,12 @@ disable-model-invocation: true
 
 # Mac App Store
 
+> [!WARNING]
+> Outdated since 2026-10-23. These steps target the pure Swift package layout that the
+> template replaced with a thin Xcode project and `Packages/AppModules`: `Sources/App`,
+> `Bundle/` and the `APP_STORE=1` switch in `Package.swift` no longer exist. Apply
+> nothing below; tell the user this skill has to be reworked for the new layout first.
+
 The project ships outside the App Store: a DMG on GitHub Releases that Sparkle keeps
 up to date. This skill adds an App Store build. The App Store updates the app itself,
 so the App Store build carries no Sparkle.

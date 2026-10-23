@@ -1,6 +1,6 @@
 import SwiftUI
 
-// The DMG window background: 660 × 400 pt, origin top-left. Bundle/DMG/settings.py
+// The DMG window background: 660 × 400 pt, origin top-left. Configs/DMG/settings.py
 // puts the app icon at (170, 200) and Applications at (490, 200) as 128 pt icons, with
 // Finder's labels under them; keep those spots clear. Finder always draws this window
 // in light mode, so labels stay black: keep the label areas light. A user's path or

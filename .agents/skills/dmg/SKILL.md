@@ -1,6 +1,6 @@
 ---
 name: dmg
-description: Design the DMG installer window (Bundle/DMG) - background and layout, from a plain default to a branded illustration. Wires dmgbuild into the project's build on first use and renders the real Finder window for the user to judge.
+description: Design the DMG installer window (Configs/DMG) - background and layout, from a plain default to a branded illustration. Wires dmgbuild into the project's build on first use and renders the real Finder window for the user to judge.
 disable-model-invocation: true
 ---
 
@@ -14,13 +14,13 @@ background never has text: it is one image for every language, and the arrow nee
 
 It is written for apps made from macos-swiftui-spm-template:
 
-- `Bundle/app.env` sets `APP_NAME` and `APP_DISPLAY_NAME`; `Bundle/AppIcon.icon` is the
-  app icon.
-- `make app` builds the debug app at `.build/app/Debug/$APP_NAME.app`, with
-  `Contents/Resources/AppIcon.icns`.
+- `Configs/Identity.xcconfig` sets `APP_NAME` and `APP_DISPLAY_NAME` as plain
+  `KEY = value` lines; `App/AppIcon.icon` is the app icon.
+- `make app` builds the debug app at `.build/xcode/Build/Products/Debug/$APP_NAME.app`,
+  with `Contents/Resources/AppIcon.icns`.
 - `scripts/make-dmg.sh <app> <dmg>` makes the unsigned DMG and `scripts/package-dmg.sh`
-  signs and notarizes it; `scripts/common.sh` loads `Bundle/app.env` and defines `die`
-  and `log`.
+  signs and notarizes it; `scripts/common.sh` exports `Configs/Identity.xcconfig` and
+  defines `die` and `log`.
 - `.github/workflows/release.yml` runs `make release` on a macOS runner.
 
 `<skill>` below is this skill's directory, for example `.agents/skills/dmg`. Its scripts
@@ -30,7 +30,7 @@ run from anywhere inside the project.
 
 The project ships a plain window: its `scripts/make-dmg.sh` runs hdiutil on the app and
 an Applications link. Step 1 swaps in dmgbuild 1.6.7, which builds the window from
-`Bundle/DMG/`:
+`Configs/DMG/`:
 
 ```
 hdiutil create a blank image and attach it
@@ -42,8 +42,8 @@ detach, shrink, convert to compressed UDZO
 | Input | Source | Change it here |
 | --- | --- | --- |
 | App, volume icon, volume name | `make app` or `make release`; the app's `AppIcon.icns`; `APP_DISPLAY_NAME` | No |
-| Background | `Bundle/DMG/Background.swift`, rendered to `background.png` and `@2x`; `art.png` when an image model made the art | Yes |
-| Layout | `window_rect`, `icon_size`, `text_size`, `icon_locations` in `Bundle/DMG/settings.py` | Yes, with the constants in `Background.swift` |
+| Background | `Configs/DMG/Background.swift`, rendered to `background.png` and `@2x`; `art.png` when an image model made the art | Yes |
+| Layout | `window_rect`, `icon_size`, `text_size`, `icon_locations` in `Configs/DMG/settings.py` | Yes, with the constants in `Background.swift` |
 | The rest of `settings.py` | `format`, `files`, `symlinks`, `icon`; no `hide_extensions` (it fails `codesign --strict`) | No |
 | `scripts/make-dmg.sh`, `scripts/dmgbuild-requirements.txt`, the release workflow's Python step | Step 1 | No, after step 1 |
 
@@ -74,14 +74,14 @@ Nothing else in CI changes. The release job builds from the committed PNGs and n
 renders `Background.swift`; PR CI (`make ci`) builds no DMG, so the preview is the check.
 
 If the user decides against a designed window, undo this step: restore
-`scripts/make-dmg.sh` and the workflow from git, and delete `Bundle/DMG/` and
+`scripts/make-dmg.sh` and the workflow from git, and delete `Configs/DMG/` and
 `scripts/dmgbuild-requirements.txt`.
 
 ## 2. Default
 
 ```bash
-mkdir -p Bundle/DMG && cp <skill>/templates/* Bundle/DMG/   # skip if Bundle/DMG exists
-<skill>/scripts/render-dmg-background.sh                    # → Bundle/DMG/background.png, @2x
+mkdir -p Configs/DMG && cp <skill>/templates/* Configs/DMG/   # skip if Configs/DMG exists
+<skill>/scripts/render-dmg-background.sh                    # → Configs/DMG/background.png, @2x
 make app && <skill>/scripts/preview-dmg.sh                  # → .build/dmg/dmg.png
 ```
 
@@ -99,7 +99,7 @@ Show the user the screenshot. Unless they already said which level they want, as
 
 ## 3. Read the brand
 
-The brand is the app icon. Take the colors from `Bundle/AppIcon.icon/icon.json` (the
+The brand is the app icon. Take the colors from `App/AppIcon.icon/icon.json` (the
 `fill`) and its layers in `Assets/`, and look at the icon in `.build/dmg/dmg.png`. Pick
 the motif: a shape from the icon that still reads at 30–60 pt.
 
@@ -111,11 +111,11 @@ the motif: a shape from the icon that still reads at 30–60 pt.
   Applications. For example the icon's chevron, a row of its dots, paw prints, a pulse
   line, a pixel arrow.
 
-Make two or three variants. For each, write `Bundle/DMG/Background.swift`, render,
+Make two or three variants. For each, write `Configs/DMG/Background.swift`, render,
 preview, then keep the source as `.build/dmg/<letter>.swift` and the screenshot as
 `.build/dmg/<letter>.png`. Show the user the screenshots with one line each on the idea,
 and let them pick or adjust in plain words ("thinner arrow", "less color"). Copy the pick
-back to `Bundle/DMG/Background.swift` and render again.
+back to `Configs/DMG/Background.swift` and render again.
 
 ## 5. Full brand
 
@@ -185,7 +185,7 @@ Made by an image model:
    ```
 
 2. The user generates, picks one and gives you the file. Save it as
-   `Bundle/DMG/art.png` (`sips -s format png <file> --out Bundle/DMG/art.png` converts a
+   `Configs/DMG/art.png` (`sips -s format png <file> --out Configs/DMG/art.png` converts a
    JPEG or WebP). It needs at least 1320 × 800 px after the crop; a smaller one blurs on
    Retina, so ask for a larger one.
 3. Draw it as the bottom layer in `Background.swift`:
@@ -195,8 +195,8 @@ Made by an image model:
 
    // In DMGBackground. The renderer runs from the repo root.
    static let art: NSImage = {
-       guard let image = NSImage(contentsOfFile: "Bundle/DMG/art.png") else {
-           fatalError("cannot read Bundle/DMG/art.png")
+       guard let image = NSImage(contentsOfFile: "Configs/DMG/art.png") else {
+           fatalError("cannot read Configs/DMG/art.png")
        }
        return image
    }()
@@ -233,6 +233,6 @@ Made by an image model:
 ## 6. Finish
 
 1. Render once more, so the PNGs match `Background.swift`, and run `preview-dmg.sh`.
-2. Commit `Bundle/DMG/`, the two files in `scripts/` and the workflow step together, for
+2. Commit `Configs/DMG/`, the two files in `scripts/` and the workflow step together, for
    example `feat(dmg): add a designed installer window`. Reverting that commit brings
    back the plain DMG.

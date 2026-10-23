@@ -163,8 +163,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **品牌 skill 改为 app-icon skill**：只做图标，去掉品牌简报。agent 画出来的图标渲染质量没问题，弱点在构思，所以流程的重点放在先比较黑白构思、每轮都出六种外观和 Dock 对比图、草稿不经用户认可不替换、两轮选不出就停。原来让用户去 Icon Composer 看深色和着色效果，现在由 ictool 直接渲染。
 - **H3 Mac App Store：移进 skill**。原来模板默认带 `APP_STORE` 开关：`Package.swift` 按环境变量切换依赖，`Sources/` 里 7 处条件编译，`SettingsView` 的公开参数为它做成可选，`build-app.sh` 为它复制源码再构建。不上 App Store 的 app 也背着这些，而这条路只用替代身份验证过。现在模板只有 Sparkle 一条渠道；`mac-app-store` skill 在用户启动时按选择加入双渠道，或者只上 App Store：后者直接删掉 Sparkle 和 DMG 发布，用不着条件编译。
 - **H2 Homebrew：移进 skill**。原来 cask 步骤在 publish job 里、排在公开 Release 之后：失败时 Release 已经上线，job 却是红的；ad-hoc 时也照样推一个装上就被 Gatekeeper 拦下的 cask；`depends_on macos: ">= :sonoma"` 是 Homebrew 7 的 `brew style` 不认的旧写法（V32）。现在模板里没有 Homebrew。skill 先选渠道：有 Developer ID 且仓库够知名的直接进官方 `homebrew/cask`，收录后由 Homebrew 自动更新，不需要自建 tap；其余的用自建 tap，cask 放进单独的 job，按 `TEAM_ID` 和 `HOMEBREW_UNSIGNED` 选 C、A 或 B，A、B 都要求 README 加 `[!IMPORTANT]` 提醒。cask 的 `zap` 补上了沙盒应用留下的 `~/Library/Application Scripts/<bundle id>`。
-- **DMG 美化**：不作为默认，做成单独的 DMG skill（A11），只能由用户启动。模板不为设计版做任何准备：原来模板的 `make-dmg.sh` 按 `Bundle/DMG/settings.py` 是否存在分两条路，发版 job 也按它决定装不装 Python；现在 dmgbuild 版的 `make-dmg.sh`、依赖清单和 setup-python 步骤都放在 skill 里，用户启动 skill 时才加进项目，和 `Bundle/DMG/` 一起提交，revert 那次提交就回到普通 DMG。
-- **skill 按独立项目写**：app-icon 和 dmg 两个 skill 的脚本都不再 source 模板的 `scripts/common.sh`，按 `$(dirname "$0")` 找 skill 自己的文件、按 `git rev-parse --show-toplevel` 找项目，在项目的任意子目录里都能运行；SKILL.md 开头写明各自对项目的要求（`Bundle/AppIcon.icon`、`Bundle/app.env`、`make app` 的产物路径、`scripts/make-dmg.sh` 的参数、发版 workflow），命令里的 skill 目录写成 `<skill>`。两个目录都可以原样搬到单独的仓库。
+- **DMG 美化**：不作为默认，做成单独的 DMG skill（A11），只能由用户启动。模板不为设计版做任何准备：原来模板的 `make-dmg.sh` 按 `Bundle/DMG/settings.py` 是否存在分两条路，发版 job 也按它决定装不装 Python；现在 dmgbuild 版的 `make-dmg.sh`、依赖清单和 setup-python 步骤都放在 skill 里，用户启动 skill 时才加进项目，和 `Configs/DMG/`（2026-10-23 前是 `Bundle/DMG/`）一起提交，revert 那次提交就回到普通 DMG。
+- **skill 按独立项目写**：app-icon 和 dmg 两个 skill 的脚本都不再 source 模板的 `scripts/common.sh`，按 `$(dirname "$0")` 找 skill 自己的文件、按 `git rev-parse --show-toplevel` 找项目，在项目的任意子目录里都能运行；SKILL.md 开头写明各自对项目的要求（`App/AppIcon.icon`、`Configs/Identity.xcconfig`、`make app` 的产物路径、`scripts/make-dmg.sh` 的参数、发版 workflow；2026-10-23 前是 `Bundle/AppIcon.icon`、`Bundle/app.env`），命令里的 skill 目录写成 `<skill>`。两个目录都可以原样搬到单独的仓库。
 - **新增**：
   - `PrivacyInfo.xcprivacy` 随所有构建打包。
   - `ci-keychain.sh` 负责 CI 中证书的导入和清理。
@@ -179,6 +179,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | 项 | 说明 |
 |----|------|
 | UI 测试占用鼠标键盘 | Mac 上没有模拟器，`make test:ui` 运行时不能同时用电脑；本地首次运行要输入管理员密码，或先免认证开启 Automation Mode。CI 上的 `automationmodetool` 步骤还没在 runner 上跑过 |
+| `mac-app-store` skill | 还是按纯 SPM 结构写的（`APP_STORE=1` 开关、`Sources/App` 里的条件编译、复制源码再构建），结构调整后不能用；SKILL.md 开头加了警告，要求 agent 停下。新结构下应改成单独的 App Store target，不链接 `ServicesLive`，待重写 |
+| `dmg` skill 的设计文件 | `Bundle/` 没了，改放 `Configs/DMG/`（不能放 `App/`：那是 buildable folder，里面的 `.swift` 会编进 app） |
 | 结构调整后的 Developer ID 重签 | 重签逻辑和调整前相同，entitlements 改从 Xcode 签好的 app 里取；只验证了 ad-hoc 路径 |
 | 漏写 `bundle: .module` 不会报错 | 已写进 AGENTS.md 的规则 |
 | ad-hoc 发布的体验 | 首次打开要在系统设置里点「仍要打开」；每次更新签名都会变，权限和 keychain 访问可能需要重新授权；Homebrew（`homebrew-cask` skill）要么首次打开被拦，要么由 cask 清掉 quarantine |

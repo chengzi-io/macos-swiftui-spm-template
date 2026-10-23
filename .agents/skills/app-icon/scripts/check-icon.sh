@@ -18,7 +18,7 @@ die() {
 
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$(git rev-parse --show-toplevel)"
-icon=${1:-Bundle/AppIcon.icon}
+icon=${1:-App/AppIcon.icon}
 [[ -f $icon/icon.json ]] || die "no icon.json in $icon"
 if [[ $# -gt 1 ]]; then
     shift

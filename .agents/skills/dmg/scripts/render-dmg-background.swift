@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-// Renders DMGBackground (Bundle/DMG/Background.swift) to background.png and
+// Renders DMGBackground (Configs/DMG/Background.swift) to background.png and
 // background@2x.png in the given directory.
 @main
 struct RenderDMGBackground {
