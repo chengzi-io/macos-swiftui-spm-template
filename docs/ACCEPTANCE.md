@@ -31,7 +31,7 @@
 | N18 | H3 | `xcodeproj.py` 的反例：重复 `add-app-store-target`、链接不存在的产品、不存在的 target、不带参数 | 各自报错退出 1，pbxproj 的哈希不变 | ✅ |
 | N9 | B4 | `make test:ui` | 应用启动，自动输入 `Ada` 并点击 Greet，测试通过 | ✅（前两次失败：启动参数让应用没有窗口，V44；macOS 上文本的内容在 `value` 里，V45） |
 | N10 | E4 | `xed App.xcodeproj`，打开 `Features/Greeting/GreetingView.swift` 看 Canvas，再点 Run | Preview 能渲染；Run 启动真正的 `.app` | 👀 |
-| N11 | E2 | Xcode 26.3，工程在 Xcode 里打开时，agent 通过 `xcrun mcpbridge` 构建、跑测试、渲染 Preview | 都成功 | ⏳ 等 Xcode 26.3 |
+| N11 | E2 | Xcode 26.3，工程在 Xcode 里打开时，agent 通过 `xcrun mcpbridge` 构建、跑测试、渲染 Preview | 都成功 | ❌ macOS 15.7.2 上 `mcpbridge` 启动即崩（V46），要 macOS 26；Xcode 26.3 下 `make ci` 通过 |
 | N12 | F1 | PR 上的 CI | `make ci` 之后，`automationmodetool` 和 `make test:ui` 两步通过 | ⏳ |
 
 ## 1. 本地：现在就能跑

@@ -31,8 +31,9 @@ make fmt     # format Swift sources (the pre-commit hook formats staged files to
 them only when the user asks; GitHub CI runs them on every PR.
 
 Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks it.
-With Xcode 26.3+ and the project open in Xcode, `xcrun mcpbridge` lets an agent build,
-run tests, render previews and search Apple's documentation through Xcode.
+On macOS 26+ with Xcode 26.3+ and the project open in Xcode, `xcrun mcpbridge` lets an
+agent build, run tests, render previews and search Apple's documentation through Xcode.
+On macOS 15 it does not launch; the make targets do all of it but previews.
 
 ## Where things go
 

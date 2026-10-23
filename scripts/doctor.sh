@@ -17,11 +17,15 @@ xcode_version=$(xcodebuild -version | awk 'NR == 1 { print $2 }')
 [[ ${xcode_version%%.*} == "$xcode_major" ]] || die "Xcode $xcode_version found; this repo needs Xcode $xcode_major.x"
 ok "Xcode $xcode_version"
 
-# Coding agents build, test and render previews through Xcode with it (Xcode 26.3+).
-if xcrun --find mcpbridge >/dev/null 2>&1; then
-    ok "xcrun mcpbridge (Xcode MCP server for agents)"
-else
+# Coding agents build, test and render previews through Xcode with it: Xcode 26.3+ on
+# macOS 26+. On macOS 15 it exists but fails to load a system framework at launch.
+macos_major=$(sw_vers -productVersion | cut -d. -f1)
+if ! xcrun --find mcpbridge >/dev/null 2>&1; then
     warn "no xcrun mcpbridge: agents need Xcode 26.3 or later to work through Xcode"
+elif ((macos_major < 26)); then
+    warn "xcrun mcpbridge needs macOS 26 or later; on this Mac agents work through make and xcodebuild"
+else
+    ok "xcrun mcpbridge (Xcode MCP server for agents)"
 fi
 
 swift format --version >/dev/null || die "swift format missing from the toolchain"

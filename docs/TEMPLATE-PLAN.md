@@ -80,6 +80,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V42 | 本机 PATH 里的 `grep` 是 Homebrew 的 ugrep，其他机器和 CI 是 BSD grep | `lint-rules.sh` 写死 `/usr/bin/grep` |
 | V44 | XCUITest 启动参数 `["--ui-testing", "-AppleLanguages", "(en)"]` 让应用一个窗口都没有：AppKit 把 `-key value` 形式的参数读成 defaults，`--ui-testing` 吞掉下一个参数当值，落单的 `(en)` 被当作要打开的文件，SwiftUI 于是不建默认窗口（`open --args strayword` 同样 0 个窗口；把 `--ui-testing` 放到最后则有 1 个） | UI 测试改用环境变量 `UI_TESTING=1` |
 | V45 | macOS 的 XCUITest 里，SwiftUI `Text` 对应的 `staticTexts` 元素 `label` 为空，文字在 `value` 里 | UI 测试断言 `value` |
+| V46 | Xcode 26.3（17C529）在 macOS 15.7.2 上装得上，`make ci` 通过；但 `xcrun mcpbridge` 一启动就崩：`dyld: Symbol not found: _$s10AppSandbox17ASBBinaryIdentityC14teamIdentifierSSSgvg`，来自私有框架 `AppSandbox.framework`。二进制声明的最低系统是 14.0，实际依赖 macOS 26 的系统框架；Apple 论坛有同样的报错，并称在 macOS 26.3 上可用 | `make doctor` 按系统版本判断，macOS 15 上给 warn；AGENTS.md、DEVELOPMENT.md 写明需要 macOS 26 |
 | V43 | 图标图层的图片缺失时，Xcode 构建只有一条 `Icon export exited with status 255` 警告，照样成功；删掉 `.app` 重新构建，里面仍有更早构建留下的 AppIcon.icns，所以冒烟测试也通过（V28 的保证在 Xcode 构建里丢了） | `scripts/lint-assets.sh` 在 `make lint` 里单独跑 actool，有警告即失败 |
 
 ---

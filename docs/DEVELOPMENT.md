@@ -2,9 +2,10 @@
 
 ## Requirements
 
-- Xcode 26 (Swift 6.2), selected with `xcode-select`. Xcode 26.3 or later adds
-  `xcrun mcpbridge`, through which coding agents build, test and render previews in
-  Xcode; `make doctor` says whether it is there.
+- Xcode 26 (Swift 6.2), selected with `xcode-select`. On macOS 26 or later, Xcode 26.3
+  or later adds `xcrun mcpbridge`, through which coding agents build, test and render
+  previews in Xcode. On macOS 15 it is installed but does not launch; `make doctor`
+  says which case you are in.
 - [lefthook](https://lefthook.dev) for git hooks: `brew install lefthook`
 - The app runs on macOS 14 or later
 
