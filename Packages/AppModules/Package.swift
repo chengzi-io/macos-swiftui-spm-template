@@ -63,6 +63,7 @@ let package = Package(
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
             path: "Tests/Features/GreetingTests",
+            exclude: ["__Snapshots__"],
             swiftSettings: ui
         ),
     ]

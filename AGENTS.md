@@ -155,7 +155,8 @@ a new skill the same way.
 2. Declare it in `Packages/AppModules/Package.swift`: a `<Name>Feature` target with
    `path: "Sources/Features/<Name>"`, `resources: [.process("Resources")]` if it has
    strings and `swiftSettings: ui`; a `<Name>FeatureTests` test target at
-   `Tests/Features/<Name>Tests`; and `<Name>Feature` in `AppRoot`'s dependencies.
+   `Tests/Features/<Name>Tests` with `exclude: ["__Snapshots__"]` (SwiftPM warns about
+   the reference PNGs otherwise); and `<Name>Feature` in `AppRoot`'s dependencies.
 3. Add every user-facing string to the feature's `Resources/Localizable.xcstrings` in
    `en` and `zh-Hans`.
 4. Work outside the process gets a service: protocol and mock in `Services`, live
