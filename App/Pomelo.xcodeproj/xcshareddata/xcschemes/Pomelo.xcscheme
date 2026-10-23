@@ -40,7 +40,7 @@
                BlueprintIdentifier = "GreetingFeatureTests"
                BuildableName = "GreetingFeatureTests"
                BlueprintName = "GreetingFeatureTests"
-               ReferencedContainer = "container:Packages/AppModules">
+               ReferencedContainer = "container:..">
             </BuildableReference>
          </TestableReference>
          <TestableReference

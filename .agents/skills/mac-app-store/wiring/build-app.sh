@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Builds $APP_NAME.app from $APP_TARGET.xcodeproj.
+# Builds $APP_NAME.app from $XCODE_PROJECT.
 #   debug   → $DEBUG_APP, ad-hoc signed, debugger can attach
 #   release → dist/$APP_NAME.app, universal; Developer ID + hardened runtime, or ad-hoc
 #   mas     → dist/mas/$APP_NAME.app, universal, no Sparkle; Apple Distribution signed
 #             with the Mac App Store profile. Needs TEAM_ID and MAS_PROVISIONING_PROFILE
 # Prints the .app path on stdout. version.txt and the commit count become the
-# version; Xcode's own builds keep the placeholders in Configs/App.xcconfig.
+# version; Xcode's own builds keep the placeholders in App/Configs/App.xcconfig.
 
 source "$(dirname "$0")/common.sh"
 
 xcodebuild_args=(
     -quiet
-    -project "$APP_TARGET.xcodeproj"
+    -project "$XCODE_PROJECT"
     -derivedDataPath "$DERIVED_DATA"
     MARKETING_VERSION="$VERSION"
     CURRENT_PROJECT_VERSION="$BUILD_NUMBER"
@@ -29,14 +29,14 @@ case $config in
         ;;
     release)
         [[ -n ${GITHUB_REPOSITORY:-} && -n ${SPARKLE_PUBLIC_KEY:-} ]] ||
-            die "release builds need GITHUB_REPOSITORY in Configs/Identity.xcconfig and SUPublicEDKey in Configs/Info.plist (see make sparkle-keys)"
+            die "release builds need GITHUB_REPOSITORY in App/Configs/Identity.xcconfig and SUPublicEDKey in App/Configs/Info.plist (see make sparkle-keys)"
         scheme=$APP_TARGET
         archive=$ARCHIVE
         app=$RELEASE_APP
         identity=$(signing_identity)
         ;;
     mas)
-        [[ -n ${TEAM_ID:-} ]] || die "App Store builds need TEAM_ID in Configs/Identity.xcconfig"
+        [[ -n ${TEAM_ID:-} ]] || die "App Store builds need TEAM_ID in App/Configs/Identity.xcconfig"
         [[ -f ${MAS_PROVISIONING_PROFILE:-} ]] ||
             die "set MAS_PROVISIONING_PROFILE to the Mac App Store .provisionprofile"
         identity=$(find_identity "Apple Distribution|3rd Party Mac Developer Application")

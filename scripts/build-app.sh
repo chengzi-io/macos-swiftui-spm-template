@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Builds $APP_NAME.app from $APP_TARGET.xcodeproj.
+# Builds $APP_NAME.app from $XCODE_PROJECT.
 #   debug   → $DEBUG_APP, ad-hoc signed, debugger can attach
 #   release → dist/$APP_NAME.app, universal; Developer ID + hardened runtime, or ad-hoc
 # Prints the .app path on stdout. version.txt and the commit count become the
-# version; Xcode's own builds keep the placeholders in Configs/App.xcconfig.
+# version; Xcode's own builds keep the placeholders in App/Configs/App.xcconfig.
 
 source "$(dirname "$0")/common.sh"
 
 xcodebuild_args=(
     -quiet
-    -project "$APP_TARGET.xcodeproj"
+    -project "$XCODE_PROJECT"
     -scheme "$APP_TARGET"
     -derivedDataPath "$DERIVED_DATA"
     MARKETING_VERSION="$VERSION"
@@ -30,7 +30,7 @@ case ${1:-} in
 esac
 
 [[ -n ${GITHUB_REPOSITORY:-} && -n ${SPARKLE_PUBLIC_KEY:-} ]] ||
-    die "release builds need GITHUB_REPOSITORY in Configs/Identity.xcconfig and SUPublicEDKey in Configs/Info.plist (see make sparkle-keys)"
+    die "release builds need GITHUB_REPOSITORY in App/Configs/Identity.xcconfig and SUPublicEDKey in App/Configs/Info.plist (see make sparkle-keys)"
 
 log "xcodebuild archive Release ($VERSION build $BUILD_NUMBER)"
 rm -rf "$ARCHIVE"
@@ -43,7 +43,7 @@ mkdir -p "$(dirname "$app")"
 ditto "$ARCHIVE/Products/Applications/$APP_NAME.app" "$app"
 
 # Xcode signs ad-hoc. Re-sign with the release identity, keeping the entitlements
-# Xcode resolved from Configs/App.entitlements.
+# Xcode resolved from App/Configs/App.entitlements.
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 entitlements="$tmp/app.entitlements"

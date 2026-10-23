@@ -11,7 +11,7 @@ app=${1:-$DEBUG_APP}
 
 codesign --verify --deep --strict "$app"
 plutil -lint -s "$app/Contents/Info.plist"
-package=$(swift package --package-path "$PACKAGE_DIR" dump-package)
+package=$(swift package dump-package)
 package_name=$(jq -r .name <<<"$package")
 for target in $(jq -r '.targets[] | select(.type == "regular" and (.resources | length) > 0) | .name' <<<"$package"); do
     bundle="${package_name}_$target.bundle"

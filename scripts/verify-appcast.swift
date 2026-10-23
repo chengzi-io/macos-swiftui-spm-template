@@ -3,7 +3,7 @@ import Foundation
 
 // Checks an appcast the way Sparkle in an installed app does: one enclosure, at the
 // DMG's download URL, with its length, signed by the key whose public half the app
-// ships (SUPublicEDKey in Configs/Info.plist). A wrong key or URL fails no build
+// ships (SUPublicEDKey in App/Configs/Info.plist). A wrong key or URL fails no build
 // step; it fails every installed app's next update.
 // usage: verify-appcast.swift <appcast.xml> <dmg> <download url> <public key>
 

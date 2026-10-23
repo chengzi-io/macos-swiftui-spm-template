@@ -69,7 +69,7 @@ set_sparkle_public_key ""
 macos_major=$(sw_vers -productVersion | cut -d. -f1)
 log "CI and releases on macos-$macos_major like this Mac; drop the demo's snapshot references"
 sed -i '' -E "s/runs-on: macos-[0-9]+/runs-on: macos-$macos_major/" .github/workflows/ci.yml .github/workflows/release.yml
-find Packages -type d -name __Snapshots__ -prune -exec rm -rf {} +
+find Tests -type d -name __Snapshots__ -prune -exec rm -rf {} +
 
 # Deletes the marked template-only blocks, then squeezes the blank lines they leave.
 drop_template_blocks() {
@@ -97,7 +97,7 @@ cat >README.md <<EOF
 Download the DMG from the [latest release](https://github.com/$repo/releases/latest),
 open it and drag $name to Applications. $display_name runs on macOS 14 or later.
 
-<!-- Delete this paragraph once TEAM_ID is set in Configs/Identity.xcconfig: apps signed with a
+<!-- Delete this paragraph once TEAM_ID is set in App/Configs/Identity.xcconfig: apps signed with a
      Developer ID open without it. -->
 macOS blocks the first launch because the app is not notarized yet: open System
 Settings → Privacy & Security and click **Open Anyway**, once.
@@ -127,10 +127,10 @@ Done. Review with \`git diff HEAD\` (renames are staged), then commit, for examp
 
 Next:
   1. make setup, then make snapshots to record the demo's view snapshots on this Mac
-     (look at the images in Packages/AppModules/Tests/**/__Snapshots__ and commit
-     them), then make ci and make run
-  2. Replace the Greeting demo (Packages/AppModules/Sources/Features/Greeting) and the
-     icon ($name/AppIcon.icon in Icon Composer, or the app-icon skill in
+     (look at the images in Tests/**/__Snapshots__ and commit them), then make ci
+     and make run
+  2. Replace the Greeting demo (Sources/Features/Greeting) and the icon
+     (App/Application/AppIcon.icon in Icon Composer, or the app-icon skill in
      .agents/skills/app-icon), and say what the app does at the top of README.md.
   3. One-time release setup: docs/RELEASING.md (make github-setup, GitHub App,
      make sparkle-keys, optional Developer ID).

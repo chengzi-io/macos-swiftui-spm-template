@@ -1,11 +1,11 @@
 # AGENTS.md
 
-macOS SwiftUI app. A thin Xcode project (`<App>.xcodeproj`) builds, signs and packages
-the app; all code lives in the local Swift package `Packages/AppModules`; `scripts/`
-ships it. `<App>` stands for the app's name (`APP_NAME`): the project, its app target
-and scheme, and the folders `<App>/` and `<App>UITests/` carry it. Setup and the layout
-live in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md), the commands in `make help`; this
-file is the rules of engagement.
+macOS SwiftUI app. All code lives in the Swift package at the repository root
+(`Package.swift`, `Sources/`, `Tests/`); a thin Xcode project, `App/<App>.xcodeproj`,
+builds, signs and packages the app; `scripts/` ships it. `<App>` stands for the app's
+name (`APP_NAME`), which the package, the project, its app target and the scheme carry.
+Setup and the layout live in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md), the commands
+in `make help`; this file is the rules of engagement.
 
 <!-- template-only:start -->
 ## Before init
@@ -44,13 +44,8 @@ On macOS 15 it does not launch; the make targets do all of it but previews.
 ## Where things go
 
 ```text
-<App>/                        @main, the composition root: builds the live services
-                              (mocks under UI_TESTING=1) and hands them to AppRoot.
-                              Plus the app delegate, assets, AppIcon.icon. No views.
-<App>UITests/                 XCUITest, a few critical flows; launches with UI_TESTING=1
-Configs/Identity.xcconfig     app identity (name, bundle id, team, repository): only here
-Configs/*.xcconfig            build settings; Info.plist and App.entitlements beside them
-Packages/AppModules/Sources/
+Package.swift                 the package <App>: targets, dependencies, Swift settings
+Sources/
   AppRoot/                    AppModel (root of the model tree), AppScenes (windows,
                               commands, Settings), app-wide menus
   Features/<Name>/            target <Name>Feature: <Name>View, <Name>Model, logic only
@@ -58,7 +53,16 @@ Packages/AppModules/Sources/
   Services/                   a protocol for each thing outside the process, its types,
                               its error enum and a Mock<Name>Service
   ServicesLive/               Live<Name>Service: system APIs, network, files, Sparkle
-Packages/AppModules/Tests/    Swift Testing, mirroring Sources/ (<Name>FeatureTests)
+Tests/                        Swift Testing, mirroring Sources/ (<Name>FeatureTests)
+App/                          the Xcode shell: <App>.xcodeproj, targets <App> and
+                              <App>UITests
+  Application/                @main, the composition root: builds the live services
+                              (mocks under UI_TESTING=1) and hands them to AppRoot.
+                              Plus the app delegate, assets, AppIcon.icon. No views.
+  UITests/                    XCUITest, a few critical flows; launches with UI_TESTING=1
+  Configs/Identity.xcconfig   app identity (name, bundle id, team, repository): only here
+  Configs/*.xcconfig          build settings; Info.plist and App.entitlements beside them
+  Package.swift               empty: keeps App/ out of the root package in Xcode
 ```
 
 Create these targets the first time something needs them, not before: `Models/` for
@@ -128,19 +132,19 @@ a new skill the same way.
   Never record any other way (`SNAPSHOT_TESTING_RECORD`, deleting references), and
   never add the `snapshots-reviewed` label: that label is the user saying they compared
   the images, and the `Snapshot review` check waits for it.
-- App identity changes in `Configs/Identity.xcconfig` only. The name, display name and
-  bundle identifier change only through `scripts/rename.sh`, which renames the project,
-  targets and folders with them, and only before the first release: after it, they
-  would make a different app.
+- App identity changes in `App/Configs/Identity.xcconfig` only. The name, display name
+  and bundle identifier change only through `scripts/rename.sh`, which renames the
+  package, project, targets and scheme with them, and only before the first release:
+  after it, they would make a different app.
 
 ## Never
 
-- add files to `project.pbxproj` by hand: `<App>/` and `<App>UITests/` are buildable
-  folders that pick up new files; put build settings in `Configs/*.xcconfig`, not the
-  project
+- add files to `project.pbxproj` by hand: `App/Application/` and `App/UITests/` are
+  buildable folders that pick up new files; put build settings in
+  `App/Configs/*.xcconfig`, not the project
 - add the package with Xcode's "Add Local…": Xcode builds that reference with
-  `-suppress-warnings`, which breaks the build; `<App>.xcodeproj` references the
-  package folder
+  `-suppress-warnings`, which breaks the build; `App/<App>.xcodeproj` references the
+  repository root as a folder
 - add Tuist or XcodeGen
 - ship or test against `swift build` output; only `make app` and `make release` produce
   a valid `.app`
@@ -155,9 +159,9 @@ a new skill the same way.
 
 ## Add a feature
 
-1. Add `Packages/AppModules/Sources/Features/<Name>/` with `<Name>View.swift` and
-   `<Name>Model.swift`; `Features/Greeting/` is the pattern.
-2. Declare it in `Packages/AppModules/Package.swift`: a `<Name>Feature` target with
+1. Add `Sources/Features/<Name>/` with `<Name>View.swift` and `<Name>Model.swift`;
+   `Features/Greeting/` is the pattern.
+2. Declare it in `Package.swift`: a `<Name>Feature` target with
    `path: "Sources/Features/<Name>"`, `resources: [.process("Resources")]` if it has
    strings and `swiftSettings: ui`; a `<Name>FeatureTests` test target at
    `Tests/Features/<Name>Tests` with `exclude: ["__Snapshots__"]` (SwiftPM warns about
@@ -166,14 +170,14 @@ a new skill the same way.
    `en` and `zh-Hans`.
 4. Work outside the process gets a service: protocol and mock in `Services`, live
    implementation in `ServicesLive` ([RECIPES](docs/RECIPES.md#networking) has one).
-   `<App>/MainApp.swift` builds the live one and the mock under `UI_TESTING=1`, and
-   passes it through `AppModel`.
+   `App/Application/MainApp.swift` builds the live one and the mock under
+   `UI_TESTING=1`, and passes it through `AppModel`.
 5. `AppModel` owns the feature's model; `AppScenes` shows its view.
 6. Test the model in `Tests/Features/<Name>Tests/` with mocks, and snapshot its view. A
-   flow worth guarding end to end gets an XCUITest in `<App>UITests/`.
+   flow worth guarding end to end gets an XCUITest in `App/UITests/`.
 7. New capability (network, files, camera…)? Add the entitlement to
-   `Configs/App.entitlements` and its usage description as
-   `INFOPLIST_KEY_NS…UsageDescription` in `Configs/App.xcconfig`.
+   `App/Configs/App.entitlements` and its usage description as
+   `INFOPLIST_KEY_NS…UsageDescription` in `App/Configs/App.xcconfig`.
 8. `make ci`.
 
 The Greeting demo (`Features/Greeting`, `GreetingModelTests`, `GreetingViewSnapshotTests`

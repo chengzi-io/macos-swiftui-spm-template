@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# Compiles <App>/Assets.xcassets and <App>/AppIcon.icon with actool and fails on any
+# Compiles App/Application/Assets.xcassets and AppIcon.icon with actool and fails on any
 # warning. When a layer's image is missing, actool only warns, and Xcode's build
 # passes with the icon from an earlier build still in the app.
 
 source "$(dirname "$0")/common.sh"
 
-min_macos=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*//p' Configs/Project.xcconfig)
-[[ -n $min_macos ]] || die "no MACOSX_DEPLOYMENT_TARGET in Configs/Project.xcconfig"
+min_macos=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*//p' App/Configs/Project.xcconfig)
+[[ -n $min_macos ]] || die "no MACOSX_DEPLOYMENT_TARGET in App/Configs/Project.xcconfig"
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 # Absolute paths: actool hands the work to a long-lived ibtoold, which resolves relative
 # paths against its own working directory, possibly another checkout.
-xcrun actool "$ROOT/$APP_TARGET/Assets.xcassets" "$ROOT/$APP_TARGET/AppIcon.icon" \
+xcrun actool "$ROOT/App/Application/Assets.xcassets" "$ROOT/App/Application/AppIcon.icon" \
     --compile "$tmp" \
     --platform macosx \
     --minimum-deployment-target "$min_macos" \

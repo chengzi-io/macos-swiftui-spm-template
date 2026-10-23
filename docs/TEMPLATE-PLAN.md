@@ -9,7 +9,7 @@
 - **开发**：用模板新建仓库 → 运行 `scripts/init.sh` → `make run` 出窗口 → 直接写业务代码。
 - **发布**：PR 以 squash 方式合并进 `main` → release-please 维护发版 PR → 合并后自动打 tag、创建草稿 Release → CI 构建、校验并上传 DMG、dSYM、appcast，然后公开 Release → 已安装的应用通过 Sparkle 自动更新。
 
-原则：薄 Xcode 工程（`Pomelo.xcodeproj`，只放壳）加本地 Swift 包（`Packages/AppModules`，放全部代码），2026-10-23 起取代原来的「纯 `Package.swift`，不提交 `.xcodeproj`」（见第 4 节末尾）；一个命令入口（Makefile）；每项都有可执行的验收方式；依赖尽量少；和 chengzi-io 其他模板以及 `github-repo-scaffold` skill 的约定保持一致。
+原则：薄 Xcode 工程（`App/Pomelo.xcodeproj`，只放壳）加仓库根的 Swift 包（`Package.swift`、`Sources/`，放全部代码），2026-10-23 起取代原来的「纯 `Package.swift`，不提交 `.xcodeproj`」（见第 4 节末尾）；一个命令入口（Makefile）；每项都有可执行的验收方式；依赖尽量少；和 chengzi-io 其他模板以及 `github-repo-scaffold` skill 的约定保持一致。
 
 ---
 
@@ -91,6 +91,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V54 | `SMAppService.Status` 有 `requiresApproval`：已注册，但用户在系统设置里收回了许可，只能在那里重新打开（SDK 头文件）。`Toggle(isOn: Binding(get: …, set: setEnabled))` 把方法直接当 `set:` 传进去，Swift 6.2.3 在 IRGen 时崩溃（signal 6，转换成 `@isolated(any)` 闭包的 thunk） | 开机启动食谱按三种状态显示，`requiresApproval` 时给出打开登录项的按钮，App 回到前台时重读状态；`set:` 写成闭包 `{ setEnabled($0) }` |
 | V55 | KeyboardShortcuts 3.1.0（2026-09）：Carbon 热键、录制控件、和系统及菜单快捷键的冲突提示，支持沙盒和 App Store，不弹权限；包本身也是 MainActor 默认隔离。`onKeyUp(for:)` 的注释写着以后会弃用、新代码用 `events(for:)`；macOS 15.0、15.1 上沙盒 app 注册不了只带 ⌥ 或 ⌥⇧ 的快捷键，15.2 恢复。同类的 LaunchAtLogin-Modern 2023-12 后没再更新，只包了几行 `SMAppService`；Defaults 和 `@AppStorage`、服务化的 UserDefaults 重叠 | 只给全局快捷键写食谱：名字和录制控件在 SettingsFeature，`AppModel` 用 `events(.keyUp, for:)` 监听；另外两个不引入 |
 | V56 | GitHub 的「从模板创建仓库」只复制目录、分支和文件，新仓库从一个提交开始，没有变量或占位符（docs.github.com，2026-10-23）。Xcode 按 `.xcodeproj` 的文件名显示工程名；scheme 的 `BuildableName` 写的是产品名（`$(APP_NAME).app`），只改 `APP_NAME` 不改它时，Xcode 打开工程会自己改回去；手写的 scheme 属性顺序和 Xcode 的不同时，打开工程也会被重排（`effd3ea` 手写的 `language`、`region`）。Xcode 开着工程时把工程目录改名，它会在旧路径下重新写出只有 `xcuserdata` 的 `.xcodeproj`。sourcekit-lsp 只认 SwiftPM 包（或 `compile_commands.json`、BSP），`Packages/AppModules` 里能跳转，Xcode target 里的文件（`<App>/`）拿不到编译参数，实测跳转无结果 | 工程、app 和 UI 测试 target、scheme、源码目录都用 app 名（模板里是 Pomelo）；`scripts/rename.sh` 改 pbxproj 和 scheme 里这几处结构、`TEST_TARGET_NAME`，`git mv` 四个路径，并写 `APP_NAME`、`APP_DISPLAY_NAME`、`BUNDLE_ID`；只在 `version.txt` 为 0.0.0（没发布过）时运行，init 先重置版本再调用它；Makefile、`scripts/` 和 skill 脚本从根目录唯一带 `project.pbxproj` 的 `*.xcodeproj` 推出 `<App>`，文档写 `<App>`，改名不用改它们 |
+| V57 | 薄壳 app（代码几乎都在包里）的做法一致：isowords、DroidKaigi 2022/2024 的 `app-ios`、kuglee/SwiftFormatter（macOS）、akbashev/swift-chat 都把 `Package.swift`、`Sources/`、`Tests/` 放在根目录，工程和只有一两个文件的壳放在 `App/`，`App/` 里放一个空的 `Package.swift`（isowords 的注释：「Leave blank. This is only here so that Xcode doesn't display it」），工程用 `lastKnownFileType = wrapper; path = ..;` 引用根目录；厚工程（IceCubes、NetNewsWire、CotEditor、Backyard Birds、Food Truck）才把包放在 `Packages/`、`Modules/` 或并排的目录；根目录主包加 `Packages/` 子包的也有（repoprompt-ce、mori、vChewing-macOS）。Xcode 没法隐藏包里的子目录，只能靠子目录里的 `Package.swift`（Swift 论坛，SwiftPM 维护者）。本机实测：工程在 `App/`、`path = ..;`、scheme 里包测试写 `container:..`，build、build-for-testing 都通过；资源包按 manifest 的 `name` 叫 `<App>_<target>.bundle`；包的 identity 取自目录名 | 包在仓库根，叫 `<App>`；壳是 `App/`：`<App>.xcodeproj`、`Application/`、`UITests/`、`Configs/` 和空的 `Package.swift`；目录按角色命名，rename.sh 只改工程、target、scheme 和包名，不再移动目录 |
 | V43 | 图标图层的图片缺失时，Xcode 构建只有一条 `Icon export exited with status 255` 警告，照样成功；删掉 `.app` 重新构建，里面仍有更早构建留下的 AppIcon.icns，所以冒烟测试也通过（V28 的保证在 Xcode 构建里丢了） | `scripts/lint-assets.sh` 在 `make lint` 里单独跑 actool，有警告即失败 |
 
 ---
@@ -105,18 +106,18 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 
 | ID | 项 | 落地位置 | 状态 |
 |----|----|----------|------|
-| A1 | 工程与目录 | `Pomelo.xcodeproj`（Pomelo、PomeloUITests 两个 target，buildable folders）、`Packages/AppModules`（AppRoot、`Features/<Name>`、Services、ServicesLive，测试目录镜像 Sources） | ✅ |
+| A1 | 工程与目录 | `App/Pomelo.xcodeproj`（Pomelo、PomeloUITests 两个 target，buildable folders）、`Package.swift`、`Sources/`、`Tests/` 在仓库根（AppRoot、`Features/<Name>`、Services、ServicesLive，测试目录镜像 Sources） | ✅ |
 | A2 | 应用身份单一来源 | `Configs/Identity.xcconfig`（Xcode 和脚本读同一份） | ✅ |
-| A3 | App 入口骨架 | `Pomelo/MainApp.swift`（组装根，环境变量 `UI_TESTING=1` 时换 mock）、`AppDelegate.swift`；场景在 `AppRoot/AppScenes.swift` | ✅ |
+| A3 | App 入口骨架 | `App/Application/MainApp.swift`（组装根，环境变量 `UI_TESTING=1` 时换 mock）、`AppDelegate.swift`；场景在 `AppRoot/AppScenes.swift` | ✅ |
 | A4 | 资源与本地化（en、zh-Hans） | 每个带文案的 target 一份 `Resources/Localizable.xcstrings` | ✅ |
-| A5 | App 图标与强调色 | `Pomelo/AppIcon.icon`（Icon Composer 格式：两层 SVG 加渐变填充，自绘橙子切面）、`Pomelo/Assets.xcassets`（强调色） | ✅ macOS 15 / 🟡 macOS 14、26 |
-| A6 | Info.plist / Entitlements / 隐私清单 | `Configs/Info.plist`、`Configs/App.entitlements`、`Pomelo/PrivacyInfo.xcprivacy` | ✅ |
+| A5 | App 图标与强调色 | `App/Application/AppIcon.icon`（Icon Composer 格式：两层 SVG 加渐变填充，自绘橙子切面）、`App/Application/Assets.xcassets`（强调色） | ✅ macOS 15 / 🟡 macOS 14、26 |
+| A6 | Info.plist / Entitlements / 隐私清单 | `App/Configs/Info.plist`、`App/Configs/App.entitlements`、`App/Application/PrivacyInfo.xcprivacy` | ✅ |
 | A7 | `.app` 构建脚本 | `scripts/build-app.sh`（debug：xcodebuild build；release：xcodebuild archive 加重签） | ✅ |
 | A8 | 本地运行与调试 | `make run`、`scripts/run.sh` | ✅ |
 | A9 | 忽略规则与编辑器配置 | `.gitignore`、`.editorconfig` | ✅ |
 | A10 | App 图标 skill | `.agents/skills/app-icon`（`.claude/skills` 里是指向它的符号链接）。三条路：用户的 logo 或图片、agent 画 SVG 图层、写生图提示词让用户去生成。`check-icon.sh` 出两张检查图：一张是 ictool 渲染的 macOS 26 六种外观、32 pt 和本机 Finder 图标，另一张把图标放进已装应用中间的 Dock 行；`concepts.sh` 把黑白构思并排比较；`image-layer.swift` 把图片变成图层，不透明的图先用 Vision 抠图。草稿放在 `.build/app-icon`，用户认可后才替换 `App/AppIcon.icon`；两轮都选不出就停下 | ✅ 脚本 / 👀 完整流程 |
 | A11 | DMG skill | `.agents/skills/dmg`，只能由用户启动（Claude Code 用 `disable-model-invocation`，Codex 用 `agents/openai.yaml`）：第一步把 dmgbuild 接进项目（用 `wiring/` 里的 dmgbuild 版 `make-dmg.sh` 替换模板的普通版，加上哈希锁定的依赖清单，在发版 job 里加 setup-python），再铺白底默认窗口，再按用户选择做轻品牌或标准品牌化；代码画不了的插画写生图提示词，生成的图作为 `art.png` 垫在箭头下面。背景一律不放文字 | ✅ 脚本和提示词坐标 / 👀 完整流程 |
-| B1 | 编译严格度 | `Packages/AppModules/Package.swift` 的 `swiftSettings`、`Configs/Project.xcconfig` | ✅ |
+| B1 | 编译严格度 | `Package.swift` 的 `swiftSettings`、`App/Configs/Project.xcconfig` | ✅ |
 | B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint`；`scripts/lint-rules.sh` 拦旧 API 和越层 import | ✅ |
 | B3 | Git hooks | `lefthook.yml`（pre-commit 格式化） | ✅ |
 | B4 | 测试 | `make test`：`GreetingFeatureTests`（Swift Testing，2 个模型用例和 3 个快照用例）；`make test:ui`：`PomeloUITests`（XCUITest，1 个用例） | ✅ |
@@ -129,7 +130,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | C6 | 网络 | `docs/RECIPES.md`，`network.client` 已开 | 📄 |
 | C7 | 菜单栏 App | `docs/RECIPES.md` | 📄 |
 | C8 | 崩溃上报 | `docs/RECIPES.md` | 📄 |
-| C9 | 隐私清单 | `Pomelo/PrivacyInfo.xcprivacy`（随所有构建打包） | ✅ |
+| C9 | 隐私清单 | `App/Application/PrivacyInfo.xcprivacy`（随所有构建打包） | ✅ |
 | C10 | 全局快捷键 | `docs/RECIPES.md`（KeyboardShortcuts 3.1.0） | 📄 |
 | E1 | 命令单一入口 | `Makefile`（`make help`） | ✅ |
 | E2 | AI 约定 | `AGENTS.md`、`CLAUDE.md` | ✅ |
@@ -152,7 +153,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SUPublicEDKey` 对得上 | ✅ 本地（含反例） |
 | H1 | Sparkle 自动更新 | `Services/UpdaterService.swift`（协议和 mock）、`ServicesLive/LiveUpdaterService.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
 | H2 | Homebrew Cask | `.agents/skills/homebrew-cask`，只能由用户启动，先按 `TEAM_ID` 和仓库知名度选渠道。官方 `homebrew/cask`：有 Developer ID 且仓库够知名时，skill 写好带 `desc` 和 `livecheck`（`:github_latest`）的 cask，在 `homebrew/cask` 的检出里检查，经用户同意后提 PR（说明用了 AI，提交不带 AI trailer）；收录后 BrewTestBot 自动更新，项目里不加 job、不建 tap。自建 tap：每次发版由单独的 `homebrew` job 下载已公开的 DMG，生成 cask 推到 tap；有 Developer ID 时是普通 cask（C），ad-hoc 时二选一：caveats 提示「仍要打开」（A）或安装后清掉 quarantine（B），两种都在 README 加 `[!IMPORTANT]` 提醒。还写了从自建 tap 转到官方库的步骤 | 🟡（自建 tap 的三种 cask 都过了 `brew style` 和 `brew audit`，A、B 用本地 tap 真装过；官方 cask 模板过了 `brew style`，`brew audit --new` 只因本仓库未公开、不够知名和下载 404 而失败；真实的 tap 推送和官方 PR 都没做过） |
-| H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（Sparkle 拆到 `SparkleUpdater` target，新增共用 `Pomelo/` 的 `AppStore` target，不链接 Sparkle，用 `APP_STORE` 编译条件区分）或只上 App Store（删掉 Sparkle 和 DMG 发布，`Pomelo` target 就是 App Store 版）；带 `wiring/xcodeproj.py`（改 pbxproj 的唯一入口）、带 mas 配置的 `build-app.sh`、`release-mas.sh` 和 RELEASING 的一节 | 🟡（2026-10-23 按新结构重写，两种方案都在仓库副本里按 skill 走过一遍，签名用的是替代身份） |
+| H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（Sparkle 拆到 `SparkleUpdater` target，新增共用 `App/Application/` 的 `AppStore` target，不链接 Sparkle，用 `APP_STORE` 编译条件区分）或只上 App Store（删掉 Sparkle 和 DMG 发布，`Pomelo` target 就是 App Store 版）；带 `wiring/xcodeproj.py`（改 pbxproj 的唯一入口）、带 mas 配置的 `build-app.sh`、`release-mas.sh` 和 RELEASING 的一节 | 🟡（2026-10-23 按新结构重写，两种方案都在仓库副本里按 skill 走过一遍，签名用的是替代身份） |
 | H4 | 测试版通道 | `docs/RELEASING.md` | 📄 |
 
 ---
@@ -186,6 +187,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
   - `github-setup.sh` 落实仓库设置：只允许 squash、分支保护、`release` environment。
 - **结构调整：薄 Xcode 工程 + 本地包（2026-10-23）**。纯 SPM 要自写脚本拼 `.app`（V1–V3、V5、V11、V22、V25），建不了 XCUITest 和 App 扩展，Xcode 的 Run 跑的也不是真正的应用。现在 `App.xcodeproj` 只有 App 和 AppUITests 两个 target，用 buildable folders，构建设置全在 `Configs/*.xcconfig`，加文件不碰 pbxproj；全部代码在 `Packages/AppModules`，按层拆 target：`AppRoot`、每个功能一个 `<Name>Feature`、`Services`（协议和 mock）、`ServicesLive`（真实实现，Sparkle 只链接到这里）。功能 target 不依赖 `ServicesLive`，在功能里直接 new 真实实现会编译失败。原来 App target 里的 `Updates`（`ObservableObject`）改成 `UpdaterService` 协议加 `LiveUpdaterService`；设置页的「默认名字」示例删掉，以免两个功能共用一个 UserDefaults 键。身份从 `Bundle/app.env` 搬到 `Configs/Identity.xcconfig`，Sparkle 公钥搬到 `Configs/Info.plist`。新增 `make test:ui`（不进 `make ci`，V40）和 `scripts/lint-rules.sh`。
 - **工程改名（2026-10-23）**：`App.xcodeproj`、`App`/`AppUITests` 两个 target、`App` scheme 和 `App/`、`AppUITests/` 目录改用 app 名，模板里是 Pomelo（先试过 `SwiftUITemplate`，太长）。改名放进 `scripts/rename.sh`，init 调用它，init 删掉自己后它还在，首次发布前改名也用它，名字、显示名、bundle id 一起改；发布后再改名或 bundle id 等于换了一个 app（Sparkle 更新、用户数据、Homebrew），脚本拒绝（V56）。先试过的做法是 init 把模板名当占位词全局替换：模板里安全，但 init 之后 app 名可能是 `Notes`、`Timer` 这样的常见词，再全局替换会改坏别处，所以文档改写 `<App>`、脚本从工程推出名字。用这个模板做的多个 app 在 Xcode 最近项目列表里不再都叫 App。`Configs/App.xcconfig`、`App.entitlements` 按角色命名，和 `UITests.xcconfig` 对应，不改名。rename.sh 拒绝工程里已有的词（`Products`、`Debug` 等）和已存在的路径（如 `Configs`），都在写文件之前。
+- **结构调整二：包到仓库根，壳进 `App/`（2026-10-23）**：`Packages/AppModules` 的 `Package.swift`、`Sources/`、`Tests/` 移到仓库根，包名从 `AppModules` 改成 app 名；工程、壳的源码、UI 测试和 `Configs/` 移进 `App/`，源码目录叫 `App/Application/`、`App/UITests/`（按角色命名，避免在 Xcode 里和同名的包并排；`App/Sources/` 会和根目录的 `Sources/` 混淆）。参照的是薄壳 app 的做法（V57），之前举的 IceCubes 等厚工程不适用。脚本从 `App/` 里唯一带 `project.pbxproj` 的工程推出 `<App>`，`PACKAGE_DIR` 和 `--package-path` 去掉；SwiftPM 的 `.build` 和 DerivedData（`.build/xcode`）现在在同一个目录。
 
 ---
 
@@ -195,7 +197,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 |----|------|
 | UI 测试占用鼠标键盘 | Mac 上没有模拟器，`make test:ui` 运行时不能同时用电脑；本地首次运行要输入管理员密码，或先免认证开启 Automation Mode。CI 上的 `automationmodetool` 步骤还没在 runner 上跑过 |
 | `mac-app-store` skill | 2026-10-23 按新结构重写，两种方案只用替代身份构建、签名、打包到 `.pkg`，从没提交过 App Store Connect；`altool --upload-app` 没实际上传过 |
-| `dmg` skill 的设计文件 | `Bundle/` 没了，改放 `Configs/DMG/`（不能放 `Pomelo/`：那是 buildable folder，里面的 `.swift` 会编进 app） |
+| `dmg` skill 的设计文件 | `Bundle/` 没了，改放 `App/Configs/DMG/`（不能放 `App/Application/`：那是 buildable folder，里面的 `.swift` 会编进 app） |
 | 视图快照 | 参考图只对录制它的 macOS 大版本有效：本机和 CI 都是 macOS 15，换版本时两边一起换并整体重录、逐张看图。CI 上（15.7.9 对本机 15.7.2）能否通过、`Snapshot review` 检查和标签流程，都要 push 到 GitHub 后才能验证 |
 | 结构调整后的 Developer ID 重签 | 重签逻辑和调整前相同，entitlements 改从 Xcode 签好的 app 里取；只验证了 ad-hoc 路径 |
 | 漏写 `bundle: .module` 不会报错 | 已写进 AGENTS.md 的规则 |

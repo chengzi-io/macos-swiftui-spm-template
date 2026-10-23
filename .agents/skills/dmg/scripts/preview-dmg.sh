@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds a DMG with the Configs/DMG design through the project's scripts/make-dmg.sh,
+# Builds a DMG with the App/Configs/DMG design through the project's scripts/make-dmg.sh,
 # opens it in Finder and screenshots the window to .build/dmg/dmg.png. The terminal
 # needs Screen Recording permission. Runs from anywhere inside the project.
 #   preview-dmg.sh [app]    default: the debug app from `make app`
@@ -12,8 +12,8 @@ die() {
 
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$(git rev-parse --show-toplevel)"
-APP_NAME=$(sed -nE 's/^APP_NAME[[:space:]]*=[[:space:]]*//p' Configs/Identity.xcconfig)
-[[ -n $APP_NAME ]] || die "no APP_NAME in Configs/Identity.xcconfig"
+APP_NAME=$(sed -nE 's/^APP_NAME[[:space:]]*=[[:space:]]*//p' App/Configs/Identity.xcconfig)
+[[ -n $APP_NAME ]] || die "no APP_NAME in App/Configs/Identity.xcconfig"
 grep -q dmgbuild scripts/make-dmg.sh || die "scripts/make-dmg.sh is the plain one; wire dmgbuild in first"
 
 app=${1:-.build/xcode/Build/Products/Debug/$APP_NAME.app}

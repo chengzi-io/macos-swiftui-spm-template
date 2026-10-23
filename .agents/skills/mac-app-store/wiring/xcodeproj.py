@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Edits <App>.xcodeproj for the mac-app-store skill, so no one edits project.pbxproj by hand.
+"""Edits App/<App>.xcodeproj for the mac-app-store skill, so no one edits project.pbxproj by hand.
 
   xcodeproj.py link <target> <product>...
-      Makes <target> link exactly these products of Packages/AppModules.
+      Makes <target> link exactly these products of the package at the repository root.
   xcodeproj.py add-app-store-target <product>...
       Adds the AppStore target (the <App> target's buildable folders and
-      Configs/AppStore.xcconfig) linking these products, and its shared scheme.
+      App/Configs/AppStore.xcconfig) linking these products, and its shared scheme.
 
 Runs from anywhere inside the project. Fails, changing nothing, when the project is not
 shaped the way the template writes it. Python 3.9 (the one macOS ships) is enough.
@@ -18,8 +18,7 @@ import sys
 import uuid
 from pathlib import Path
 
-PACKAGE = "Packages/AppModules"
-# main sets them from the one <App>.xcodeproj at the root; the app target is <App>.
+# main sets them from the one App/<App>.xcodeproj; the app target is <App>.
 PROJECT = None
 APP_TARGET = None
 
@@ -113,9 +112,9 @@ class Project:
         self.path.write_text(self.text)
 
 
-def package_products(base):
+def package_products(repo):
     out = subprocess.run(
-        ["swift", "package", "--package-path", str(base / PACKAGE), "dump-package"],
+        ["swift", "package", "--package-path", str(repo), "dump-package"],
         capture_output=True,
         text=True,
     )
@@ -127,7 +126,7 @@ def package_products(base):
 def link(project, target_name, products, available):
     missing = [product for product in products if product not in available]
     if missing:
-        die(f"{PACKAGE} has no product {', '.join(missing)}; declare it in Package.swift first")
+        die(f"Package.swift has no product {', '.join(missing)}; declare it there first")
     target_id = project.target(target_name)
     if not target_id:
         die(f"no target {target_name} in {PROJECT}")
@@ -192,7 +191,7 @@ def add_app_store_target(project, base, products, available):
         die(f"no {APP_TARGET} target in {PROJECT}")
     for name in ("AppStore.xcconfig", "AppStore-Info.plist", "AppStore.entitlements"):
         if not (base / "Configs" / name).is_file():
-            die(f"no Configs/{name}; copy it from the skill's wiring/ first")
+            die(f"no App/Configs/{name}; copy it from the skill's wiring/ first")
 
     configs = next((g for g in project.objects("PBXGroup") if project.field(g, "path") == "Configs"), None)
     if not configs:
@@ -296,15 +295,16 @@ def main():
     if len(sys.argv) < 3 or sys.argv[1] not in ("link", "add-app-store-target"):
         die(__doc__.split("\n\n")[1].strip())
     global PROJECT, APP_TARGET
-    base = root()
+    repo = root()
+    base = repo / "App"
     projects = sorted(p.parent.name for p in base.glob("*.xcodeproj/project.pbxproj"))
     if len(projects) != 1:
-        die(f"expected one Xcode project at {base}, found: {', '.join(projects) or 'none'}")
+        die(f"expected one Xcode project in {base}, found: {', '.join(projects) or 'none'}")
     PROJECT = projects[0]
     APP_TARGET = PROJECT[: -len(".xcodeproj")]
     pbxproj = base / PROJECT / "project.pbxproj"
     project = Project(pbxproj)
-    available = package_products(base)
+    available = package_products(repo)
     if sys.argv[1] == "link":
         link(project, sys.argv[2], sys.argv[3:], available)
     else:

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Creates an unsigned DMG of an .app with an /Applications link, in the Finder window
-# that Configs/DMG/settings.py designs: background, window size, icon spots. The dmg
+# that App/Configs/DMG/settings.py designs: background, window size, icon spots. The dmg
 # skill installs it as scripts/make-dmg.sh in place of the plain version;
 # package-dmg.sh signs and notarizes the result.
 #   make-dmg.sh <app> <dmg>
@@ -10,7 +10,7 @@ source "$(dirname "$0")/common.sh"
 app=${1:?usage: make-dmg.sh <app> <dmg>}
 dmg=${2:?usage: make-dmg.sh <app> <dmg>}
 [[ -d $app ]] || die "no app at $app"
-[[ -f Configs/DMG/settings.py ]] || die "no Configs/DMG/settings.py; the dmg skill writes it"
+[[ -f App/Configs/DMG/settings.py ]] || die "no App/Configs/DMG/settings.py; the dmg skill writes it"
 mkdir -p "$(dirname "$dmg")"
 rm -f "$dmg"
 
@@ -26,5 +26,5 @@ if [[ ! -x $dmgbuild ]]; then
     .build/dmgbuild-1.6.7/bin/pip install --quiet --disable-pip-version-check \
         --require-hashes --only-binary :all: -r scripts/dmgbuild-requirements.txt
 fi
-log "package $dmg with the Configs/DMG design"
-"$dmgbuild" -s Configs/DMG/settings.py -D app="$app" "$APP_DISPLAY_NAME" "$dmg" >&2
+log "package $dmg with the App/Configs/DMG design"
+"$dmgbuild" -s App/Configs/DMG/settings.py -D app="$app" "$APP_DISPLAY_NAME" "$dmg" >&2

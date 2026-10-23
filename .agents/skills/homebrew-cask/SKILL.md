@@ -16,7 +16,7 @@ It is written for apps made from macos-swiftui-spm-template, once its init has r
 - `make release` writes `dist/$APP_NAME-$VERSION.dmg`. `.github/workflows/release.yml`
   has a `release-please` job and a `publish` job that publishes the GitHub Release, and
   the repository has a `release` environment.
-- `Configs/Identity.xcconfig` sets `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID`,
+- `App/Configs/Identity.xcconfig` sets `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID`,
   `TEAM_ID` and `GITHUB_REPOSITORY` as plain `KEY = value` lines; `scripts/common.sh`
   exports them, derives `RELEASES_URL` and defines `die` and `log`.
 - `README.md` is the app's page for its users, with an Install section.
@@ -37,7 +37,7 @@ It is written for apps made from macos-swiftui-spm-template, once its init has r
 Read the facts before recommending one:
 
 ```bash
-grep '^TEAM_ID' Configs/Identity.xcconfig
+grep '^TEAM_ID' App/Configs/Identity.xcconfig
 gh repo view --json stargazerCount,forkCount,watchers,createdAt
 gh release list --exclude-drafts --limit 1
 ```
@@ -61,7 +61,7 @@ Forking, pushing and opening the pull request act on the user's GitHub account: 
 before each.
 
 1. Write the cask. `brew generate-cask-token "<path to the .app>"` gives the token. Take
-   the values from `Configs/Identity.xcconfig`, `version.txt` and the DMG of the latest published
+   the values from `App/Configs/Identity.xcconfig`, `version.txt` and the DMG of the latest published
    release (`gh release download v<version> --pattern '*.dmg' --dir .build/cask`, then
    `shasum -a 256`):
 
@@ -131,7 +131,7 @@ before each.
 
    - `docs/RELEASING.md`: replace the `## Homebrew cask (optional)` section, which only
      points to this skill, with `<skill>/wiring/releasing-official.md`.
-   - Nothing changes in the release workflow or `Configs/Identity.xcconfig`. Commit, for example
+   - Nothing changes in the release workflow or `App/Configs/Identity.xcconfig`. Commit, for example
      `docs: add the homebrew install`.
 
 ## 3. Own tap
@@ -172,7 +172,7 @@ Both need the user's GitHub account: ask before creating either for them.
 ### 3.3 Wire it in
 
 1. `cp <skill>/wiring/update-cask.sh scripts/update-cask.sh`
-2. At the end of `Configs/Identity.xcconfig`, in its `KEY = value` form:
+2. At the end of `App/Configs/Identity.xcconfig`, in its `KEY = value` form:
 
    ```text
    // Homebrew tap the release workflow updates (owner/homebrew-name).
@@ -243,7 +243,7 @@ Both need the user's GitHub account: ask before creating either for them.
 
 ### 3.4 Check and finish
 
-1. After `make release` (it needs `SUPublicEDKey` in `Configs/Info.plist`), write the cask and check its
+1. After `make release` (it needs `SUPublicEDKey` in `App/Configs/Info.plist`), write the cask and check its
    syntax: `scripts/update-cask.sh print > .build/<token>.rb && ruby -c .build/<token>.rb`.
 2. With Homebrew installed, check it as Homebrew will, in a throwaway local tap; outside
    a tap `brew style` applies other rules:
@@ -258,7 +258,7 @@ Both need the user's GitHub account: ask before creating either for them.
    brew untrust --cask local/casktest/<token>; brew untap local/casktest
    ```
 
-3. `make ci`, then commit `scripts/update-cask.sh`, `Configs/Identity.xcconfig`, the workflow job,
+3. `make ci`, then commit `scripts/update-cask.sh`, `App/Configs/Identity.xcconfig`, the workflow job,
    `README.md` and `docs/RELEASING.md` together, for example
    `feat(homebrew): publish releases to a homebrew tap`.
 

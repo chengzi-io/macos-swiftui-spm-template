@@ -8,7 +8,7 @@
 
 source "$(dirname "$0")/common.sh"
 
-[[ -n ${TEAM_ID:-} ]] || die "App Store builds need TEAM_ID in Configs/Identity.xcconfig"
+[[ -n ${TEAM_ID:-} ]] || die "App Store builds need TEAM_ID in App/Configs/Identity.xcconfig"
 installer=$(find_identity "3rd Party Mac Developer Installer|Mac Installer Distribution" basic)
 [[ -n $installer ]] || die "no Mac Installer Distribution identity for team $TEAM_ID in the keychain"
 

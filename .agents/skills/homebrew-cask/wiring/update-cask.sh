@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Homebrew cask for the current release DMG, dist/$APP_NAME-$VERSION.dmg.
 #   print  writes the cask to stdout
-#   push   commits Casks/<token>.rb to the tap $HOMEBREW_TAP (Configs/Identity.xcconfig)
+#   push   commits Casks/<token>.rb to the tap $HOMEBREW_TAP (App/Configs/Identity.xcconfig)
 #          through the GitHub API; GH_TOKEN needs contents:write on the tap
 # Homebrew quarantines what it downloads, so Gatekeeper checks the app on first launch.
 # A Developer ID build passes and gets a plain cask. An ad-hoc build (TEAM_ID empty)
-# gets what HOMEBREW_UNSIGNED in Configs/Identity.xcconfig picks:
+# gets what HOMEBREW_UNSIGNED in App/Configs/Identity.xcconfig picks:
 #   caveats  the cask tells the user to click Open Anyway after macOS blocks the launch
 #   xattr    the cask clears the quarantine flag after installing, so macOS never checks
 #            the app; homebrew/cask never accepts such a cask
@@ -19,7 +19,7 @@ cask() {
     [[ -f $dmg ]] || die "no DMG at $dmg; run make release first"
     local sha min_macos macos unsigned=""
     sha=$(shasum -a 256 "$dmg" | awk '{ print $1 }')
-    min_macos=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*//p' Configs/Project.xcconfig)
+    min_macos=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*//p' App/Configs/Project.xcconfig)
     case ${min_macos%%.*} in
         14) macos=sonoma ;;
         15) macos=sequoia ;;
@@ -29,7 +29,7 @@ cask() {
     if [[ -z ${TEAM_ID:-} ]]; then
         unsigned=${HOMEBREW_UNSIGNED:-}
         [[ $unsigned == caveats || $unsigned == xattr ]] ||
-            die "TEAM_ID is empty: set HOMEBREW_UNSIGNED in Configs/Identity.xcconfig to caveats or xattr"
+            die "TEAM_ID is empty: set HOMEBREW_UNSIGNED in App/Configs/Identity.xcconfig to caveats or xattr"
     elif [[ -n ${HOMEBREW_UNSIGNED:-} ]]; then
         log "TEAM_ID is set, so the cask ignores HOMEBREW_UNSIGNED; remove it and its README notice"
     fi
@@ -79,7 +79,7 @@ EOF
 case ${1:-} in
     print) cask ;;
     push)
-        [[ -n ${HOMEBREW_TAP:-} ]] || die "set HOMEBREW_TAP in Configs/Identity.xcconfig to owner/homebrew-tap"
+        [[ -n ${HOMEBREW_TAP:-} ]] || die "set HOMEBREW_TAP in App/Configs/Identity.xcconfig to owner/homebrew-tap"
         path="Casks/$token.rb"
         content=$(cask | base64)
         args=(-X PUT "repos/$HOMEBREW_TAP/contents/$path" -f message="chore($token): update to $VERSION" -f content="$content")

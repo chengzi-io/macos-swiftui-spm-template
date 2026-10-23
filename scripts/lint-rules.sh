@@ -6,7 +6,7 @@
 
 source "$(dirname "$0")/common.sh"
 
-swift_paths=("$APP_TARGET" "${APP_TARGET}UITests" "$PACKAGE_DIR/Sources" "$PACKAGE_DIR/Tests")
+swift_paths=(App/Application App/UITests Sources Tests)
 status=0
 
 # check <message> <extended regex> <paths...>: reports every matching line.
@@ -31,10 +31,10 @@ check "use NavigationStack or NavigationSplitView, not NavigationView" \
 check "use foregroundStyle(_:), not foregroundColor(_:)" \
     '\.foregroundColor\(' "${swift_paths[@]}"
 check "Services and ServicesLive hold no views; UI belongs in a feature" \
-    '^import SwiftUI\b' "$PACKAGE_DIR/Sources/Services" "$PACKAGE_DIR/Sources/ServicesLive"
+    '^import SwiftUI\b' Sources/Services Sources/ServicesLive
 check "Services holds protocols and mocks only; system frameworks belong in ServicesLive" \
-    '^import (AppKit|IOKit|Network|Sparkle)\b' "$PACKAGE_DIR/Sources/Services"
+    '^import (AppKit|IOKit|Network|Sparkle)\b' Sources/Services
 check "wrap AppKit views in an AppKitBridge target, not in a feature" \
-    '\bNS(View|ViewController)Representable\b' "$PACKAGE_DIR/Sources/Features" "$PACKAGE_DIR/Sources/AppRoot"
+    '\bNS(View|ViewController)Representable\b' Sources/Features Sources/AppRoot
 
 exit $status

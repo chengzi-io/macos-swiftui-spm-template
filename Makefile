@@ -5,14 +5,13 @@ SHELL := /bin/bash
 .SHELLFLAGS := -euo pipefail -c
 .DEFAULT_GOAL := help
 
-PACKAGE := Packages/AppModules
-# The app's Xcode project names the app target, its scheme and its source folder.
-APP_TARGET := $(patsubst %.xcodeproj/project.pbxproj,%,$(wildcard *.xcodeproj/project.pbxproj))
+# App/<App>.xcodeproj names the app target and its scheme.
+APP_TARGET := $(patsubst App/%.xcodeproj/project.pbxproj,%,$(wildcard App/*.xcodeproj/project.pbxproj))
 ifneq ($(words $(APP_TARGET)),1)
-$(error expected one Xcode project at the repository root, found: $(APP_TARGET))
+$(error expected one Xcode project in App/, found: $(APP_TARGET))
 endif
-SWIFT_PATHS := $(APP_TARGET) $(APP_TARGET)UITests $(PACKAGE)/Package.swift $(PACKAGE)/Sources $(PACKAGE)/Tests
-BUNDLE_ID := $(shell sed -nE 's/^BUNDLE_ID[[:space:]]*=[[:space:]]*//p' Configs/Identity.xcconfig)
+SWIFT_PATHS := Package.swift Sources Tests App/Package.swift App/Application App/UITests
+BUNDLE_ID := $(shell sed -nE 's/^BUNDLE_ID[[:space:]]*=[[:space:]]*//p' App/Configs/Identity.xcconfig)
 
 .PHONY: help
 help: ## List targets
@@ -42,21 +41,21 @@ github-setup: ## One-time GitHub settings: squash only, branch protection, relea
 
 .PHONY: test
 test: ## Run the package unit tests with swift test (fast: no app, no UI)
-	swift test --package-path $(PACKAGE)
+	swift test
 
 # Records the view snapshots that are missing or differ. A recording run reports each
 # image it writes as an issue, so the second run is the one that has to pass. Agents run
 # it only after the user has seen the old and new images (.claude/settings.json asks).
 .PHONY: snapshots
 snapshots: ## Record new and changed view snapshots in __Snapshots__/ (review them before committing)
-	-SNAPSHOT_TESTING_RECORD=failed swift test --package-path $(PACKAGE)
-	swift test --package-path $(PACKAGE)
+	-SNAPSHOT_TESTING_RECORD=failed swift test
+	swift test
 
 # UI tests drive the real mouse and keyboard on this Mac, so they stay out of
 # `make test` and `make ci`; GitHub CI runs them.
 .PHONY: test\:ui
 test\:ui: ## Run the UI tests; they take over the mouse and keyboard while they run
-	xcodebuild test -quiet -project $(APP_TARGET).xcodeproj -scheme $(APP_TARGET) \
+	xcodebuild test -quiet -project App/$(APP_TARGET).xcodeproj -scheme $(APP_TARGET) \
 		-derivedDataPath .build/xcode -destination "platform=macOS,arch=$$(uname -m)" \
 		-only-testing:$(APP_TARGET)UITests
 
@@ -110,9 +109,9 @@ release: ## Full release into dist/: app, notarization, DMG, dSYM, appcast, chec
 	scripts/release.sh
 
 .PHONY: sparkle-keys
-sparkle-keys: ## Create the Sparkle EdDSA key and write its public half to Configs/Info.plist
+sparkle-keys: ## Create the Sparkle EdDSA key and write its public half to App/Configs/Info.plist
 	scripts/sparkle-keys.sh
 
 .PHONY: clean
 clean: ## Remove build output
-	rm -rf .build dist $(PACKAGE)/.build
+	rm -rf .build dist

@@ -18,9 +18,9 @@ make run     # build and launch the debug app
 
 ```mermaid
 flowchart LR
-    pkg["Packages/AppModules<br/>all code, string catalogs,<br/>unit tests"] --> xb
-    shell["Xcode project + app folder<br/>@main, assets, AppIcon.icon"] --> xb
-    cfg["Configs/<br/>Identity.xcconfig, build settings,<br/>Info.plist, entitlements"] --> xb
+    pkg["Package.swift, Sources/<br/>all code, string catalogs,<br/>unit tests"] --> xb
+    shell["App/: Xcode project,<br/>@main, assets, AppIcon.icon"] --> xb
+    cfg["App/Configs/<br/>Identity.xcconfig, build settings,<br/>Info.plist, entitlements"] --> xb
     xb["xcodebuild<br/>compile, embed Sparkle,<br/>compile icon, sign"] --> app[".app"] --> smoke["scripts/smoke.sh<br/>check, launch"]
     pkg --> st["swift test<br/>unit tests, seconds"]
 ```
@@ -60,22 +60,24 @@ Try the Chinese UI with `make run ARGS="-AppleLanguages '(zh-Hans)'"`.
 
 `<App>` is the app's name (`APP_NAME`). Before the first release,
 `scripts/rename.sh --name <Name> --bundle-id <id>` renames the app (name, display name,
-bundle identifier) and the Xcode project, its targets, the scheme and the folders.
+bundle identifier) and the package, the Xcode project, its targets and the scheme.
 
 ```text
-<App>.xcodeproj/           the shell: <App> and <App>UITests targets, shared <App> scheme
-<App>/                     @main (composition root), app delegate, assets, AppIcon.icon,
+Package.swift              the package with all the code: targets, platforms, Swift
+                           settings, Sparkle
+Sources/AppRoot/           root model, scenes, menu commands
+Sources/Features/<Name>/   one target per feature: view, model, string catalog
+Sources/Services/          protocols for what reaches outside the process, and mocks
+Sources/ServicesLive/      the live implementations: system APIs, network, Sparkle
+Tests/                     Swift Testing, mirroring Sources/
+App/                       the Xcode shell
+  <App>.xcodeproj/         <App> and <App>UITests targets, shared <App> scheme
+  Application/             @main (composition root), app delegate, assets, AppIcon.icon,
                            privacy manifest
-<App>UITests/              XCUITest: a few critical flows
-Configs/                   Identity.xcconfig (app identity), build settings, Info.plist,
+  UITests/                 XCUITest: a few critical flows
+  Configs/                 Identity.xcconfig (app identity), build settings, Info.plist,
                            entitlements
-Packages/AppModules/       the local Swift package with all the code
-  Package.swift            targets, platforms, Swift settings, Sparkle
-  Sources/AppRoot/         root model, scenes, menu commands
-  Sources/Features/<Name>/ one target per feature: view, model, string catalog
-  Sources/Services/        protocols for what reaches outside the process, and mocks
-  Sources/ServicesLive/    the live implementations: system APIs, network, Sparkle
-  Tests/                   Swift Testing, mirroring Sources/
+  Package.swift            empty: keeps App/ out of the root package in Xcode
 scripts/                   build, sign, notarize, package, publish, lint rules
 .agents/skills/            agent skills, linked from .claude/skills
 .github/                   CI, PR title, release-please, Dependabot, templates
@@ -86,11 +88,12 @@ Where code goes and the rules it follows: [AGENTS.md](../AGENTS.md).
 
 ## Editors
 
-- Xcode: `xed <App>.xcodeproj`. Its Run button builds and launches the real `.app`
+- Xcode: `xed App/<App>.xcodeproj`. Its Run button builds and launches the real `.app`
   (bundle identifier, sandbox, Info.plist), with the debugger attached. Previews run
-  in the package targets.
-- VS Code / Cursor: the Swift extension (sourcekit-lsp) works on
-  `Packages/AppModules`; build and run the app with `make run`.
+  in the package targets. `xed .` opens the package alone, without the app.
+- VS Code, Cursor, Zed: the Swift extension (sourcekit-lsp) loads the package at the
+  root; the files in `App/` get no code intelligence. Build and run the app with
+  `make run`.
 
 ## Agent skills
 

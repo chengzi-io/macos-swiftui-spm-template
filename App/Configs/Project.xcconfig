@@ -1,11 +1,11 @@
 // Project-wide build settings, both configurations. Targets add theirs in
 // App.xcconfig and UITests.xcconfig. Package targets take their settings from
-// Packages/AppModules/Package.swift instead.
+// Package.swift at the repository root instead.
 
 #include "Identity.xcconfig"
 
 SDKROOT = macosx
-// Keep in step with platforms in Packages/AppModules/Package.swift.
+// Keep in step with platforms in Package.swift at the repository root.
 MACOSX_DEPLOYMENT_TARGET = 14.0
 
 SWIFT_VERSION = 6.0

@@ -1,7 +1,7 @@
 ## Homebrew cask
 
 Each release updates `Casks/<app>.rb` in the tap that `HOMEBREW_TAP` in
-`Configs/Identity.xcconfig` names: the `homebrew` job of the release workflow downloads the
+`App/Configs/Identity.xcconfig` names: the `homebrew` job of the release workflow downloads the
 published DMG and runs `scripts/update-cask.sh push` with the `HOMEBREW_TAP_TOKEN`
 secret. Preview the cask with `scripts/update-cask.sh print` after `make release`.
 

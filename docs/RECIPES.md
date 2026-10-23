@@ -130,7 +130,7 @@ struct LaunchAtLoginToggle: View {
 Keep the binding's `set:` a closure: passing the method `setEnabled` itself crashes the
 Swift 6.2.3 compiler. Add `Launch at login`, `Turned off in System Settings.` and
 `Open Login Items…` to `Features/Settings/Resources/Localizable.xcstrings` in `en` and
-`zh-Hans`. `<App>/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under
+`zh-Hans`. `App/Application/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under
 `UI_TESTING=1`) and `AppModel` hands it to `SettingsView`. Check it with the installed
 app in `/Applications` rather than a debug build.
 
@@ -197,7 +197,7 @@ network.
 
 A `MenuBarExtra` in its default `.menu` style is a native menu, and each `Divider()` is
 a separator between groups. Menus belong to `AppRoot`, beside `CheckForUpdatesButton`:
-`Packages/AppModules/Sources/AppRoot/MenuBarMenu.swift`.
+`Sources/AppRoot/MenuBarMenu.swift`.
 
 ```swift
 import AppKit
@@ -296,7 +296,7 @@ MenuBarExtra {
 .menuBarExtraStyle(.window)
 ```
 
-For no Dock icon, add `INFOPLIST_KEY_LSUIElement = YES` to `Configs/App.xcconfig`. That also hides
+For no Dock icon, add `INFOPLIST_KEY_LSUIElement = YES` to `App/Configs/App.xcconfig`. That also hides
 the app menu, so the panel carries its own Settings and Quit. Keep the `Settings`
 scene and open it as the menu above does; `SettingsLink` does not activate the app and
 leaves the window behind the frontmost one:
@@ -324,7 +324,7 @@ where the user picks it, and a check against shortcuts the system or the app's m
 already use. [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) does
 all three and stores the choice in `UserDefaults`; it works in the sandbox and on the
 Mac App Store without a permission prompt. It owns the hotkey, the storage and the
-recorder, so there is no service to write. Add it to `Packages/AppModules/Package.swift`,
+recorder, so there is no service to write. Add it to `Package.swift`,
 and its product to the dependencies of `SettingsFeature` and `AppRoot`:
 
 ```swift
@@ -399,7 +399,7 @@ poll to reapply a value.
 
 Steps 1 and 2 are representables, and they live in an `AppKitBridge` target that
 features depend on (`make lint` rejects them in a feature). Create it the first time:
-`Packages/AppModules/Sources/AppKitBridge/`, and in `Package.swift`
+`Sources/AppKitBridge/`, and in `Package.swift`
 `.target(name: "AppKitBridge", swiftSettings: ui)`.
 
 Step 2 reads the window from a view placed in it:
@@ -505,7 +505,7 @@ Developer ID apps get no crash reports from Apple; they stay in
 `~/Library/Logs/DiagnosticReports` on the user's Mac. Pick one when the app has users:
 
 - **Sentry**: add `https://github.com/getsentry/sentry-cocoa` to
-  `Packages/AppModules/Package.swift` with an `exact:` version as a dependency of
+  `Package.swift` with an `exact:` version as a dependency of
   `ServicesLive`, start it from a function there that
   `AppDelegate.applicationDidFinishLaunching` calls, and upload
   `dist/*.dSYM.zip` with `sentry-cli debug-files upload` in the publish job. Declare
@@ -521,7 +521,7 @@ Either way, ask for consent where your privacy policy requires it.
 - Tokens and passwords: Keychain through `SecItemAdd` / `SecItemCopyMatching` in a
   small service. Ad-hoc builds change signature on every update, so the keychain may
   ask the user to allow access again (see docs/RELEASING.md, 4a).
-- Structured data: SwiftData. `<App>/MainApp.swift` builds the `ModelContainer` (an
+- Structured data: SwiftData. `App/Application/MainApp.swift` builds the `ModelContainer` (an
   in-memory one under `UI_TESTING=1`) and hands it to `AppScenes`, which sets
   `.modelContainer(...)` on the scene. The store lives in the sandbox container under Application Support.
 - Plain files: `URL.applicationSupportDirectory`, which resolves inside
@@ -529,7 +529,7 @@ Either way, ask for consent where your privacy policy requires it.
 
 ## Privacy manifest
 
-`<App>/PrivacyInfo.xcprivacy` ships in every build and declares UserDefaults
+`App/Application/PrivacyInfo.xcprivacy` ships in every build and declares UserDefaults
 (`CA92.1`: the app reads its own defaults). Add an entry when code or an SDK uses
 another required-reason API (file timestamps, disk space, system boot time, active
 keyboards) or collects data. The App Store checks it; Developer ID builds carry it

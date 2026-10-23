@@ -15,7 +15,7 @@ symlinks = {"Applications": "/Applications"}
 icon = os.path.join(app, "Contents/Resources/AppIcon.icns")
 
 # dmgbuild pairs background.png with background@2x.png for Retina screens.
-background = "Configs/DMG/background.png"
+background = "App/Configs/DMG/background.png"
 # The window size includes the 28 pt title bar: 660 × 400 of content.
 window_rect = ((200, 120), (660, 428))
 icon_size = 128

@@ -15,20 +15,21 @@ no Sparkle entitlements.
 
 It is written for apps made from macos-swiftui-spm-template, once its init has run:
 
-- `<App>` is the app's name. `<App>.xcodeproj` has the `<App>` target: its code is
-  the buildable folder `<App>/`, its settings `Configs/App.xcconfig`. All other code
-  is the local package `Packages/AppModules`.
-- `Services/UpdaterService.swift` declares `UpdaterService` and `MockUpdaterService`;
-  `ServicesLive/LiveUpdaterService.swift` wraps Sparkle. `<App>/MainApp.swift` builds
-  the updater, `AppModel.updater` holds it, and `AppRoot/AppScenes.swift` shows
-  `CheckForUpdatesButton` and hands the updater to `SettingsView`.
+- `<App>` is the app's name. `App/<App>.xcodeproj` has the `<App>` target: its code is
+  the buildable folder `App/Application/`, its settings `App/Configs/App.xcconfig`. All
+  other code is the package at the repository root (`Package.swift`, `Sources/`).
+- `Sources/Services/UpdaterService.swift` declares `UpdaterService` and
+  `MockUpdaterService`; `Sources/ServicesLive/LiveUpdaterService.swift` wraps Sparkle.
+  `App/Application/MainApp.swift` builds the updater, `AppModel.updater` holds it, and
+  `Sources/AppRoot/AppScenes.swift` shows `CheckForUpdatesButton` and hands the updater
+  to `SettingsView`.
 - `scripts/build-app.sh debug|release` archives with xcodebuild and re-signs;
-  `scripts/common.sh` exports `Configs/Identity.xcconfig` (`TEAM_ID`, `BUNDLE_ID`) and
+  `scripts/common.sh` exports `App/Configs/Identity.xcconfig` (`TEAM_ID`, `BUNDLE_ID`) and
   defines `die`, `log`, `find_identity` and `signing_identity`.
-- `Configs/App.entitlements` turns the App Sandbox on, which the App Store requires.
+- `App/Configs/App.entitlements` turns the App Sandbox on, which the App Store requires.
 
 `<skill>` below is this skill's directory, for example `.agents/skills/mac-app-store`.
-`<skill>/wiring/xcodeproj.py` makes every change to `<App>.xcodeproj`; never edit
+`<skill>/wiring/xcodeproj.py` makes every change to `App/<App>.xcodeproj`; never edit
 `project.pbxproj` by hand. It refuses, changing nothing, when the project is not shaped
 as it expects.
 
@@ -42,7 +43,7 @@ Ask the user, unless they already said:
 
 | Channel | What changes |
 | --- | --- |
-| Both | The Developer ID release stays. A second app target, `AppStore`, builds the same app from `<App>/` without Sparkle |
+| Both | The Developer ID release stays. A second app target, `AppStore`, builds the same app from `App/Application/` without Sparkle |
 | App Store only | Sparkle and the GitHub DMG release go; the `<App>` target is the App Store app |
 
 Then do step 2, and 3a or 3b.
@@ -84,11 +85,11 @@ Then do step 2, and 3a or 3b.
    live services:
 
    ```bash
-   mkdir Packages/AppModules/Sources/SparkleUpdater
-   git mv Packages/AppModules/Sources/ServicesLive/LiveUpdaterService.swift Packages/AppModules/Sources/SparkleUpdater/
+   mkdir Sources/SparkleUpdater
+   git mv Sources/ServicesLive/LiveUpdaterService.swift Sources/SparkleUpdater/
    ```
 
-   In `Packages/AppModules/Package.swift`, add the product and the target, and take the
+   In `Package.swift`, add the product and the target, and take the
    Sparkle dependency off `ServicesLive`:
 
    ```swift
@@ -131,7 +132,7 @@ Then do step 2, and 3a or 3b.
    Store build).`), and the toggle sits inside `if let updater { … }`. If that leaves
    the App Store build's Settings empty, tell the user.
 
-   `<App>/MainApp.swift`: import `SparkleUpdater` instead of `ServicesLive` (keep
+   `App/Application/MainApp.swift`: import `SparkleUpdater` instead of `ServicesLive` (keep
    `ServicesLive` if it still exists), and build no updater for the App Store:
 
    ```swift
@@ -157,12 +158,12 @@ Then do step 2, and 3a or 3b.
 3. The App Store target's settings:
 
    ```bash
-   cp <skill>/wiring/AppStore.xcconfig <skill>/wiring/AppStore-Info.plist <skill>/wiring/AppStore.entitlements Configs/
+   cp <skill>/wiring/AppStore.xcconfig <skill>/wiring/AppStore-Info.plist <skill>/wiring/AppStore.entitlements App/Configs/
    ```
 
    `AppStore.xcconfig` includes `App.xcconfig` and switches to the other two files and
    the `APP_STORE` compilation condition. `AppStore-Info.plist` and
-   `AppStore.entitlements` are `Configs/Info.plist` and `Configs/App.entitlements`
+   `AppStore.entitlements` are `App/Configs/Info.plist` and `App/Configs/App.entitlements`
    without Sparkle's keys; carry over anything the project added to those since init.
 
 4. The project, from the repository root:
@@ -172,15 +173,15 @@ Then do step 2, and 3a or 3b.
    python3 <skill>/wiring/xcodeproj.py add-app-store-target AppRoot Services
    ```
 
-   Name the products `<App>/MainApp.swift` imports, plus `ServicesLive` while it
-   exists. The AppStore target compiles the same `<App>/` folder, so there is one
+   Name the products `App/Application/MainApp.swift` imports, plus `ServicesLive` while it
+   exists. The AppStore target compiles the same `App/Application/` folder, so there is one
    `@main`; `APP_STORE` tells the two builds apart. The script also writes the shared
    `AppStore` scheme, which `build-app.sh mas` archives.
 
 5. In `AGENTS.md` and `docs/DEVELOPMENT.md`, where they describe the layout, add the
    `AppStore` target and `SparkleUpdater`.
 
-6. `make fmt`, then `make ci`. `xcodebuild -list -project <App>.xcodeproj` lists the
+6. `make fmt`, then `make ci`. `xcodebuild -list -project App/<App>.xcodeproj` lists the
    `AppStore` target and scheme.
 
 The Developer ID release, Sparkle and their docs stay as they are.
@@ -191,23 +192,23 @@ Every build is now the App Store app. In `scripts/build-app.sh`, set `scheme=App
 `mas` branch, and drop the `release` configuration, its signing branch and its line in
 the header comment and the usage. Then remove:
 
-- Sparkle: the package in `Packages/AppModules/Package.swift`,
+- Sparkle: the package in `Package.swift`,
   `ServicesLive/LiveUpdaterService.swift`, and `Services/UpdaterService.swift` (protocol
   and mock). A target left without sources (`ServicesLive` and `Services` in a fresh
   template) goes with its product and every dependency on it.
 - The updater in the app: `AppModel.updater`, `makeUpdater` and its imports in
-  `<App>/MainApp.swift`, `AppRoot/CheckForUpdatesButton.swift` and the `.commands` in
+  `App/Application/MainApp.swift`, `AppRoot/CheckForUpdatesButton.swift` and the `.commands` in
   `AppScenes`, the toggle in `SettingsView`, and their entries in the string catalogs.
   A catalog left empty goes with its target's `resources:`. A Settings screen left
   empty (a fresh template) goes too: the `SettingsFeature` target and the `Settings`
   scene.
-- `Configs/Info.plist`: `SUEnableInstallerLauncherService`, `SUFeedURL` and
-  `SUPublicEDKey`. `Configs/App.entitlements`: the Sparkle mach-lookup exception.
-- In the project, link only what `<App>/MainApp.swift` imports (`AppRoot` in a fresh
-  template): `python3 <skill>/wiring/xcodeproj.py link <App> AppRoot`. With no remote
-  package left, Xcode deletes
-  `<App>.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` and SwiftPM
-  deletes `Packages/AppModules/Package.resolved`; commit the deletions.
+- `App/Configs/Info.plist`: `SUEnableInstallerLauncherService`, `SUFeedURL` and
+  `SUPublicEDKey`. `App/Configs/App.entitlements`: the Sparkle mach-lookup exception.
+- In the project, link only what `App/Application/MainApp.swift` imports (`AppRoot` in
+  a fresh template): `python3 <skill>/wiring/xcodeproj.py link <App> AppRoot`. With no
+  remote package left, Xcode deletes
+  `App/<App>.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` and
+  SwiftPM deletes `Package.resolved`; commit the deletions.
 - `scripts/common.sh`: `RELEASES_URL`, `SPARKLE_PUBLIC_KEY` (it reads `SUPublicEDKey`,
   which is gone, and would fail every script), `ARCHIVE`, `RELEASE_APP`, `SPARKLE_BIN`,
   `set_sparkle_public_key` and `signing_identity`.
@@ -219,13 +220,13 @@ the header comment and the usage. Then remove:
   the Release section's header about CI running `make release`.
 - A Homebrew cask, if the `homebrew-cask` skill added one: Homebrew installs the DMG,
   so `scripts/update-cask.sh`, its job in `release.yml` and its keys in
-  `Configs/Identity.xcconfig` go too.
+  `App/Configs/Identity.xcconfig` go too.
 - `.github/workflows/release.yml`: the `publish` job. release-please stays for versions
   and `CHANGELOG.md`; in `.github/release-please-config.json` drop `draft` and
   `force-tag-creation`, which only existed so the publish job could fill a draft.
 - `scripts/github-setup.sh`: the `release` environment, the closing note about its
   secrets, and the environment in the `github-setup` help line of the Makefile.
-- `Configs/Identity.xcconfig`: `GITHUB_REPOSITORY` once nothing reads it; the
+- `App/Configs/Identity.xcconfig`: `GITHUB_REPOSITORY` once nothing reads it; the
   `TEAM_ID` comment now says App Store builds need it.
 - `scripts/doctor.sh`: check for the Apple Distribution identity instead of Developer
   ID Application.
@@ -246,7 +247,7 @@ grep -rn 'Sparkle\|appcast\|notariz\|SPARKLE\|SUPublicEDKey\|RELEASES_URL\|Updat
 ## 4. What the user sets up
 
 1. Certificates **Apple Distribution** and **Mac Installer Distribution** in the login
-   keychain; `TEAM_ID` in `Configs/Identity.xcconfig`.
+   keychain; `TEAM_ID` in `App/Configs/Identity.xcconfig`.
 2. An App ID for the bundle identifier and a **Mac App Store** provisioning profile.
 3. The app record in App Store Connect, including its export compliance answer.
 4. An App Store Connect API key (`.p8`, key ID, issuer ID) for `make upload-mas`.

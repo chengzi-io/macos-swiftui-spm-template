@@ -31,7 +31,6 @@ jobs:
         with:
           path: |
             .build
-            Packages/AppModules/.build
           key: build-${{ runner.os }}-xcode-26.2-${{ hashFiles('**/Package.resolved') }}
           restore-keys: build-${{ runner.os }}-xcode-26.2-
       - run: make ci

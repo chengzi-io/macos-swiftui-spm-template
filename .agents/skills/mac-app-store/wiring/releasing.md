@@ -8,7 +8,7 @@ identifier entitlements, and wraps it in `dist/mas/<App>-X.Y.Z.pkg` signed with 
 installer certificate. Uploading runs on your Mac; the release workflow does not do it.
 
 1. Certificates: **Apple Distribution** and **Mac Installer Distribution** in your
-   login keychain. `TEAM_ID` set in `Configs/Identity.xcconfig`.
+   login keychain. `TEAM_ID` set in `App/Configs/Identity.xcconfig`.
 2. App ID for the bundle identifier and a **Mac App Store** provisioning profile;
    download it.
 3. Create the app record in App Store Connect.
@@ -20,5 +20,5 @@ installer certificate. Uploading runs on your Mac; the release workflow does not
      NOTARY_ISSUER_ID=<uuid> make upload-mas
    ```
 
-5. Keep `<App>/PrivacyInfo.xcprivacy` accurate (see [RECIPES.md](RECIPES.md)), then
+5. Keep `App/Application/PrivacyInfo.xcprivacy` accurate (see [RECIPES.md](RECIPES.md)), then
    submit for review in App Store Connect.

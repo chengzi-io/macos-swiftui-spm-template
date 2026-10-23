@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Renames the app before its first release: APP_NAME, APP_DISPLAY_NAME and BUNDLE_ID,
-# and the Xcode project, its app and UI test targets, the scheme and the source
-# folders, which carry APP_NAME. After a release a new name or bundle identifier is a
-# different app to macOS, Sparkle and Homebrew, so this refuses.
+# and what carries APP_NAME: the Xcode project App/<App>.xcodeproj, its app and UI test
+# targets, the scheme and the package in Package.swift. After a release a new name or
+# bundle identifier is a different app to macOS, Sparkle and Homebrew, so this refuses.
 #
 #   scripts/rename.sh --name NewName --bundle-id com.example.newname [--display-name "New Name"]
 #
@@ -42,22 +42,21 @@ old=$APP_TARGET
 if [[ $new != "$old" ]]; then
     # The project's own vocabulary: renaming the targets rewrites these words in project.pbxproj.
     case $new in
-        AppModules | AppRoot | AppStore | Configs | Debug | Frameworks | Products | Release | Resources | Services | ServicesLive | Sources)
+        Application | AppRoot | AppStore | Configs | Debug | Frameworks | Products | Release | Resources | Services | ServicesLive | Sources | UITests)
             die "$new is a name the Xcode project already uses; pick another"
             ;;
     esac
-    for path in "$new" "${new}UITests" "$new.xcodeproj"; do
-        [[ ! -e $path ]] || die "$path already exists; pick another name"
-    done
-    schemes=$old.xcodeproj/xcshareddata/xcschemes
+    [[ ! -e App/$new.xcodeproj ]] || die "App/$new.xcodeproj already exists; pick another name"
+    schemes=$XCODE_PROJECT/xcshareddata/xcschemes
     [[ -f $schemes/$old.xcscheme ]] || die "no $schemes/$old.xcscheme"
+    grep -qx "    name: \"$old\"," Package.swift || die "Package.swift does not name the package $old"
 
-    log "rename $old to $new: Xcode project, targets, scheme and folders"
+    log "rename $old to $new: Xcode project, targets, scheme and package"
     sed -i '' -E \
         -e "s/(remoteInfo|path|name|productName) = $old(UITests)?(\.app|\.xctest)?;/\1 = $new\2\3;/" \
         -e "s#/\* $old(UITests)?(\.app|\.xctest)? \*/#/* $new\1\2 */#g" \
         -e "s/(PBXNativeTarget|PBXProject) \"$old(UITests)?\"/\1 \"$new\2\"/g" \
-        "$old.xcodeproj/project.pbxproj"
+        "$XCODE_PROJECT/project.pbxproj"
     # Every scheme, the AppStore one included, points into the project; BuildableName is
     # the product, named by APP_NAME.
     for scheme in "$schemes"/*.xcscheme; do
@@ -68,20 +67,18 @@ if [[ $new != "$old" ]]; then
             -e "s/container:$old\.xcodeproj/container:$new.xcodeproj/" \
             "$scheme"
     done
-    sed -i '' -E "s/^TEST_TARGET_NAME = $old\$/TEST_TARGET_NAME = $new/" Configs/UITests.xcconfig
+    sed -i '' -E "s/^TEST_TARGET_NAME = $old\$/TEST_TARGET_NAME = $new/" App/Configs/UITests.xcconfig
+    sed -i '' -E "s/^    name: \"$old\",\$/    name: \"$new\",/" Package.swift
 
     git mv "$schemes/$old.xcscheme" "$schemes/$new.xcscheme"
-    git mv "$old.xcodeproj" "$new.xcodeproj"
-    git mv "$old" "$new"
-    git mv "${old}UITests" "${new}UITests"
+    git mv "$XCODE_PROJECT" "App/$new.xcodeproj"
 
-    grep -qx "TEST_TARGET_NAME = $new" Configs/UITests.xcconfig || die "TEST_TARGET_NAME in Configs/UITests.xcconfig is not $new"
-    for expected in "path = $new;" "path = ${new}UITests;"; do
-        grep -qF "$expected" "$new.xcodeproj/project.pbxproj" || die "no '$expected' in $new.xcodeproj/project.pbxproj"
-    done
-    targets=$(xcodebuild -list -json -project "$new.xcodeproj" | plutil -extract project.targets json -o - -)
+    grep -qx "TEST_TARGET_NAME = $new" App/Configs/UITests.xcconfig || die "TEST_TARGET_NAME in App/Configs/UITests.xcconfig is not $new"
+    grep -qx "    name: \"$new\"," Package.swift || die "Package.swift does not name the package $new"
+    grep -qF "name = $new; path = ..;" "App/$new.xcodeproj/project.pbxproj" || die "App/$new.xcodeproj does not reference the package as $new"
+    targets=$(xcodebuild -list -json -project "App/$new.xcodeproj" | plutil -extract project.targets json -o - -)
     [[ $targets == *"\"$new\""* && $targets == *"\"${new}UITests\""* ]] ||
-        die "$new.xcodeproj has targets $targets, expected $new and ${new}UITests"
+        die "App/$new.xcodeproj has targets $targets, expected $new and ${new}UITests"
 fi
 
 set_identity APP_NAME "$new"

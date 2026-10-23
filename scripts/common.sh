@@ -1,5 +1,5 @@
 # Sourced by scripts/*.sh. Runs from the repo root with the app identity
-# (Configs/Identity.xcconfig) exported.
+# (App/Configs/Identity.xcconfig) exported.
 # macOS ships bash 3.2: no associative arrays, no mapfile, guard empty arrays.
 
 set -euo pipefail
@@ -12,19 +12,18 @@ while IFS= read -r line; do
     if [[ $line =~ ^([A-Z_][A-Z0-9_]*)[[:space:]]*=[[:space:]]*(.*[^[:space:]])?[[:space:]]*$ ]]; then
         export "${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
     fi
-done <Configs/Identity.xcconfig
+done <App/Configs/Identity.xcconfig
 export RELEASES_URL="https://github.com/$GITHUB_REPOSITORY/releases"
-SPARKLE_PUBLIC_KEY=$(plutil -extract SUPublicEDKey raw Configs/Info.plist)
+SPARKLE_PUBLIC_KEY=$(plutil -extract SUPublicEDKey raw App/Configs/Info.plist)
 export SPARKLE_PUBLIC_KEY
 
-PACKAGE_DIR=Packages/AppModules
 DERIVED_DATA=.build/xcode
 VERSION=$(tr -d '[:space:]' < version.txt)
 BUILD_NUMBER=$(git rev-list --count HEAD)
 DEBUG_APP="$DERIVED_DATA/Build/Products/Debug/$APP_NAME.app"
 ARCHIVE="$DERIVED_DATA/$APP_NAME.xcarchive"
 RELEASE_APP="dist/$APP_NAME.app"
-SPARKLE_BIN="$PACKAGE_DIR/.build/artifacts/sparkle/Sparkle/bin"
+SPARKLE_BIN=.build/artifacts/sparkle/Sparkle/bin
 
 die() {
     echo "error: $*" >&2
@@ -35,25 +34,25 @@ log() {
     echo "==> $*" >&2
 }
 
-# The app's Xcode project names the app target, its scheme and its source folder:
-# <App>.xcodeproj, <App>/, <App>UITests/ (scripts/rename.sh renames them together).
-# Only a folder with a project.pbxproj counts: Xcode can leave its window state behind
-# in an old project path.
-projects=(*.xcodeproj/project.pbxproj)
+# App/<App>.xcodeproj names the app target and its scheme <App> (scripts/rename.sh renames
+# them together). Only a folder with a project.pbxproj counts: Xcode can leave its window
+# state behind in an old project path.
+projects=(App/*.xcodeproj/project.pbxproj)
 [[ ${#projects[@]} -eq 1 && -f ${projects[0]} ]] ||
-    die "expected one Xcode project at the repository root, found: ${projects[*]}"
-APP_TARGET=${projects[0]%.xcodeproj/project.pbxproj}
+    die "expected one Xcode project in App/, found: ${projects[*]}"
+XCODE_PROJECT=${projects[0]%/project.pbxproj}
+APP_TARGET=$(basename "$XCODE_PROJECT" .xcodeproj)
 
-# set_identity KEY value: rewrites the KEY line of Configs/Identity.xcconfig.
+# set_identity KEY value: rewrites the KEY line of App/Configs/Identity.xcconfig.
 set_identity() {
-    sed -i '' -E -e "s|^$1[[:space:]]*=.*|$1 = $2|" -e 's/[[:space:]]+$//' Configs/Identity.xcconfig
+    sed -i '' -E -e "s|^$1[[:space:]]*=.*|$1 = $2|" -e 's/[[:space:]]+$//' App/Configs/Identity.xcconfig
 }
 
-# Sets SUPublicEDKey in Configs/Info.plist in place, keeping the file's formatting
+# Sets SUPublicEDKey in App/Configs/Info.plist in place, keeping the file's formatting
 # (plutil and PlistBuddy rewrite it with tabs).
 set_sparkle_public_key() {
-    sed -i '' -e '/<key>SUPublicEDKey<\/key>/{' -e 'n' -e "s|<string>.*</string>|<string>$1</string>|" -e '}' Configs/Info.plist
-    [[ $(plutil -extract SUPublicEDKey raw Configs/Info.plist) == "$1" ]] || die "could not set SUPublicEDKey in Configs/Info.plist"
+    sed -i '' -e '/<key>SUPublicEDKey<\/key>/{' -e 'n' -e "s|<string>.*</string>|<string>$1</string>|" -e '}' App/Configs/Info.plist
+    [[ $(plutil -extract SUPublicEDKey raw App/Configs/Info.plist) == "$1" ]] || die "could not set SUPublicEDKey in App/Configs/Info.plist"
 }
 
 # Prints the SHA-1 of the first valid codesigning identity for TEAM_ID whose name

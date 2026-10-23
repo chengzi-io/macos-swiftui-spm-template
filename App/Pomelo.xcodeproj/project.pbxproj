@@ -31,18 +31,18 @@
 		0A0000000000000000000015 /* UITests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = UITests.xcconfig; sourceTree = "<group>"; };
 		0A0000000000000000000016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0A0000000000000000000017 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
-		0A0000000000000000000018 /* AppModules */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = AppModules; path = Packages/AppModules; sourceTree = "<group>"; };
+		0A0000000000000000000018 /* Pomelo */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Pomelo; path = ..; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0A0000000000000000000005 /* Pomelo */ = {
+		0A0000000000000000000005 /* Application */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Pomelo;
+			path = Application;
 			sourceTree = "<group>";
 		};
-		0A0000000000000000000006 /* PomeloUITests */ = {
+		0A0000000000000000000006 /* UITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = PomeloUITests;
+			path = UITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -71,9 +71,9 @@
 		0A0000000000000000000002 = {
 			isa = PBXGroup;
 			children = (
-				0A0000000000000000000018 /* AppModules */,
-				0A0000000000000000000005 /* Pomelo */,
-				0A0000000000000000000006 /* PomeloUITests */,
+				0A0000000000000000000018 /* Pomelo */,
+				0A0000000000000000000005 /* Application */,
+				0A0000000000000000000006 /* UITests */,
 				0A0000000000000000000004 /* Configs */,
 				0A0000000000000000000003 /* Products */,
 			);
@@ -117,7 +117,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				0A0000000000000000000005 /* Pomelo */,
+				0A0000000000000000000005 /* Application */,
 			);
 			name = Pomelo;
 			packageProductDependencies = (
@@ -143,7 +143,7 @@
 				0A0000000000000000000037 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				0A0000000000000000000006 /* PomeloUITests */,
+				0A0000000000000000000006 /* UITests */,
 			);
 			name = PomeloUITests;
 			packageProductDependencies = (

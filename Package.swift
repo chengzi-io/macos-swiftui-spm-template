@@ -7,14 +7,14 @@ let common: [SwiftSetting] = [
     .enableUpcomingFeature("InferIsolatedConformances"),
     .enableUpcomingFeature("MemberImportVisibility"),
     // Xcode builds a package added with "Add Local…" (XCLocalSwiftPackageReference)
-    // with -suppress-warnings, which conflicts with this. <App>.xcodeproj references
-    // the package folder instead, which Xcode builds with warnings on.
+    // with -suppress-warnings, which conflicts with this. App/<App>.xcodeproj
+    // references this folder instead, which Xcode builds with warnings on.
     .treatAllWarnings(as: .error),
 ]
 let ui = common + [.defaultIsolation(MainActor.self)]
 
 let package = Package(
-    name: "AppModules",
+    name: "Pomelo",
     defaultLocalization: "en",
     platforms: [.macOS(.v14)],
     products: [
