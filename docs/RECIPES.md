@@ -7,22 +7,36 @@ logged once and shown by the view.
 ## Launch at login
 
 `SMAppService` (macOS 13+) registers the app itself; no helper app, no entitlement. It
-changes system state, so it is a service. The protocol and its mock go in `Services`:
+changes system state, so it is a service. The user can switch the item off in System
+Settings > General > Login Items; the status then reads `requiresApproval`, and only
+System Settings can switch it back on. The protocol, its status and its mock go in
+`Services`:
 
 ```swift
+public enum LaunchAtLoginStatus: Sendable {
+    case enabled
+    case disabled
+    /// Registered, but the user turned it off in System Settings, and only System
+    /// Settings can turn it back on.
+    case requiresApproval
+}
+
 @MainActor
 public protocol LaunchAtLoginService: AnyObject {
-    var isEnabled: Bool { get }
+    var status: LaunchAtLoginStatus { get }
     func setEnabled(_ enabled: Bool) throws
+    func openLoginItemsSettings()
 }
 
 @MainActor
 public final class MockLaunchAtLoginService: LaunchAtLoginService {
-    public private(set) var isEnabled: Bool
+    public var status: LaunchAtLoginStatus
 
-    public init(isEnabled: Bool = false) { self.isEnabled = isEnabled }
+    public init(status: LaunchAtLoginStatus = .disabled) { self.status = status }
 
-    public func setEnabled(_ enabled: Bool) throws { isEnabled = enabled }
+    public func setEnabled(_ enabled: Bool) throws { status = enabled ? .enabled : .disabled }
+
+    public func openLoginItemsSettings() {}
 }
 ```
 
@@ -36,8 +50,15 @@ import Services
 public final class LiveLaunchAtLoginService: LaunchAtLoginService {
     public init() {}
 
-    // Users can turn the item off in System Settings, so the status is the only truth.
-    public var isEnabled: Bool { SMAppService.mainApp.status == .enabled }
+    // Users can change the item in System Settings, so the status is the only truth.
+    public var status: LaunchAtLoginStatus {
+        switch SMAppService.mainApp.status {
+        case .enabled: .enabled
+        case .requiresApproval: .requiresApproval
+        case .notRegistered, .notFound: .disabled
+        @unknown default: .disabled
+        }
+    }
 
     public func setEnabled(_ enabled: Bool) throws {
         if enabled {
@@ -46,42 +67,72 @@ public final class LiveLaunchAtLoginService: LaunchAtLoginService {
             try SMAppService.mainApp.unregister()
         }
     }
+
+    public func openLoginItemsSettings() {
+        SMAppService.openSystemSettingsLoginItems()
+    }
 }
 ```
 
 The toggle goes in `Features/Settings`, with a `Log.swift` like Greeting's that declares
-a `settings` category:
+a `settings` category. When System Settings turned the item off, it says so and offers
+the way there:
 
 ```swift
+import AppKit
 import OSLog
 import Services
 import SwiftUI
 
 struct LaunchAtLoginToggle: View {
     let service: any LaunchAtLoginService
-    @State private var enabled = false
+    @State private var status = LaunchAtLoginStatus.disabled
 
     var body: some View {
-        Toggle(isOn: $enabled) {
-            Text("Launch at login", bundle: .module)
-        }
-        .onAppear { enabled = service.isEnabled }
-        .onChange(of: enabled) { _, newValue in
-            guard newValue != service.isEnabled else { return }
-            do {
-                try service.setEnabled(newValue)
-            } catch {
-                Log.settings.error("launch at login: \(error.localizedDescription, privacy: .public)")
-                enabled = service.isEnabled
+        VStack(alignment: .leading) {
+            Toggle(isOn: Binding(get: { status == .enabled }, set: { setEnabled($0) })) {
+                Text("Launch at login", bundle: .module)
+            }
+            .disabled(status == .requiresApproval)
+            if status == .requiresApproval {
+                Text("Turned off in System Settings.", bundle: .module)
+                    .foregroundStyle(.secondary)
+                Button {
+                    service.openLoginItemsSettings()
+                } label: {
+                    Text("Open Login Items…", bundle: .module)
+                }
             }
         }
+        .onAppear { status = service.status }
+        // Back from System Settings, the Settings window is still open.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            status = service.status
+        }
     }
+
+    private func setEnabled(_ enabled: Bool) {
+        do {
+            try service.setEnabled(enabled)
+        } catch {
+            Log.settings.error("launch at login: \(error.localizedDescription, privacy: .public)")
+        }
+        status = service.status
+    }
+}
+
+#Preview {
+    LaunchAtLoginToggle(service: MockLaunchAtLoginService(status: .requiresApproval))
+        .padding()
 }
 ```
 
-`App/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under `UI_TESTING=1`)
-and `AppModel` hands it to `SettingsView`. Check it with the installed app in
-`/Applications` rather than a debug build.
+Keep the binding's `set:` a closure: passing the method `setEnabled` itself crashes the
+Swift 6.2.3 compiler. Add `Launch at login`, `Turned off in System Settings.` and
+`Open Login Items…` to `Features/Settings/Resources/Localizable.xcstrings` in `en` and
+`zh-Hans`. `App/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under
+`UI_TESTING=1`) and `AppModel` hands it to `SettingsView`. Check it with the installed
+app in `/Applications` rather than a debug build.
 
 ## Networking
 
