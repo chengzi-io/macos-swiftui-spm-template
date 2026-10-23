@@ -78,6 +78,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V40 | Mac 上的 XCUITest 在真实桌面上启动应用并发送真实的鼠标键盘事件；本机 Automation Mode 关闭且需要认证，`automationmodetool enable-automationmode-without-authentication` 可免认证开启（man page） | UI 测试不进 `make ci`，由 GitHub CI 跑 |
 | V41 | Xcode 26.4 起要求 macOS Tahoe 26.2；26.3 是最后一个支持 macOS Sequoia 的版本（Apple 的系统要求页） | 本机（macOS 15.7）停在 26.3 |
 | V42 | 本机 PATH 里的 `grep` 是 Homebrew 的 ugrep，其他机器和 CI 是 BSD grep | `lint-rules.sh` 写死 `/usr/bin/grep` |
+| V44 | XCUITest 启动参数 `["--ui-testing", "-AppleLanguages", "(en)"]` 让应用一个窗口都没有：AppKit 把 `-key value` 形式的参数读成 defaults，`--ui-testing` 吞掉下一个参数当值，落单的 `(en)` 被当作要打开的文件，SwiftUI 于是不建默认窗口（`open --args strayword` 同样 0 个窗口；把 `--ui-testing` 放到最后则有 1 个） | UI 测试改用环境变量 `UI_TESTING=1` |
+| V45 | macOS 的 XCUITest 里，SwiftUI `Text` 对应的 `staticTexts` 元素 `label` 为空，文字在 `value` 里 | UI 测试断言 `value` |
 | V43 | 图标图层的图片缺失时，Xcode 构建只有一条 `Icon export exited with status 255` 警告，照样成功；删掉 `.app` 重新构建，里面仍有更早构建留下的 AppIcon.icns，所以冒烟测试也通过（V28 的保证在 Xcode 构建里丢了） | `scripts/lint-assets.sh` 在 `make lint` 里单独跑 actool，有警告即失败 |
 
 ---
@@ -94,7 +96,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 |----|----|----------|------|
 | A1 | 工程与目录 | `App.xcodeproj`（App、AppUITests 两个 target，buildable folders）、`Packages/AppModules`（AppRoot、`Features/<Name>`、Services、ServicesLive，测试目录镜像 Sources） | ✅ |
 | A2 | 应用身份单一来源 | `Configs/Identity.xcconfig`（Xcode 和脚本读同一份） | ✅ |
-| A3 | App 入口骨架 | `App/MainApp.swift`（组装根，`--ui-testing` 时换 mock）、`AppDelegate.swift`；场景在 `AppRoot/AppScenes.swift` | ✅ |
+| A3 | App 入口骨架 | `App/MainApp.swift`（组装根，环境变量 `UI_TESTING=1` 时换 mock）、`AppDelegate.swift`；场景在 `AppRoot/AppScenes.swift` | ✅ |
 | A4 | 资源与本地化（en、zh-Hans） | 每个带文案的 target 一份 `Resources/Localizable.xcstrings` | ✅ |
 | A5 | App 图标与强调色 | `App/AppIcon.icon`（Icon Composer 格式：两层 SVG 加渐变填充，自绘橙子切面）、`App/Assets.xcassets`（强调色） | ✅ macOS 15 / 🟡 macOS 14、26 |
 | A6 | Info.plist / Entitlements / 隐私清单 | `Configs/Info.plist`、`Configs/App.entitlements`、`App/PrivacyInfo.xcprivacy` | ✅ |
@@ -106,7 +108,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | B1 | 编译严格度 | `Packages/AppModules/Package.swift` 的 `swiftSettings`、`Configs/Project.xcconfig` | ✅ |
 | B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint`；`scripts/lint-rules.sh` 拦旧 API 和越层 import | ✅ |
 | B3 | Git hooks | `lefthook.yml`（pre-commit 格式化） | ✅ |
-| B4 | 测试 | `make test`：`GreetingFeatureTests`（Swift Testing，2 个用例）；`make test:ui`：`AppUITests`（XCUITest，1 个用例） | ✅ 单测 / 🟡 UI 测试只编译过 |
+| B4 | 测试 | `make test`：`GreetingFeatureTests`（Swift Testing，2 个用例）；`make test:ui`：`AppUITests`（XCUITest，1 个用例） | ✅ |
 | B5 | `.app` 冒烟测试 | `scripts/smoke.sh`，同时用于 debug 包和 release 包；检查签名、Info.plist、资源包、`Assets.car` 和 `AppIcon.icns`，然后启动应用 | ✅ |
 | C1 | 日志 | 每个模块一个内部 `Log`（各自的 category）、`make logs` | ✅ |
 | C2 | 错误处理约定 | `AppModel` 示例 + AGENTS.md | ✅ |

@@ -79,7 +79,7 @@ struct LaunchAtLoginToggle: View {
 }
 ```
 
-`App/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under `--ui-testing`)
+`App/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under `UI_TESTING=1`)
 and `AppModel` hands it to `SettingsView`. Check it with the installed app in
 `/Applications` rather than a debug build.
 
@@ -413,7 +413,7 @@ Either way, ask for consent where your privacy policy requires it.
   small service. Ad-hoc builds change signature on every update, so the keychain may
   ask the user to allow access again (see docs/RELEASING.md, 4a).
 - Structured data: SwiftData. `App/MainApp.swift` builds the `ModelContainer` (an
-  in-memory one under `--ui-testing`) and hands it to `AppScenes`, which sets
+  in-memory one under `UI_TESTING=1`) and hands it to `AppScenes`, which sets
   `.modelContainer(...)` on the scene. The store lives in the sandbox container under Application Support.
 - Plain files: `URL.applicationSupportDirectory`, which resolves inside
   `~/Library/Containers/<bundle id>/Data/` under the sandbox.

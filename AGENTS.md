@@ -38,9 +38,9 @@ run tests, render previews and search Apple's documentation through Xcode.
 
 ```text
 App/                          @main, the composition root: builds the live services
-                              (mocks under --ui-testing) and hands them to AppRoot.
+                              (mocks under UI_TESTING=1) and hands them to AppRoot.
                               Plus the app delegate, assets, AppIcon.icon. No views.
-AppUITests/                   XCUITest, a few critical flows; launches with --ui-testing
+AppUITests/                   XCUITest, a few critical flows; launches with UI_TESTING=1
 Configs/Identity.xcconfig     app identity (name, bundle id, team, repository): only here
 Configs/*.xcconfig            build settings; Info.plist and App.entitlements beside them
 Packages/AppModules/Sources/
@@ -144,7 +144,7 @@ a new skill the same way.
    `en` and `zh-Hans`.
 4. Work outside the process gets a service: protocol and mock in `Services`, live
    implementation in `ServicesLive` ([RECIPES](docs/RECIPES.md#networking) has one).
-   `App/MainApp.swift` builds the live one and the mock under `--ui-testing`, and
+   `App/MainApp.swift` builds the live one and the mock under `UI_TESTING=1`, and
    passes it through `AppModel`.
 5. `AppModel` owns the feature's model; `AppScenes` shows its view.
 6. Test the model in `Tests/Features/<Name>Tests/` with mocks. A flow worth guarding end

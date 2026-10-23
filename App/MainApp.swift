@@ -14,9 +14,11 @@ struct MainApp: App {
     }
 }
 
-/// UI tests launch with --ui-testing: mocks only, no network or system side effects.
+/// UI tests launch with UI_TESTING=1: mocks only, no network or system side effects.
+/// An environment variable, not an argument: AppKit reads `-key value` arguments as
+/// defaults and opens a leftover argument as a file, and then no window appears.
 private func makeUpdater() -> any UpdaterService {
-    if CommandLine.arguments.contains("--ui-testing") {
+    if ProcessInfo.processInfo.environment["UI_TESTING"] == "1" {
         return MockUpdaterService()
     }
     return LiveUpdaterService()

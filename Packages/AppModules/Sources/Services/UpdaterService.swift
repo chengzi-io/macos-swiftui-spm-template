@@ -9,7 +9,7 @@ public protocol UpdaterService: AnyObject, Observable {
     func checkForUpdates()
 }
 
-/// Stands in for Sparkle in previews, tests and `--ui-testing` launches.
+/// Stands in for Sparkle in previews, tests and UI test launches (`UI_TESTING=1`).
 @MainActor
 @Observable
 public final class MockUpdaterService: UpdaterService {
