@@ -17,7 +17,9 @@ jobs:
     # release-please PRs only touch version.txt, CHANGELOG.md and the manifest. A skipped
     # job still satisfies the required check; the same-repo guard keeps forks from skipping.
     if: ${{ !(startsWith(github.head_ref, 'release-please--') && github.event.pull_request.head.repo.full_name == github.repository) }}
-    runs-on: macos-26
+    # The macOS major the view snapshots were recorded on; other versions draw controls
+    # differently. Move it with the Mac that records them.
+    runs-on: macos-15
     timeout-minutes: 30
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer

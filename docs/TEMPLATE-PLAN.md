@@ -84,7 +84,9 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V47 | swift-snapshot-testing 1.19.6 的 SwiftUI 策略只支持 iOS 和 tvOS；macOS 上包进 `NSHostingView` 用 NSView 的 `.image`，本机按 2x 出图（360×200 pt 得 720×400 px），连跑两次一致，内边距改 4 pt 即失败，失败信息给出参考图和新图两个路径；`SNAPSHOT_TESTING_RECORD` 设默认录制模式（缺省 `missing`），套件上显式写 `record:` 会盖掉它。它的 manifest 连带解析 swift-syntax、swift-custom-dump、xctest-dynamic-overlay，只链接进测试 target，app 里没有它的符号 | 视图快照测试；重录用 `SNAPSHOT_TESTING_RECORD=failed make test` |
 | V48 | 不在窗口里的 `NSHostingView` 没人画窗口背景：暗色快照里浅色文字落在透明像素上，看不见 | 快照前加 `.background(Color(nsColor: .windowBackgroundColor))` |
 | V49 | 同一台机器上，`xcodebuild test` 跑包测试时编译了字符串目录、跟随系统语言（本机中文），快照里是「名字」「打招呼」；`swift test` 不编译目录，显示英文 key，两者对不上 | `App` scheme 的 TestAction 设 `language = "en"`、`region = "US"`，两种跑法都通过 |
-| V50 | 库的源码注释写明快照只能在录制参考图的同一系统上比对；本机 macOS 15，CI 是 macOS 26（Liquid Glass 控件） | 快照套件在 `CI` 环境变量存在时跳过 |
+| V50 | 库的源码注释写明快照只能在录制参考图的同一系统上比对；本机 macOS 15，CI 原来是 macOS 26（Liquid Glass 控件）。GitHub 的 macos-15 镜像是 macOS 15.7.9，带 Xcode 26.2 和 26.3 | CI 和发版 job 改到 `macos-15`，快照在 CI 上照常比对；容差 `perceptualPrecision: 0.98` 吸收小版本间的抗锯齿差别，内边距改 4 pt 仍失败 |
+| V51 | NSView 策略按主屏幕的缩放出图，CI 的虚拟显示器可能是 1x；自己建 2x 的 `NSBitmapImageRep` 再 `cacheDisplay`，交给 `Snapshotting<NSImage, NSImage>`，尺寸固定。快照默认录制模式改成 `.never`（读 `SNAPSHOT_TESTING_RECORD`，缺省 never）后，删掉参考图再跑只会失败、不会补录 | 只有 `make snapshots` 录制；`.claude/settings.json` 对它和 `gh pr edit` 设 `ask`（Claude Code 文档：ask 规则在 auto 模式下也会问，但匹配时跳过命令前的环境变量赋值，所以拦不住 `SNAPSHOT_TESTING_RECORD=… swift test`，那条靠 AGENTS.md） |
+| V52 | 重录能让任何截图失败重新通过，所以快照测试只能发现界面变了，判断不了对不对 | `Snapshot review` 检查（`scripts/check-snapshot-review.sh`）：PR 改了 `__Snapshots__/` 就失败，直到有 `snapshots-reviewed` 标签；之后再推改动截图的提交会摘掉标签。分支保护把它列为必过检查 |
 | V43 | 图标图层的图片缺失时，Xcode 构建只有一条 `Icon export exited with status 255` 警告，照样成功；删掉 `.app` 重新构建，里面仍有更早构建留下的 AppIcon.icns，所以冒烟测试也通过（V28 的保证在 Xcode 构建里丢了） | `scripts/lint-assets.sh` 在 `make lint` 里单独跑 actool，有警告即失败 |
 
 ---
@@ -188,7 +190,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | UI 测试占用鼠标键盘 | Mac 上没有模拟器，`make test:ui` 运行时不能同时用电脑；本地首次运行要输入管理员密码，或先免认证开启 Automation Mode。CI 上的 `automationmodetool` 步骤还没在 runner 上跑过 |
 | `mac-app-store` skill | 2026-10-23 按新结构重写，两种方案只用替代身份构建、签名、打包到 `.pkg`，从没提交过 App Store Connect；`altool --upload-app` 没实际上传过 |
 | `dmg` skill 的设计文件 | `Bundle/` 没了，改放 `Configs/DMG/`（不能放 `App/`：那是 buildable folder，里面的 `.swift` 会编进 app） |
-| 视图快照 | 参考图只对录制它的 macOS 版本有效，CI（macOS 26）跳过；换系统版本后要整体重录，并逐张看图 |
+| 视图快照 | 参考图只对录制它的 macOS 大版本有效：本机和 CI 都是 macOS 15，换版本时两边一起换并整体重录、逐张看图。CI 上（15.7.9 对本机 15.7.2）能否通过、`Snapshot review` 检查和标签流程，都要 push 到 GitHub 后才能验证 |
 | 结构调整后的 Developer ID 重签 | 重签逻辑和调整前相同，entitlements 改从 Xcode 签好的 app 里取；只验证了 ad-hoc 路径 |
 | 漏写 `bundle: .module` 不会报错 | 已写进 AGENTS.md 的规则 |
 | ad-hoc 发布的体验 | 首次打开要在系统设置里点「仍要打开」；每次更新签名都会变，权限和 keychain 访问可能需要重新授权；Homebrew（`homebrew-cask` skill）要么首次打开被拦，要么由 cask 清掉 quarantine |

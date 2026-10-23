@@ -30,6 +30,8 @@
 | N17 | H3 | 另一个副本里走「只上 App Store」（第 2、3b 步），`make fmt`、`make ci`，替代身份下 `build-app.sh mas` | `make ci` 通过（不先 `make fmt` 时 lint 报格式问题，skill 里因此写了这一步）；Xcode 删掉工程里的 `Package.resolved`；mas 版同 N16 | ✅ |
 | N18 | H3 | `xcodeproj.py` 的反例：重复 `add-app-store-target`、链接不存在的产品、不存在的 target、不带参数 | 各自报错退出 1，pbxproj 的哈希不变 | ✅ |
 | N19 | B4 | 视图快照：首次 `make test` 录制、再跑；`CI=true make test`；`SNAPSHOT_TESTING_RECORD=all make test`；`xcodebuild test -only-testing:GreetingFeatureTests`；看三张 PNG | 首次 3 个快照报 `No reference was found` 并录下，再跑全过；`CI=true` 时套件跳过；重录的图逐字节相同；xcodebuild 下 5 个用例全过（scheme 固定英文后，V49）；亮色、暗色都像真实窗口（V48） | ✅ |
+| N20 | B4 | 录制关卡：删掉一张参考图跑 `make test`；内边距改 36 跑 `make test`；`make snapshots` | 参考图缺失时报 `New snapshot was not recorded because recording is disabled`，文件没被补回；改内边距 3 张都失败（容差 0.98 下）；`make snapshots` 第一轮录制、第二轮通过，图固定 720×400 | ✅ |
+| N21 | B4 | `scripts/check-snapshot-review.sh` 在临时 git 仓库里模拟 7 种 PR 情况，`gh` 换成记录调用的假命令 | 没改截图通过；改了没标签失败；有标签通过；之后的推送没碰截图保留标签；推送改了截图或强推后摘标签并失败；只有别的标签失败 | ✅（GitHub 上的真实运行要 push 后看） |
 | N9 | B4 | `make test:ui` | 应用启动，自动输入 `Ada` 并点击 Greet，测试通过 | ✅（前两次失败：启动参数让应用没有窗口，V44；macOS 上文本的内容在 `value` 里，V45） |
 | N10 | E4 | `xed App.xcodeproj`，打开 `Features/Greeting/GreetingView.swift` 看 Canvas，再点 Run | Preview 能渲染；Run 启动真正的 `.app` | 👀 |
 | N11 | E2 | Xcode 26.3，工程在 Xcode 里打开时，agent 通过 `xcrun mcpbridge` 构建、跑测试、渲染 Preview | 都成功 | ❌ macOS 15.7.2 上 `mcpbridge` 启动即崩（V46），要 macOS 26；Xcode 26.3 下 `make ci` 通过 |

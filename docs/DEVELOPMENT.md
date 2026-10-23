@@ -35,10 +35,15 @@ keeps the unit-test loop fast.
 `make help` lists every target.
 
 - `make test` runs the unit tests: seconds, no app, no UI. Run it after every change.
-  It includes the snapshot tests, which compare views with the PNGs in `__Snapshots__/`.
-  After an intended UI change, `SNAPSHOT_TESTING_RECORD=failed make test` records new
-  references; review them in the diff. They hold this Mac's controls: on another macOS
-  version they differ, which is why CI skips them.
+  It includes the snapshot tests, which compare views with the PNGs in `__Snapshots__/`
+  and never record: a missing or changed reference fails.
+- `make snapshots` records the missing and changed references. Look at each new image
+  first; an agent shows you the old and the new one and asks before it runs this, and
+  Claude Code asks too (`.claude/settings.json`). A PR that changes references fails
+  the `Snapshot review` check until you compare the images in Files changed (2-up,
+  swipe, onion skin) and add the `snapshots-reviewed` label; a later push that changes
+  them again removes the label. References hold one macOS major's controls: CI runs on
+  macOS 15 like the Mac that recorded them, and both move together.
 - `make ci` runs lint, the unit tests, the debug `.app` and its launch smoke test. It is
   the definition of done.
 - `make test:ui` runs the UI tests. On a Mac they drive the real mouse and keyboard,
