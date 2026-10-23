@@ -81,6 +81,10 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V44 | XCUITest 启动参数 `["--ui-testing", "-AppleLanguages", "(en)"]` 让应用一个窗口都没有：AppKit 把 `-key value` 形式的参数读成 defaults，`--ui-testing` 吞掉下一个参数当值，落单的 `(en)` 被当作要打开的文件，SwiftUI 于是不建默认窗口（`open --args strayword` 同样 0 个窗口；把 `--ui-testing` 放到最后则有 1 个） | UI 测试改用环境变量 `UI_TESTING=1` |
 | V45 | macOS 的 XCUITest 里，SwiftUI `Text` 对应的 `staticTexts` 元素 `label` 为空，文字在 `value` 里 | UI 测试断言 `value` |
 | V46 | Xcode 26.3（17C529）在 macOS 15.7.2 上装得上，`make ci` 通过；但 `xcrun mcpbridge` 一启动就崩：`dyld: Symbol not found: _$s10AppSandbox17ASBBinaryIdentityC14teamIdentifierSSSgvg`，来自私有框架 `AppSandbox.framework`。二进制声明的最低系统是 14.0，实际依赖 macOS 26 的系统框架；Apple 论坛有同样的报错，并称在 macOS 26.3 上可用 | `make doctor` 按系统版本判断，macOS 15 上给 warn；AGENTS.md、DEVELOPMENT.md 写明需要 macOS 26 |
+| V47 | swift-snapshot-testing 1.19.6 的 SwiftUI 策略只支持 iOS 和 tvOS；macOS 上包进 `NSHostingView` 用 NSView 的 `.image`，本机按 2x 出图（360×200 pt 得 720×400 px），连跑两次一致，内边距改 4 pt 即失败，失败信息给出参考图和新图两个路径；`SNAPSHOT_TESTING_RECORD` 设默认录制模式（缺省 `missing`），套件上显式写 `record:` 会盖掉它。它的 manifest 连带解析 swift-syntax、swift-custom-dump、xctest-dynamic-overlay，只链接进测试 target，app 里没有它的符号 | 视图快照测试；重录用 `SNAPSHOT_TESTING_RECORD=failed make test` |
+| V48 | 不在窗口里的 `NSHostingView` 没人画窗口背景：暗色快照里浅色文字落在透明像素上，看不见 | 快照前加 `.background(Color(nsColor: .windowBackgroundColor))` |
+| V49 | 同一台机器上，`xcodebuild test` 跑包测试时编译了字符串目录、跟随系统语言（本机中文），快照里是「名字」「打招呼」；`swift test` 不编译目录，显示英文 key，两者对不上 | `App` scheme 的 TestAction 设 `language = "en"`、`region = "US"`，两种跑法都通过 |
+| V50 | 库的源码注释写明快照只能在录制参考图的同一系统上比对；本机 macOS 15，CI 是 macOS 26（Liquid Glass 控件） | 快照套件在 `CI` 环境变量存在时跳过 |
 | V43 | 图标图层的图片缺失时，Xcode 构建只有一条 `Icon export exited with status 255` 警告，照样成功；删掉 `.app` 重新构建，里面仍有更早构建留下的 AppIcon.icns，所以冒烟测试也通过（V28 的保证在 Xcode 构建里丢了） | `scripts/lint-assets.sh` 在 `make lint` 里单独跑 actool，有警告即失败 |
 
 ---
@@ -109,7 +113,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | B1 | 编译严格度 | `Packages/AppModules/Package.swift` 的 `swiftSettings`、`Configs/Project.xcconfig` | ✅ |
 | B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint`；`scripts/lint-rules.sh` 拦旧 API 和越层 import | ✅ |
 | B3 | Git hooks | `lefthook.yml`（pre-commit 格式化） | ✅ |
-| B4 | 测试 | `make test`：`GreetingFeatureTests`（Swift Testing，2 个用例）；`make test:ui`：`AppUITests`（XCUITest，1 个用例） | ✅ |
+| B4 | 测试 | `make test`：`GreetingFeatureTests`（Swift Testing，2 个模型用例和 3 个快照用例）；`make test:ui`：`AppUITests`（XCUITest，1 个用例） | ✅ |
 | B5 | `.app` 冒烟测试 | `scripts/smoke.sh`，同时用于 debug 包和 release 包；检查签名、Info.plist、资源包、`Assets.car` 和 `AppIcon.icns`，然后启动应用 | ✅ |
 | C1 | 日志 | 每个模块一个内部 `Log`（各自的 category）、`make logs` | ✅ |
 | C2 | 错误处理约定 | `AppModel` 示例 + AGENTS.md | ✅ |
@@ -184,6 +188,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | UI 测试占用鼠标键盘 | Mac 上没有模拟器，`make test:ui` 运行时不能同时用电脑；本地首次运行要输入管理员密码，或先免认证开启 Automation Mode。CI 上的 `automationmodetool` 步骤还没在 runner 上跑过 |
 | `mac-app-store` skill | 2026-10-23 按新结构重写，两种方案只用替代身份构建、签名、打包到 `.pkg`，从没提交过 App Store Connect；`altool --upload-app` 没实际上传过 |
 | `dmg` skill 的设计文件 | `Bundle/` 没了，改放 `Configs/DMG/`（不能放 `App/`：那是 buildable folder，里面的 `.swift` 会编进 app） |
+| 视图快照 | 参考图只对录制它的 macOS 版本有效，CI（macOS 26）跳过；换系统版本后要整体重录，并逐张看图 |
 | 结构调整后的 Developer ID 重签 | 重签逻辑和调整前相同，entitlements 改从 Xcode 签好的 app 里取；只验证了 ad-hoc 路径 |
 | 漏写 `bundle: .module` 不会报错 | 已写进 AGENTS.md 的规则 |
 | ad-hoc 发布的体验 | 首次打开要在系统设置里点「仍要打开」；每次更新签名都会变，权限和 keychain 访问可能需要重新授权；Homebrew（`homebrew-cask` skill）要么首次打开被拦，要么由 cask 清掉 quarantine |

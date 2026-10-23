@@ -35,6 +35,10 @@ keeps the unit-test loop fast.
 `make help` lists every target.
 
 - `make test` runs the unit tests: seconds, no app, no UI. Run it after every change.
+  It includes the snapshot tests, which compare views with the PNGs in `__Snapshots__/`.
+  After an intended UI change, `SNAPSHOT_TESTING_RECORD=failed make test` records new
+  references; review them in the diff. They hold this Mac's controls: on another macOS
+  version they differ, which is why CI skips them.
 - `make ci` runs lint, the unit tests, the debug `.app` and its launch smoke test. It is
   the definition of done.
 - `make test:ui` runs the UI tests. On a Mac they drive the real mouse and keyboard,

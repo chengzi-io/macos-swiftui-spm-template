@@ -24,7 +24,8 @@ let package = Package(
         .library(name: "ServicesLive", targets: ["ServicesLive"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0")
+        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.19.6"),
     ],
     targets: [
         .target(
@@ -57,7 +58,10 @@ let package = Package(
         ),
         .testTarget(
             name: "GreetingFeatureTests",
-            dependencies: ["GreetingFeature"],
+            dependencies: [
+                "GreetingFeature",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ],
             path: "Tests/Features/GreetingTests",
             swiftSettings: ui
         ),

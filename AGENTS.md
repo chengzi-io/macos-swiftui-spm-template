@@ -111,6 +111,13 @@ a new skill the same way.
   every service. `swift test` does not compile asset or string catalogs, so unit tests
   never assert localized text or images; `make smoke` covers resources in the real
   `.app`. XCTest only for UI tests.
+- Views get snapshot tests (swift-snapshot-testing; `GreetingViewSnapshotTests` is the
+  pattern): through `NSHostingView`, light and dark, in English. The PNGs in
+  `__Snapshots__/` beside the test are how an agent sees a view without Xcode: read
+  them. A new snapshot test fails once while it records its reference; look at the
+  image, then run it again. After an intended change, `SNAPSHOT_TESTING_RECORD=failed
+  make test` re-records; look at every changed image before committing. References are
+  this Mac's controls, so CI, on another macOS version, skips them.
 - App identity changes in `Configs/Identity.xcconfig` only.
 
 ## Never
@@ -148,15 +155,15 @@ a new skill the same way.
    `App/MainApp.swift` builds the live one and the mock under `UI_TESTING=1`, and
    passes it through `AppModel`.
 5. `AppModel` owns the feature's model; `AppScenes` shows its view.
-6. Test the model in `Tests/Features/<Name>Tests/` with mocks. A flow worth guarding end
-   to end gets an XCUITest in `AppUITests/`.
+6. Test the model in `Tests/Features/<Name>Tests/` with mocks, and snapshot its view. A
+   flow worth guarding end to end gets an XCUITest in `AppUITests/`.
 7. New capability (network, files, camera…)? Add the entitlement to
    `Configs/App.entitlements` and its usage description as
    `INFOPLIST_KEY_NS…UsageDescription` in `Configs/App.xcconfig`.
 8. `make ci`.
 
-The Greeting demo (`Features/Greeting`, `GreetingModelTests`, `GreetingUITests`) is a
-placeholder; replace it with the first real feature. Recipes for launch at login,
+The Greeting demo (`Features/Greeting`, `GreetingModelTests`, `GreetingViewSnapshotTests`
+and its `__Snapshots__`, `GreetingUITests`) is a placeholder; replace it with the first real feature. Recipes for launch at login,
 networking, menu bar apps, AppKit bridges and crash reporting:
 [docs/RECIPES.md](docs/RECIPES.md).
 
