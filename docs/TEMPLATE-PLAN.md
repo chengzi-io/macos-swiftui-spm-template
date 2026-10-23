@@ -140,7 +140,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SUPublicEDKey` 对得上 | ✅ 本地（含反例） |
 | H1 | Sparkle 自动更新 | `Services/UpdaterService.swift`（协议和 mock）、`ServicesLive/LiveUpdaterService.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
 | H2 | Homebrew Cask | `.agents/skills/homebrew-cask`，只能由用户启动，先按 `TEAM_ID` 和仓库知名度选渠道。官方 `homebrew/cask`：有 Developer ID 且仓库够知名时，skill 写好带 `desc` 和 `livecheck`（`:github_latest`）的 cask，在 `homebrew/cask` 的检出里检查，经用户同意后提 PR（说明用了 AI，提交不带 AI trailer）；收录后 BrewTestBot 自动更新，项目里不加 job、不建 tap。自建 tap：每次发版由单独的 `homebrew` job 下载已公开的 DMG，生成 cask 推到 tap；有 Developer ID 时是普通 cask（C），ad-hoc 时二选一：caveats 提示「仍要打开」（A）或安装后清掉 quarantine（B），两种都在 README 加 `[!IMPORTANT]` 提醒。还写了从自建 tap 转到官方库的步骤 | 🟡（自建 tap 的三种 cask 都过了 `brew style` 和 `brew audit`，A、B 用本地 tap 真装过；官方 cask 模板过了 `brew style`，`brew audit --new` 只因本仓库未公开、不够知名和下载 404 而失败；真实的 tap 推送和官方 PR 都没做过） |
-| H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（`APP_STORE=1` 只在 MAS 构建里去掉 Sparkle）或只上 App Store（删掉 Sparkle 和 DMG 发布）；带 `release-mas.sh`、`build-app.sh` 的 mas 配置和 RELEASING 的一节 | 🟡（两种方案都在临时 worktree 里按 skill 走过一遍，签名用的是替代身份） |
+| H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（Sparkle 拆到 `SparkleUpdater` target，新增共用 `App/` 的 `AppStore` target，不链接 Sparkle，用 `APP_STORE` 编译条件区分）或只上 App Store（删掉 Sparkle 和 DMG 发布，`App` target 就是 App Store 版）；带 `wiring/xcodeproj.py`（改 pbxproj 的唯一入口）、带 mas 配置的 `build-app.sh`、`release-mas.sh` 和 RELEASING 的一节 | 🟡（2026-10-23 按新结构重写，两种方案都在仓库副本里按 skill 走过一遍，签名用的是替代身份） |
 | H4 | 测试版通道 | `docs/RELEASING.md` | 📄 |
 
 ---
@@ -181,7 +181,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | 项 | 说明 |
 |----|------|
 | UI 测试占用鼠标键盘 | Mac 上没有模拟器，`make test:ui` 运行时不能同时用电脑；本地首次运行要输入管理员密码，或先免认证开启 Automation Mode。CI 上的 `automationmodetool` 步骤还没在 runner 上跑过 |
-| `mac-app-store` skill | 还是按纯 SPM 结构写的（`APP_STORE=1` 开关、`Sources/App` 里的条件编译、复制源码再构建），结构调整后不能用；SKILL.md 开头加了警告，要求 agent 停下。新结构下应改成单独的 App Store target，不链接 `ServicesLive`，待重写 |
+| `mac-app-store` skill | 2026-10-23 按新结构重写，两种方案只用替代身份构建、签名、打包到 `.pkg`，从没提交过 App Store Connect；`altool --upload-app` 没实际上传过 |
 | `dmg` skill 的设计文件 | `Bundle/` 没了，改放 `Configs/DMG/`（不能放 `App/`：那是 buildable folder，里面的 `.swift` 会编进 app） |
 | 结构调整后的 Developer ID 重签 | 重签逻辑和调整前相同，entitlements 改从 Xcode 签好的 app 里取；只验证了 ad-hoc 路径 |
 | 漏写 `bundle: .module` 不会报错 | 已写进 AGENTS.md 的规则 |
