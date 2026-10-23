@@ -40,8 +40,8 @@ flowchart TB
 ```
 
 Notarizing, signing the DMG and the Gatekeeper check need a Developer ID; without one
-they are skipped. The appcast check uses `SPARKLE_PUBLIC_KEY`, the key installed apps
-trust. The job then uploads the DMG, dSYM zip, appcast and `SHA256SUMS` to the draft
+they are skipped. The appcast check uses `SUPublicEDKey` in `Configs/Info.plist`, the key
+installed apps trust. The job then uploads the DMG, dSYM zip, appcast and `SHA256SUMS` to the draft
 release and publishes it, and keeps the dSYM as a workflow artifact for 90 days.
 Installed apps read `releases/latest/download/appcast.xml`.
 
@@ -94,14 +94,14 @@ make sparkle-keys
 ```
 
 Creates an EdDSA key in your login keychain (account = bundle identifier), writes the
-public key to `Bundle/app.env` (commit it) and prints the two commands that export the
+public key to `SUPublicEDKey` in `Configs/Info.plist` (commit it) and prints the two commands that export the
 private key and store it as the `SPARKLE_ED_PRIVATE_KEY` secret of the `release`
 environment. Back the private key up offline: without it, installed copies can never
-update again. Release builds fail while `SPARKLE_PUBLIC_KEY` is empty.
+update again. Release builds fail while `SUPublicEDKey` is empty.
 
 ### 4a. Without a Developer ID (default)
 
-Leave `TEAM_ID` empty in `Bundle/app.env`. Releases are ad-hoc signed, without the
+Leave `TEAM_ID` empty in `Configs/Identity.xcconfig`. Releases are ad-hoc signed, without the
 hardened runtime (its library validation would reject the embedded Sparkle framework)
 and without notarization. The publish job adds a note to the release explaining the
 first launch.
@@ -123,7 +123,7 @@ Ad-hoc updates were verified locally with two sandboxed builds (0.1.0 → 0.1.1)
 2. App Store Connect → Users and Access → Integrations → App Store Connect API: create a
    team key with the Developer role; download the `.p8` once; note the key ID and the
    issuer ID.
-3. Set `TEAM_ID` in `Bundle/app.env` and commit.
+3. Set `TEAM_ID` in `Configs/Identity.xcconfig` and commit.
 4. Store the secrets in the `release` environment:
 
    ```bash

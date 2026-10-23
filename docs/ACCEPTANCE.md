@@ -2,6 +2,7 @@
 
 > 对应 [TEMPLATE-PLAN.md](TEMPLATE-PLAN.md) 的 A–H 各项。分支 `feat/template-infrastructure`，未 push。
 > 前置条件：Xcode 26.2 已用 `xcode-select` 选中；已 `brew install lefthook`。
+> 2026-10-23 起结构改为薄 Xcode 工程加本地包（[TEMPLATE-PLAN.md](TEMPLATE-PLAN.md) 第 4 节末尾），新结构的验收在第 0 节，分支 `feat/thin-xcode-project`。第 1 节起是调整前在旧结构上的结果，其中的 `Bundle/`、`Sources/`、`.build/app/`、`make build` 已不存在。
 
 「我的结果」一列的含义：
 
@@ -9,6 +10,23 @@
 - 👀 需要你看界面或做交互确认。
 - ⏳ 需要 push 到 GitHub 之后验收。
 - 🔑 需要 Apple 证书或外部账号。
+
+## 0. 结构调整后（2026-10-23）
+
+| # | 项 | 命令 / 操作 | 预期 | 我的结果 |
+|---|----|-------------|------|----------|
+| N1 | 全链路 | `make ci` | lint（`swift format` 和 `lint-rules.sh`）无输出；2 个单测通过；`==> smoke ok: .build/xcode/Build/Products/Debug/SwiftUITemplate.app` | ✅ |
+| N2 | A1 | `xcodebuild -list -project App.xcodeproj` | Targets 为 App、AppUITests；Schemes 里有 App | ✅ |
+| N3 | B1 | 在 `GreetingModel` 的 init 里加 `let unused = 1`，分别跑 `swift build --package-path Packages/AppModules` 和 `scripts/build-app.sh debug` | 两者都报 `never used` 并失败：包里的警告在 Xcode 构建中同样是错误（V33） | ✅ |
+| N4 | B5 | `make app`，删掉 `.app` 里的 `AppModules_SettingsFeature.bundle` 并 ad-hoc 重签，再 `make smoke`；之后删掉整个 `.app` 再 `make app` | 报 `has no AppModules_SettingsFeature.bundle`；不重签时在签名校验处失败。增量构建不会修复被手动改过的产物，`build-app.sh` 的签名校验会报出来 | ✅ |
+| N5 | B2 | 在 Greeting、Services、AppRoot 里各放一个违规文件（`ObservableObject` 和 `@Published`、`NavigationView`、`foregroundColor(`、Services 里 `import SwiftUI` 和 `import AppKit`、AppRoot 里 `NSViewRepresentable`），跑 `scripts/lint-rules.sh` | 6 条规则各报一次，退出码 1；删掉后 `make lint` 通过 | ✅ |
+| N6 | A6、H1 | `make app` 后 `plutil -p` 看 Info.plist，`codesign -d --entitlements - --xml` 看 entitlements | `SUFeedURL` 指向 `GITHUB_REPOSITORY` 的 releases；mach-lookup 例外是 `<bundle id>-spks`、`-spki`；Debug 带 `get-task-allow`；`Contents/Resources` 有三个资源包、`Assets.car`、`AppIcon.icns`、`PrivacyInfo.xcprivacy`，`Contents/Frameworks` 有 Sparkle | ✅ |
+| N7 | G1–G9 | 用 `set_sparkle_public_key` 临时写入公钥，`scripts/build-app.sh release`、`scripts/smoke.sh dist/SwiftUITemplate.app`、`scripts/package-dmg.sh`、`scripts/verify-dmg.sh`，再清空公钥 | app 和 Sparkle 都是 `x86_64 arm64`；release 的 entitlements 不含 `get-task-allow`；`smoke ok`、`dmg ok` | ✅（appcast 要 keychain 里的私钥，没跑） |
+| N8 | E5 | 在临时 clone 里 `scripts/init.sh --name Demo --bundle-id com.example.demo --display-name "Demo App" --repo acme/demo`，再 `scripts/build-app.sh debug` | `Configs/Identity.xcconfig` 各行更新，`TEAM_ID =` 后没有空格，`SUPublicEDKey` 为空；产物是 `Demo.app`，bundle ID、显示名、版权和 `SUFeedURL` 都对 | ✅ |
+| N9 | B4 | `make test:ui` | 应用启动，自动输入 `Ada` 并点击 Greet，测试通过 | 👀 只编译过（`build-for-testing`）。运行时会占用鼠标键盘 |
+| N10 | E4 | `xed App.xcodeproj`，打开 `Features/Greeting/GreetingView.swift` 看 Canvas，再点 Run | Preview 能渲染；Run 启动真正的 `.app` | 👀 |
+| N11 | E2 | Xcode 26.3，工程在 Xcode 里打开时，agent 通过 `xcrun mcpbridge` 构建、跑测试、渲染 Preview | 都成功 | ⏳ 等 Xcode 26.3 |
+| N12 | F1 | PR 上的 CI | `make ci` 之后，`automationmodetool` 和 `make test:ui` 两步通过 | ⏳ |
 
 ## 1. 本地：现在就能跑
 

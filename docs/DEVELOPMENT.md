@@ -2,7 +2,9 @@
 
 ## Requirements
 
-- Xcode 26 (Swift 6.2), selected with `xcode-select`
+- Xcode 26 (Swift 6.2), selected with `xcode-select`. Xcode 26.3 or later adds
+  `xcrun mcpbridge`, through which coding agents build, test and render previews in
+  Xcode; `make doctor` says whether it is there.
 - [lefthook](https://lefthook.dev) for git hooks: `brew install lefthook`
 - The app runs on macOS 14 or later
 
@@ -15,32 +17,50 @@ make run     # build and launch the debug app
 
 ```mermaid
 flowchart LR
-    src["Package.swift<br/>Sources/"] --> xb["xcodebuild<br/>code, string and<br/>asset catalogs"]
-    bundle["Bundle/<br/>app.env, Info.plist,<br/>AppIcon.icon, entitlements"] --> asm
-    xb --> asm["scripts/build-app.sh<br/>assemble the .app,<br/>compile the icon,<br/>embed Sparkle, sign"]
-    asm --> app[".app"] --> smoke["scripts/smoke.sh<br/>check, launch"]
+    pkg["Packages/AppModules<br/>all code, string catalogs,<br/>unit tests"] --> xb
+    shell["App.xcodeproj + App/<br/>@main, assets, AppIcon.icon"] --> xb
+    cfg["Configs/<br/>Identity.xcconfig, build settings,<br/>Info.plist, entitlements"] --> xb
+    xb["xcodebuild<br/>compile, embed Sparkle,<br/>compile icon, sign"] --> app[".app"] --> smoke["scripts/smoke.sh<br/>check, launch"]
+    pkg --> st["swift test<br/>unit tests, seconds"]
 ```
 
-`swift build` copies the catalogs uncompiled, and its `Bundle.module` looks outside
-`Contents/Resources`, so its output is never an app; use it only for quick compile
-checks. `make app` and `make release` run the whole chain.
+Xcode builds the app the way it builds any app; `scripts/build-app.sh` only adds the
+version from `version.txt` and, for releases, archives a universal build and signs it
+with the Developer ID. `swift test` builds the package alone, without the app, which
+keeps the unit-test loop fast.
 
 ## Commands
 
-`make help` lists every target. `make ci` runs everything CI runs; it is the definition
-of done.
+`make help` lists every target.
+
+- `make test` runs the unit tests: seconds, no app, no UI. Run it after every change.
+- `make ci` runs lint, the unit tests, the debug `.app` and its launch smoke test. It is
+  the definition of done.
+- `make test:ui` runs the UI tests. On a Mac they drive the real mouse and keyboard,
+  so the app comes to the front and types while they run: leave the machine alone until
+  they finish. GitHub CI runs them after `make ci`. The first run asks for an
+  administrator password to turn on Automation Mode, unless you turn it on once with
+  `sudo automationmodetool enable-automationmode-without-authentication`.
 
 Try the Chinese UI with `make run ARGS="-AppleLanguages '(zh-Hans)'"`.
 
 ## Layout
 
 ```text
-Package.swift              targets, platforms, Swift settings, Sparkle
-Sources/App/               @main, scenes, commands, app delegate, updater
-Sources/AppCore/           views, models, services, Localizable.xcstrings
-Tests/AppCoreTests/        Swift Testing
-Bundle/                    app.env, Info.plist, entitlements, privacy manifest, AppIcon.icon
-scripts/                   build, sign, notarize, package, publish
+App.xcodeproj/             the shell: App and AppUITests targets, shared App scheme
+App/                       @main (composition root), app delegate, assets, AppIcon.icon,
+                           privacy manifest
+AppUITests/                XCUITest: a few critical flows
+Configs/                   Identity.xcconfig (app identity), build settings, Info.plist,
+                           entitlements
+Packages/AppModules/       the local Swift package with all the code
+  Package.swift            targets, platforms, Swift settings, Sparkle
+  Sources/AppRoot/         root model, scenes, menu commands
+  Sources/Features/<Name>/ one target per feature: view, model, string catalog
+  Sources/Services/        protocols for what reaches outside the process, and mocks
+  Sources/ServicesLive/    the live implementations: system APIs, network, Sparkle
+  Tests/                   Swift Testing, mirroring Sources/
+scripts/                   build, sign, notarize, package, publish, lint rules
 .agents/skills/            agent skills, linked from .claude/skills
 .github/                   CI, PR title, release-please, Dependabot, templates
 version.txt                current version, owned by release-please
@@ -50,11 +70,11 @@ Where code goes and the rules it follows: [AGENTS.md](../AGENTS.md).
 
 ## Editors
 
-- Xcode: `xed .` opens `Package.swift`. Its Run button starts the bare executable,
-  outside an `.app`: no bundle identifier, no sandbox, no Info.plist. Use it for quick
-  UI checks and SwiftUI previews; for the real app run `make run` and attach the
-  debugger (Debug › Attach to Process, or `lldb -n <AppName>`).
-- VS Code / Cursor: the Swift extension (sourcekit-lsp) works on the package as is.
+- Xcode: `xed App.xcodeproj`. Its Run button builds and launches the real `.app`
+  (bundle identifier, sandbox, Info.plist), with the debugger attached. Previews run
+  in the package targets.
+- VS Code / Cursor: the Swift extension (sourcekit-lsp) works on
+  `Packages/AppModules`; build and run the app with `make run`.
 
 ## Agent skills
 

@@ -9,7 +9,7 @@
 - **开发**：用模板新建仓库 → 运行 `scripts/init.sh` → `make run` 出窗口 → 直接写业务代码。
 - **发布**：PR 以 squash 方式合并进 `main` → release-please 维护发版 PR → 合并后自动打 tag、创建草稿 Release → CI 构建、校验并上传 DMG、dSYM、appcast，然后公开 Release → 已安装的应用通过 Sparkle 自动更新。
 
-原则：纯 `Package.swift`，不提交 `.xcodeproj`；一个命令入口（Makefile）；每项都有可执行的验收方式；依赖尽量少；和 chengzi-io 其他模板以及 `github-repo-scaffold` skill 的约定保持一致。
+原则：薄 Xcode 工程（`App.xcodeproj`，只放壳）加本地 Swift 包（`Packages/AppModules`，放全部代码），2026-10-23 起取代原来的「纯 `Package.swift`，不提交 `.xcodeproj`」（见第 4 节末尾）；一个命令入口（Makefile）；每项都有可执行的验收方式；依赖尽量少；和 chengzi-io 其他模板以及 `github-repo-scaffold` skill 的约定保持一致。
 
 ---
 
@@ -21,7 +21,7 @@
 | Q2 | 分发渠道 | 以 Developer ID 为主（DMG + Sparkle）。暂时没有 Developer ID 时，`TEAM_ID` 留空即可：用 ad-hoc 签名、跳过公证，整条发布链路照常运行；有了证书后填上 `TEAM_ID` 和 secrets 即切换。MAS 不在模板里，由 `mac-app-store` skill 按需加入 |
 | Q3 | CPU 架构 | 通用二进制（arm64 + x86_64） |
 | Q4 | App Sandbox | 默认开启 |
-| Q5 | 打包实现 | 自写脚本（`scripts/`） |
+| Q5 | 打包实现 | Xcode 构建、签名、打包；`scripts/` 只补版本号、release 的 universal 归档和 Developer ID 重签（2026-10-23 前是自写脚本组装 `.app`） |
 | Q6 | 命令入口 | **Makefile** |
 | Q7 | Lint | 只用 `swift format` |
 | Q8 | 崩溃上报 | 不内置，只提供接入说明 |
@@ -68,6 +68,16 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V30 | 玻璃效果下，用描边画的开放路径会沿弦多出一条淡线；同样的形状改成填充轮廓就没有。深色前景放在浅色底上，在 Dark 和 Tinted 外观里几乎看不见；浅色或饱和色前景在六种外观里都清楚 | 写进 app-icon skill 的作图规则 |
 | V31 | Icon Composer 的其余设置都是 `icon.json` 里的普通属性。格式取自公开仓库里 Icon Composer 保存的 10 个文件（expo、VLC、Firefox iOS、CodeEdit、KeePassXC、Signal、UTM 等），再在模板图标上逐项修改、用 ictool 渲染核对：只在深色外观生效的底色和图层颜色、关掉 specular、blur-material、position（y 向下）、只在着色外观隐藏，都按预期生效；图层的 `fill` 会把整层改成一种颜色。lighting、混合模式和不透明度只核对了格式。actool 对错误取值（未知的混合模式和外观名，`fill`、`position` 里拼错的键）给警告；根、组、层这一级拼错的属性名则被静默忽略。VLC 的文件里有 Icon Composer 1.2 不认识的 `refractivity`，是新版本写的，这个 Xcode 同样会忽略 | skill 里列出属性表；`check-icon.sh` 先用 `lint-icon.swift` 检查属性名 |
 | V32 | Homebrew 7.0：flight 块改成声明式的 `postflight_steps`（官方库拒收旧的 `postflight do`，第三方 tap 暂时还能用）；`depends_on macos:` 用裸 symbol 表示最低版本，`">= :sonoma"` 过不了 `brew style`；官方 cask 必须通过 Gatekeeper；第三方 tap 需要 Tap Trust，`brew install --cask owner/tap/token` 这种全名安装只信任这一个 cask；cask 的下载都带 quarantine。官方库收录要求仓库「知名」且建库满 30 天：作者自己提交要 225 star、90 fork 或 90 watcher 之一（别人提交 75、30、30），`brew audit --new` 联网检查（审计报错用的是 75/30/30 的门槛）；收录后 BrewTestBot 每 3 小时按 livecheck 自动提版本 PR（autobump），作者不用管；livecheck 默认用 `Git` 策略读 tag，`:github_latest` 只读已公开的 Release（用 exelban/stats 实测两种策略）；给官方库提 PR 时用了 AI 要在 PR 里说明，提交不能带 AI 署名或 `Assisted-by` 之类的 trailer，维护者的提问要本人回答；`tap_migrations.json` 对 cask 生效（`cask_loader.rb`），能把 `owner/tap/token` 指向官方 cask，但已经从 tap 装上的 cask 不会自动迁移。本地 tap 实测：`postflight_steps` 里 `run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/X.app"]` 在 Homebrew 的沙盒里能清掉 quarantine；`xattr -dr` 在属性不存在时也返回 0；`brew style` 只在 tap 里按 cask 规则检查 | `homebrew-cask` skill 的 cask 写法和检查步骤 |
+| V33 | 用 Xcode「Add Local…」加入的本地包（pbxproj 里是 `XCLocalSwiftPackageReference`），Xcode 给包里每个模块都加 `-suppress-warnings`，和 `.treatAllWarnings(as: .error)` 冲突：`Conflicting options '-warnings-as-errors' and '-suppress-warnings'`，构建失败；去掉 treatAllWarnings 后包里的警告在 Xcode 里则完全看不到。改成把包目录作为文件夹引用（`PBXFileReference`，`lastKnownFileType = wrapper`），6 个模块都带 `-warnings-as-errors` 编译 | `App.xcodeproj` 用文件夹引用；AGENTS.md 禁止「Add Local…」 |
+| V34 | 模块名和 SwiftUI 类型同名时，不带前缀的用法能编译，带模块前缀的会解析到 SwiftUI 类型：`App.RootView()` 报 `type 'any App' has no member 'RootView'`，`Settings.SettingsView()` 报 `type 'Settings<Content>' has no member 'SettingsView'`（临时包实测） | 功能模块名以 `Feature` 结尾，根模块叫 `AppRoot` |
+| V35 | 开启 `MemberImportVisibility` 后，`Logger` 带 `privacy:` 的字符串插值要求本文件 `import OSLog` | 包和工程都开启；写进 AGENTS.md |
+| V36 | Xcode 展开 Info.plist 的值和 entitlements 文件里的构建变量（`$(PRODUCT_BUNDLE_IDENTIFIER)-spks`）；包的资源包放在 `Contents/Resources/<包名>_<target>.bundle`；Sparkle.framework 自动嵌入；buildable folder 里的 `.icon` 配 `ASSETCATALOG_COMPILER_APPICON_NAME` 产出 AppIcon.icns 和 Assets.car | 不再需要组装脚本；`smoke.sh` 按 `dump-package` 里带资源的 target 检查资源包 |
+| V37 | `xcodebuild archive -destination 'generic/platform=macOS'` 产出 universal 的 app 和 Sparkle（x86_64 arm64），归档的 `dSYMs/` 里有 app 和 Sparkle 各部件的 dSYM；Release 的 entitlements 不含 `get-task-allow` | `build-app.sh release` |
+| V38 | `plutil -replace` 和 PlistBuddy 会把整个 plist 改成 tab 缩进，和 `.editorconfig` 的 2 空格冲突 | `SUPublicEDKey` 用 sed 原地替换（`set_sparkle_public_key`） |
+| V39 | macOS 自带的 GNU Make 3.81 接受 `test\:ui:` 这样的目标，`make test:ui` 能调用 | UI 测试的入口 |
+| V40 | Mac 上的 XCUITest 在真实桌面上启动应用并发送真实的鼠标键盘事件；本机 Automation Mode 关闭且需要认证，`automationmodetool enable-automationmode-without-authentication` 可免认证开启（man page） | UI 测试不进 `make ci`，由 GitHub CI 跑 |
+| V41 | Xcode 26.4 起要求 macOS Tahoe 26.2；26.3 是最后一个支持 macOS Sequoia 的版本（Apple 的系统要求页） | 本机（macOS 15.7）停在 26.3 |
+| V42 | 本机 PATH 里的 `grep` 是 Homebrew 的 ugrep，其他机器和 CI 是 BSD grep | `lint-rules.sh` 写死 `/usr/bin/grep` |
 
 ---
 
@@ -81,42 +91,42 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 
 | ID | 项 | 落地位置 | 状态 |
 |----|----|----------|------|
-| A1 | Package.swift 与目录 | `Package.swift`、`Sources/App`、`Sources/AppCore`、`Tests/AppCoreTests` | ✅ |
-| A2 | 应用身份单一来源 | `Bundle/app.env` | ✅ |
-| A3 | App 入口骨架 | `Sources/App/MainApp.swift`、`AppDelegate.swift` | ✅ |
-| A4 | 资源与本地化（en、zh-Hans） | `Sources/AppCore/Resources/Localizable.xcstrings` | ✅ |
-| A5 | App 图标与强调色 | `Bundle/AppIcon.icon`（Icon Composer 格式：两层 SVG 加渐变填充，自绘橙子切面）、`Bundle/Assets.xcassets`（强调色） | ✅ macOS 15 / 🟡 macOS 14、26 |
-| A6 | Info.plist / Entitlements / 隐私清单 | `Bundle/Info.plist`、`App.entitlements`、`PrivacyInfo.xcprivacy` | ✅ |
-| A7 | `.app` 打包脚本 | `scripts/build-app.sh`（debug / release） | ✅ |
+| A1 | 工程与目录 | `App.xcodeproj`（App、AppUITests 两个 target，buildable folders）、`Packages/AppModules`（AppRoot、`Features/<Name>`、Services、ServicesLive，测试目录镜像 Sources） | ✅ |
+| A2 | 应用身份单一来源 | `Configs/Identity.xcconfig`（Xcode 和脚本读同一份） | ✅ |
+| A3 | App 入口骨架 | `App/MainApp.swift`（组装根，`--ui-testing` 时换 mock）、`AppDelegate.swift`；场景在 `AppRoot/AppScenes.swift` | ✅ |
+| A4 | 资源与本地化（en、zh-Hans） | 每个带文案的 target 一份 `Resources/Localizable.xcstrings` | ✅ |
+| A5 | App 图标与强调色 | `App/AppIcon.icon`（Icon Composer 格式：两层 SVG 加渐变填充，自绘橙子切面）、`App/Assets.xcassets`（强调色） | ✅ macOS 15 / 🟡 macOS 14、26 |
+| A6 | Info.plist / Entitlements / 隐私清单 | `Configs/Info.plist`、`Configs/App.entitlements`、`App/PrivacyInfo.xcprivacy` | ✅ |
+| A7 | `.app` 构建脚本 | `scripts/build-app.sh`（debug：xcodebuild build；release：xcodebuild archive 加重签） | ✅ |
 | A8 | 本地运行与调试 | `make run`、`scripts/run.sh` | ✅ |
 | A9 | 忽略规则与编辑器配置 | `.gitignore`、`.editorconfig` | ✅ |
-| A10 | App 图标 skill | `.agents/skills/app-icon`（`.claude/skills` 里是指向它的符号链接）。三条路：用户的 logo 或图片、agent 画 SVG 图层、写生图提示词让用户去生成。`check-icon.sh` 出两张检查图：一张是 ictool 渲染的 macOS 26 六种外观、32 pt 和本机 Finder 图标，另一张把图标放进已装应用中间的 Dock 行；`concepts.sh` 把黑白构思并排比较；`image-layer.swift` 把图片变成图层，不透明的图先用 Vision 抠图。草稿放在 `.build/app-icon`，用户认可后才替换 `Bundle/AppIcon.icon`；两轮都选不出就停下 | ✅ 脚本 / 👀 完整流程 |
+| A10 | App 图标 skill | `.agents/skills/app-icon`（`.claude/skills` 里是指向它的符号链接）。三条路：用户的 logo 或图片、agent 画 SVG 图层、写生图提示词让用户去生成。`check-icon.sh` 出两张检查图：一张是 ictool 渲染的 macOS 26 六种外观、32 pt 和本机 Finder 图标，另一张把图标放进已装应用中间的 Dock 行；`concepts.sh` 把黑白构思并排比较；`image-layer.swift` 把图片变成图层，不透明的图先用 Vision 抠图。草稿放在 `.build/app-icon`，用户认可后才替换 `App/AppIcon.icon`；两轮都选不出就停下 | ✅ 脚本 / 👀 完整流程 |
 | A11 | DMG skill | `.agents/skills/dmg`，只能由用户启动（Claude Code 用 `disable-model-invocation`，Codex 用 `agents/openai.yaml`）：第一步把 dmgbuild 接进项目（用 `wiring/` 里的 dmgbuild 版 `make-dmg.sh` 替换模板的普通版，加上哈希锁定的依赖清单，在发版 job 里加 setup-python），再铺白底默认窗口，再按用户选择做轻品牌或标准品牌化；代码画不了的插画写生图提示词，生成的图作为 `art.png` 垫在箭头下面。背景一律不放文字 | ✅ 脚本和提示词坐标 / 👀 完整流程 |
-| B1 | 编译严格度 | `Package.swift` 中的 `swiftSettings` | ✅ |
-| B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint` | ✅ |
+| B1 | 编译严格度 | `Packages/AppModules/Package.swift` 的 `swiftSettings`、`Configs/Project.xcconfig` | ✅ |
+| B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint`；`scripts/lint-rules.sh` 拦旧 API 和越层 import | ✅ |
 | B3 | Git hooks | `lefthook.yml`（pre-commit 格式化） | ✅ |
-| B4 | 测试 | `Tests/AppCoreTests`（Swift Testing，2 个用例） | ✅ |
+| B4 | 测试 | `make test`：`GreetingFeatureTests`（Swift Testing，2 个用例）；`make test:ui`：`AppUITests`（XCUITest，1 个用例） | ✅ 单测 / 🟡 UI 测试只编译过 |
 | B5 | `.app` 冒烟测试 | `scripts/smoke.sh`，同时用于 debug 包和 release 包；检查签名、Info.plist、资源包、`Assets.car` 和 `AppIcon.icns`，然后启动应用 | ✅ |
-| C1 | 日志 | `Sources/AppCore/Support/Log.swift`、`make logs` | ✅ |
+| C1 | 日志 | 每个模块一个内部 `Log`（各自的 category）、`make logs` | ✅ |
 | C2 | 错误处理约定 | `AppModel` 示例 + AGENTS.md | ✅ |
-| C3 | 状态与依赖注入 | `AppModel` 用 `.environment` 注入；碰进程外资源（网络、文件、系统 API、时钟）的服务才写成协议，经初始化器注入，测试传 stub（RECIPES 的网络示例）；纯逻辑的 `Greeter` 是普通类型 | ✅ |
-| C4 | 本地持久化 | 设置页 `@AppStorage` 示例；Keychain / SwiftData 见 RECIPES | ✅ |
+| C3 | 状态与依赖注入 | 模型经初始化器传给视图（漏传编译失败，`.environment` 漏注入运行时才崩），`AppModel` 持有各功能的模型；碰进程外资源（网络、文件、系统 API、时钟）的服务才写成协议，经初始化器注入，测试传 stub（RECIPES 的网络示例）；纯逻辑的 `Greeter` 是普通类型 | ✅ |
+| C4 | 本地持久化 | Keychain / SwiftData 见 RECIPES（设置页的 `@AppStorage` 示例随结构调整删除） | 📄 |
 | C5 | 开机启动 | `docs/RECIPES.md` | 📄 |
 | C6 | 网络 | `docs/RECIPES.md`，`network.client` 已开 | 📄 |
 | C7 | 菜单栏 App | `docs/RECIPES.md` | 📄 |
 | C8 | 崩溃上报 | `docs/RECIPES.md` | 📄 |
-| C9 | 隐私清单 | `Bundle/PrivacyInfo.xcprivacy`（随所有构建打包） | ✅ |
+| C9 | 隐私清单 | `App/PrivacyInfo.xcprivacy`（随所有构建打包） | ✅ |
 | E1 | 命令单一入口 | `Makefile`（`make help`） | ✅ |
 | E2 | AI 约定 | `AGENTS.md`、`CLAUDE.md` | ✅ |
 | E3 | 环境自检 | `make doctor` | ✅ |
-| E4 | IDE 支持 | `docs/DEVELOPMENT.md`「Editors」一节 | ✅（Preview 需在 Xcode 中人工确认） |
+| E4 | IDE 支持 | `docs/DEVELOPMENT.md`「Editors」一节；Xcode Run 跑真正的 `.app` | ✅（Preview 需在 Xcode 中确认） |
 | E5 | 模板初始化 | `scripts/init.sh`、`make init` | ✅ |
 | E6 | 项目文档 | `README.md`（模板首页，init 把它换成应用自己的页面）、`docs/DEVELOPMENT.md`、`docs/RELEASING.md`、`docs/RECIPES.md`、`.github/SECURITY.md`、`.github/CONTRIBUTING.md`；流程用 mermaid 图加少量文字 | ✅ 本地渲染 / 🟡 GitHub 上的渲染 |
 | F1 | PR CI | `.github/workflows/ci.yml` | 🟡 |
 | F2 | 依赖更新 | `.github/dependabot.yml` | 🟡 |
 | F3 | 仓库治理 | PR 模板、CODEOWNERS、Issue 模板、`make github-setup` | 🟡 |
 | F4 | PR 标题规范 | `.github/workflows/pr-title.yml` | 🟡 |
-| G1 | 代码签名 | `build-app.sh`：ad-hoc，或 Developer ID + runtime | ✅ ad-hoc / 🟡 Developer ID |
+| G1 | 代码签名 | Xcode 签 ad-hoc；`build-app.sh release` 由内向外重签：ad-hoc，或 Developer ID + runtime | ✅ ad-hoc / 🟡 Developer ID |
 | G2 | 公证 | `scripts/notarize.sh` | 🟡（无 `TEAM_ID` 时跳过，已验证） |
 | G3 | DMG | `scripts/package-dmg.sh`、`scripts/make-dmg.sh`：hdiutil 生成普通窗口。设计版完全由 dmg skill（A11）接入，模板里没有 dmgbuild、Python 和对应的 CI 步骤 | ✅ 本地 / 🟡 CI 上的设计版 |
 | G4 | 版本号 | `version.txt` 加 `git rev-list --count HEAD` | ✅ |
@@ -124,8 +134,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | G6 | 密钥管理 | `scripts/ci-keychain.sh`、`release` environment、`docs/RELEASING.md` | 🟡 |
 | G7 | 发布说明 | release-please 的 CHANGELOG；ad-hoc 构建自动追加打开方式说明 | 🟡 |
 | G8 | dSYM 存档 | Release 资产 + 保留 90 天的 workflow artifact | ✅ 本地 / 🟡 CI |
-| G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SPARKLE_PUBLIC_KEY` 对得上 | ✅ 本地（含反例） |
-| H1 | Sparkle 自动更新 | `Sources/App/Updates.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
+| G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SUPublicEDKey` 对得上 | ✅ 本地（含反例） |
+| H1 | Sparkle 自动更新 | `Services/UpdaterService.swift`（协议和 mock）、`ServicesLive/LiveUpdaterService.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
 | H2 | Homebrew Cask | `.agents/skills/homebrew-cask`，只能由用户启动，先按 `TEAM_ID` 和仓库知名度选渠道。官方 `homebrew/cask`：有 Developer ID 且仓库够知名时，skill 写好带 `desc` 和 `livecheck`（`:github_latest`）的 cask，在 `homebrew/cask` 的检出里检查，经用户同意后提 PR（说明用了 AI，提交不带 AI trailer）；收录后 BrewTestBot 自动更新，项目里不加 job、不建 tap。自建 tap：每次发版由单独的 `homebrew` job 下载已公开的 DMG，生成 cask 推到 tap；有 Developer ID 时是普通 cask（C），ad-hoc 时二选一：caveats 提示「仍要打开」（A）或安装后清掉 quarantine（B），两种都在 README 加 `[!IMPORTANT]` 提醒。还写了从自建 tap 转到官方库的步骤 | 🟡（自建 tap 的三种 cask 都过了 `brew style` 和 `brew audit`，A、B 用本地 tap 真装过；官方 cask 模板过了 `brew style`，`brew audit --new` 只因本仓库未公开、不够知名和下载 404 而失败；真实的 tap 推送和官方 PR 都没做过） |
 | H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（`APP_STORE=1` 只在 MAS 构建里去掉 Sparkle）或只上 App Store（删掉 Sparkle 和 DMG 发布）；带 `release-mas.sh`、`build-app.sh` 的 mas 配置和 RELEASING 的一节 | 🟡（两种方案都在临时 worktree 里按 skill 走过一遍，签名用的是替代身份） |
 | H4 | 测试版通道 | `docs/RELEASING.md` | 📄 |
@@ -143,8 +153,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **G10 发版演练：已移除**。它曾在发版 PR 上跑 ad-hoc 签名的 universal 构建和 DMG 校验：发版 PR 以草稿打开，点「Ready for review」才跑。草稿 Release 已经保证失败时用户看不到，演练额外换来的只是不浪费一个版本号，代价是第二个 macOS job、第三个必需检查，以及「合并前一刻再点 Ready」的操作纪律。现在发版 PR 的两个必需检查都跳过，合并即发版；仓库内容导致的发版失败，修复后发下一个版本。
 - **G1**：ad-hoc 发布不开 hardened runtime（V12）。
 - **B3**：没有 commit-msg 钩子（Q9）。**F4**：从 P2 提升为已实现。
-- **H1**：`SUFeedURL` 由 `RELEASES_URL` 推导；联网用 `network.client`，不用 Downloader XPC（Sparkle 文档建议这样做）。
-- **A8**：`make run` 改用 `open` 启动（V15）；没有终端时日志写到 `.build/app/run.log`。
+- **H1**：`SUFeedURL` 由 `GITHUB_REPOSITORY` 推导（2026-10-23 前是 `RELEASES_URL`）；联网用 `network.client`，不用 Downloader XPC（Sparkle 文档建议这样做）。
+- **A8**：`make run` 改用 `open` 启动（V15）；没有终端时日志写到 `.build/run.log`。
 - **C2**：`GreeterError` 不实现 `LocalizedError`（V9）。
 - **C3**：原来规定所有服务都是协议，`Greeter` 这种纯本地逻辑也套了协议、Live 实现和测试 stub，示例和「不加任务不需要的抽象」相矛盾。改为只有碰进程外资源的服务才抽协议；`Greeter` 改成普通类型，用 typed throws（`throws(GreeterError)`），`AppModel` 的测试直接用真实的 `Greeter`，同步调用。
 - **A5**：图标从 `.appiconset` 改为 Icon Composer 的 `.icon`（V22）。
@@ -159,6 +169,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
   - `ci-keychain.sh` 负责 CI 中证书的导入和清理。
   - `publish-github.sh` 负责上传资产，并给 ad-hoc 的 Release 追加打开说明。
   - `github-setup.sh` 落实仓库设置：只允许 squash、分支保护、`release` environment。
+- **结构调整：薄 Xcode 工程 + 本地包（2026-10-23）**。纯 SPM 要自写脚本拼 `.app`（V1–V3、V5、V11、V22、V25），建不了 XCUITest 和 App 扩展，Xcode 的 Run 跑的也不是真正的应用。现在 `App.xcodeproj` 只有 App 和 AppUITests 两个 target，用 buildable folders，构建设置全在 `Configs/*.xcconfig`，加文件不碰 pbxproj；全部代码在 `Packages/AppModules`，按层拆 target：`AppRoot`、每个功能一个 `<Name>Feature`、`Services`（协议和 mock）、`ServicesLive`（真实实现，Sparkle 只链接到这里）。功能 target 不依赖 `ServicesLive`，在功能里直接 new 真实实现会编译失败。原来 App target 里的 `Updates`（`ObservableObject`）改成 `UpdaterService` 协议加 `LiveUpdaterService`；设置页的「默认名字」示例删掉，以免两个功能共用一个 UserDefaults 键。身份从 `Bundle/app.env` 搬到 `Configs/Identity.xcconfig`，Sparkle 公钥搬到 `Configs/Info.plist`。新增 `make test:ui`（不进 `make ci`，V40）和 `scripts/lint-rules.sh`。
 
 ---
 
@@ -166,8 +177,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 
 | 项 | 说明 |
 |----|------|
-| 没有 XCUITest | 纯 SPM 无法建 UI Testing target；用冒烟测试 + 模型层测试 + 人工检查代替 |
-| Xcode Run 跑的是裸可执行文件 | 没有 bundle ID、不受 sandbox 限制；真实环境请用 `make run` 再附加调试器 |
+| UI 测试占用鼠标键盘 | Mac 上没有模拟器，`make test:ui` 运行时不能同时用电脑；本地首次运行要输入管理员密码，或先免认证开启 Automation Mode。CI 上的 `automationmodetool` 步骤还没在 runner 上跑过 |
+| 结构调整后的 Developer ID 重签 | 重签逻辑和调整前相同，entitlements 改从 Xcode 签好的 app 里取；只验证了 ad-hoc 路径 |
 | 漏写 `bundle: .module` 不会报错 | 已写进 AGENTS.md 的规则 |
 | ad-hoc 发布的体验 | 首次打开要在系统设置里点「仍要打开」；每次更新签名都会变，权限和 keychain 访问可能需要重新授权；Homebrew（`homebrew-cask` skill）要么首次打开被拦，要么由 cask 清掉 quarantine |
 | ad-hoc 切换到 Developer ID 的首次更新 | 理论上靠 EdDSA 能通过，**尚未实测** |
