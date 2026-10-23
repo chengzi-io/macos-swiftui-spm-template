@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # One-time GitHub settings for this repository (needs `gh` with admin rights):
 #   - squash merge only, commit title = PR title (release-please reads it)
-#   - main protected: PR required, "Validate PR title" and "Lint, test, build"
-#     required, no force push or deletion; reviews required only with two or more
-#     pushers
+#   - main protected: PR required, "Validate PR title", "Lint, test, build" and
+#     "Snapshot review" required, no force push or deletion; reviews required only with
+#     two or more pushers
+#   - the snapshots-reviewed label, which the Snapshot review check waits for
 #   - default workflow token read-only
 #   - `release` environment limited to protected branches (the publish job)
 #   - private vulnerability reporting on
@@ -23,6 +24,9 @@ gh api --method PATCH "repos/$repo" \
     -f squash_merge_commit_message=PR_BODY \
     -F delete_branch_on_merge=true >/dev/null
 
+gh label create snapshots-reviewed --color 0E8A16 --force \
+    --description "Changed view snapshots were compared and accepted" >/dev/null
+
 pushers=$(gh api "repos/$repo/collaborators?per_page=100" --jq '[.[] | select(.permissions.push)] | length')
 reviews=$([[ $pushers -ge 2 ]] && echo 1 || echo 0)
 
@@ -30,7 +34,7 @@ gh api --method PUT "repos/$repo/branches/$branch/protection" --input - >/dev/nu
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": ["Validate PR title", "Lint, test, build"]
+    "contexts": ["Validate PR title", "Lint, test, build", "Snapshot review"]
   },
   "enforce_admins": true,
   "required_pull_request_reviews": {

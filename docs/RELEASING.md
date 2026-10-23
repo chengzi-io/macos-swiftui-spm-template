@@ -56,7 +56,7 @@ make github-setup
 ```
 
 Squash merge only, with the PR title as the commit title; `main` requires a PR and the
-two checks below; the workflow token is read-only; the `release` environment only runs
+three checks below; the workflow token is read-only; the `release` environment only runs
 from protected branches; private vulnerability reporting is on. The script prints the
 settings it reads back.
 
@@ -64,10 +64,13 @@ settings it reads back.
 | --- | --- | --- |
 | `Validate PR title` | runs | skipped |
 | `Lint, test, build` | runs | skipped |
+| `Snapshot review` | runs | runs, passes |
 
 A skipped required check counts as passed. release-please's PRs (branch
 `release-please--*` in this repository) change only the version and the changelog, so
-they skip both.
+they skip the first two and change no snapshot. `Snapshot review` fails while a PR
+changes view snapshot references without the `snapshots-reviewed` label, which the
+script creates; see [DEVELOPMENT.md](DEVELOPMENT.md#commands).
 
 ### 2. GitHub App for release-please
 
