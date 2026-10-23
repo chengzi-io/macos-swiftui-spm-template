@@ -90,7 +90,7 @@ out and finishes each with `make ci`.
 | `AGENTS.md` (`CLAUDE.md` points to it) | rules for agents, where code goes | kept |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | setup, commands, layout, how the app is built | kept |
 | [docs/RELEASING.md](docs/RELEASING.md) | the release flow, one-time setup, recovery | kept |
-| [docs/RECIPES.md](docs/RECIPES.md) | launch at login, networking, menu bar, crash reporting | kept |
+| [docs/RECIPES.md](docs/RECIPES.md) | launch at login, networking, menu bar, global shortcuts, crash reporting | kept |
 | `docs/TEMPLATE-PLAN.md`, `docs/ACCEPTANCE.md` | the template's own plan and checks (Chinese) | removed |
 
 ## License

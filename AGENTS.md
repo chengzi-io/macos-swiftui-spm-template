@@ -172,9 +172,9 @@ a new skill the same way.
 8. `make ci`.
 
 The Greeting demo (`Features/Greeting`, `GreetingModelTests`, `GreetingViewSnapshotTests`
-and its `__Snapshots__`, `GreetingUITests`) is a placeholder; replace it with the first real feature. Recipes for launch at login,
-networking, menu bar apps, AppKit bridges and crash reporting:
-[docs/RECIPES.md](docs/RECIPES.md).
+and its `__Snapshots__`, `GreetingUITests`) is a placeholder; replace it with the first
+real feature. Recipes for launch at login, networking, menu bar apps, global keyboard
+shortcuts, AppKit bridges and crash reporting: [docs/RECIPES.md](docs/RECIPES.md).
 
 Skills in `.agents/skills/`: `app-icon` makes the app icon. Skills that change the build
 or the release start only when the user asks for them by name: `dmg` designs the DMG

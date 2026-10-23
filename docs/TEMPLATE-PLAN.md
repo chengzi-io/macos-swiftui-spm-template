@@ -89,6 +89,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V52 | 重录能让任何截图失败重新通过，所以快照测试只能发现界面变了，判断不了对不对 | `Snapshot review` 检查（`scripts/check-snapshot-review.sh`）：PR 改了 `__Snapshots__/` 就失败，直到有 `snapshots-reviewed` 标签；之后再推改动截图的提交会摘掉标签。分支保护把它列为必过检查 |
 | V53 | 参考图是模板作者那台 Mac 的控件样子；别的 macOS 大版本初始化后，第一次 `make ci` 就会失败（快照默认不录、CI 也不再跳过） | init 删掉示例的参考图，把两个 workflow 的 `runs-on` 设成本机的 macOS 大版本（macos-15、macos-26 镜像都有 Xcode 26.2）；AGENTS.md 的 init 步骤加上 `make snapshots`；`make doctor` 在 CI runner 和本机大版本不一致时 warn |
 | V54 | `SMAppService.Status` 有 `requiresApproval`：已注册，但用户在系统设置里收回了许可，只能在那里重新打开（SDK 头文件）。`Toggle(isOn: Binding(get: …, set: setEnabled))` 把方法直接当 `set:` 传进去，Swift 6.2.3 在 IRGen 时崩溃（signal 6，转换成 `@isolated(any)` 闭包的 thunk） | 开机启动食谱按三种状态显示，`requiresApproval` 时给出打开登录项的按钮，App 回到前台时重读状态；`set:` 写成闭包 `{ setEnabled($0) }` |
+| V55 | KeyboardShortcuts 3.1.0（2026-09）：Carbon 热键、录制控件、和系统及菜单快捷键的冲突提示，支持沙盒和 App Store，不弹权限；包本身也是 MainActor 默认隔离。`onKeyUp(for:)` 的注释写着以后会弃用、新代码用 `events(for:)`；macOS 15.0、15.1 上沙盒 app 注册不了只带 ⌥ 或 ⌥⇧ 的快捷键，15.2 恢复。同类的 LaunchAtLogin-Modern 2023-12 后没再更新，只包了几行 `SMAppService`；Defaults 和 `@AppStorage`、服务化的 UserDefaults 重叠 | 只给全局快捷键写食谱：名字和录制控件在 SettingsFeature，`AppModel` 用 `events(.keyUp, for:)` 监听；另外两个不引入 |
 | V43 | 图标图层的图片缺失时，Xcode 构建只有一条 `Icon export exited with status 255` 警告，照样成功；删掉 `.app` 重新构建，里面仍有更早构建留下的 AppIcon.icns，所以冒烟测试也通过（V28 的保证在 Xcode 构建里丢了） | `scripts/lint-assets.sh` 在 `make lint` 里单独跑 actool，有警告即失败 |
 
 ---
@@ -128,6 +129,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | C7 | 菜单栏 App | `docs/RECIPES.md` | 📄 |
 | C8 | 崩溃上报 | `docs/RECIPES.md` | 📄 |
 | C9 | 隐私清单 | `App/PrivacyInfo.xcprivacy`（随所有构建打包） | ✅ |
+| C10 | 全局快捷键 | `docs/RECIPES.md`（KeyboardShortcuts 3.1.0） | 📄 |
 | E1 | 命令单一入口 | `Makefile`（`make help`） | ✅ |
 | E2 | AI 约定 | `AGENTS.md`、`CLAUDE.md` | ✅ |
 | E3 | 环境自检 | `make doctor` | ✅ |
