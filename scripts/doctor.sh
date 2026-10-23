@@ -28,6 +28,14 @@ else
     ok "xcrun mcpbridge (Xcode MCP server for agents)"
 fi
 
+# View snapshot references hold one macOS major's controls, and CI compares them.
+runner=$(sed -nE 's/^[[:space:]]*runs-on: macos-([0-9]+).*/\1/p' .github/workflows/ci.yml | head -n 1)
+if [[ $runner != "$macos_major" ]]; then
+    warn "CI runs on macos-$runner, this Mac on macOS $macos_major: view snapshots differ between them; set runs-on to macos-$macos_major in ci.yml and release.yml, then make snapshots"
+else
+    ok "CI runs on macos-$runner, like this Mac (view snapshots)"
+fi
+
 swift format --version >/dev/null || die "swift format missing from the toolchain"
 ok "swift format $(swift format --version)"
 

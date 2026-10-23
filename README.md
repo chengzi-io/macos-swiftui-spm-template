@@ -66,12 +66,14 @@ later.
 ```bash
 scripts/init.sh --name MyApp --bundle-id com.example.myapp \
   --display-name "My App" --copyright "Jane Doe"
-make setup   # check the toolchain, install git hooks
-make run     # build and launch the debug app
+make setup       # check the toolchain, install git hooks
+make snapshots   # record the demo's view snapshots on this Mac; look at them, commit
+make run         # build and launch the debug app
 ```
 
 `scripts/init.sh` writes the app identity into `Configs/Identity.xcconfig`, points releases and
-updates at your repository, resets the version to `0.0.0`, updates LICENSE, CODEOWNERS
+updates at your repository, runs CI on your Mac's macOS version and drops the demo's view
+snapshots (they hold the template Mac's controls), resets the version to `0.0.0`, updates LICENSE, CODEOWNERS
 and the issue templates, and replaces this README with a short page for your app's
 users. It removes the template's own planning docs, then itself.
 

@@ -61,6 +61,13 @@ set_identity GITHUB_REPOSITORY "$repo"
 set_identity TEAM_ID ""
 set_sparkle_public_key ""
 
+# View snapshot references hold one macOS major's controls, and CI compares them: both
+# follow this Mac. The demo's references come from the template's Mac.
+macos_major=$(sw_vers -productVersion | cut -d. -f1)
+log "CI and releases on macos-$macos_major like this Mac; drop the demo's snapshot references"
+sed -i '' -E "s/runs-on: macos-[0-9]+/runs-on: macos-$macos_major/" .github/workflows/ci.yml .github/workflows/release.yml
+find Packages -type d -name __Snapshots__ -prune -exec rm -rf {} +
+
 log "reset version to 0.0.0"
 echo 0.0.0 >version.txt
 printf '{\n  ".": "0.0.0"\n}\n' >.release-please-manifest.json
@@ -121,7 +128,9 @@ Done. Review with \`git diff\`, then commit, for example:
   git add -A && git commit -m "chore: initialize $name from template"
 
 Next:
-  1. make setup && make run
+  1. make setup, then make snapshots to record the demo's view snapshots on this Mac
+     (look at the images in Packages/AppModules/Tests/**/__Snapshots__ and commit
+     them), then make ci and make run
   2. Replace the Greeting demo (Packages/AppModules/Sources/Features/Greeting) and the
      icon (App/AppIcon.icon in Icon Composer, or the app-icon skill in
      .agents/skills/app-icon), and say what the app does at the top of README.md.
