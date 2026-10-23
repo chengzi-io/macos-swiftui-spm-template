@@ -51,14 +51,14 @@ for value in "$display_name" "$holder" "$codeowner"; do
 done
 year=$(date +%Y)
 
-# First, while the tree is clean, as rename.sh requires.
-[[ $name == "$APP_TARGET" ]] || "$ROOT/scripts/rename.sh" "$name"
+# Before rename.sh, which works only on an unreleased version.
+log "reset version to 0.0.0"
+echo 0.0.0 >version.txt
+printf '{\n  ".": "0.0.0"\n}\n' >.release-please-manifest.json
+rm -f CHANGELOG.md
 
-log "app identity: $name ($bundle_id), releases from $repo"
-set_identity() { sed -i '' -E -e "s|^$1[[:space:]]*=.*|$1 = $2|" -e 's/[[:space:]]+$//' Configs/Identity.xcconfig; }
-set_identity APP_NAME "$name"
-set_identity APP_DISPLAY_NAME "$display_name"
-set_identity BUNDLE_ID "$bundle_id"
+"$ROOT/scripts/rename.sh" --name "$name" --bundle-id "$bundle_id" --display-name "$display_name"
+log "releases from $repo"
 set_identity COPYRIGHT "Copyright © $year $holder"
 set_identity GITHUB_REPOSITORY "$repo"
 set_identity TEAM_ID ""
@@ -70,11 +70,6 @@ macos_major=$(sw_vers -productVersion | cut -d. -f1)
 log "CI and releases on macos-$macos_major like this Mac; drop the demo's snapshot references"
 sed -i '' -E "s/runs-on: macos-[0-9]+/runs-on: macos-$macos_major/" .github/workflows/ci.yml .github/workflows/release.yml
 find Packages -type d -name __Snapshots__ -prune -exec rm -rf {} +
-
-log "reset version to 0.0.0"
-echo 0.0.0 >version.txt
-printf '{\n  ".": "0.0.0"\n}\n' >.release-please-manifest.json
-rm -f CHANGELOG.md
 
 # Deletes the marked template-only blocks, then squeezes the blank lines they leave.
 drop_template_blocks() {

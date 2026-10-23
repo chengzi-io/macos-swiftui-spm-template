@@ -3,10 +3,9 @@
 macOS SwiftUI app. A thin Xcode project (`<App>.xcodeproj`) builds, signs and packages
 the app; all code lives in the local Swift package `Packages/AppModules`; `scripts/`
 ships it. `<App>` stands for the app's name (`APP_NAME`): the project, its app target
-and scheme, and the folders `<App>/` and `<App>UITests/` carry it, and
-`scripts/rename.sh <Name>` renames them together. Setup and the layout live in
-[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md), the commands in `make help`; this file is
-the rules of engagement.
+and scheme, and the folders `<App>/` and `<App>UITests/` carry it. Setup and the layout
+live in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md), the commands in `make help`; this
+file is the rules of engagement.
 
 <!-- template-only:start -->
 ## Before init
@@ -129,9 +128,10 @@ a new skill the same way.
   Never record any other way (`SNAPSHOT_TESTING_RECORD`, deleting references), and
   never add the `snapshots-reviewed` label: that label is the user saying they compared
   the images, and the `Snapshot review` check waits for it.
-- App identity changes in `Configs/Identity.xcconfig` only, except the name:
-  `scripts/rename.sh <Name>` changes `APP_NAME` and the project, targets and folders
-  named after it.
+- App identity changes in `Configs/Identity.xcconfig` only. The name, display name and
+  bundle identifier change only through `scripts/rename.sh`, which renames the project,
+  targets and folders with them, and only before the first release: after it, they
+  would make a different app.
 
 ## Never
 

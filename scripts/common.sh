@@ -44,6 +44,11 @@ projects=(*.xcodeproj/project.pbxproj)
     die "expected one Xcode project at the repository root, found: ${projects[*]}"
 APP_TARGET=${projects[0]%.xcodeproj/project.pbxproj}
 
+# set_identity KEY value: rewrites the KEY line of Configs/Identity.xcconfig.
+set_identity() {
+    sed -i '' -E -e "s|^$1[[:space:]]*=.*|$1 = $2|" -e 's/[[:space:]]+$//' Configs/Identity.xcconfig
+}
+
 # Sets SUPublicEDKey in Configs/Info.plist in place, keeping the file's formatting
 # (plutil and PlistBuddy rewrite it with tabs).
 set_sparkle_public_key() {

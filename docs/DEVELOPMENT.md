@@ -58,9 +58,9 @@ Try the Chinese UI with `make run ARGS="-AppleLanguages '(zh-Hans)'"`.
 
 ## Layout
 
-`<App>` is the app's name (`APP_NAME`). `scripts/rename.sh <Name>` renames the app,
-the Xcode project, its targets, the scheme and the folders together; the bundle
-identifier stays.
+`<App>` is the app's name (`APP_NAME`). Before the first release,
+`scripts/rename.sh --name <Name> --bundle-id <id>` renames the app (name, display name,
+bundle identifier) and the Xcode project, its targets, the scheme and the folders.
 
 ```text
 <App>.xcodeproj/           the shell: <App> and <App>UITests targets, shared <App> scheme
