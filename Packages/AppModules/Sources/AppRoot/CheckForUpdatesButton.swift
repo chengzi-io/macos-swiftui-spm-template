@@ -1,7 +1,8 @@
 import Services
 import SwiftUI
 
-/// A view, not inline command content: commands only refresh through an observed view.
+/// A view of its own, as in Sparkle's SwiftUI setup guide, which needs one for the
+/// disabled state to refresh before macOS 12.
 struct CheckForUpdatesButton: View {
     let updater: any UpdaterService
 
