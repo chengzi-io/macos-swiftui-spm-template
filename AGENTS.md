@@ -72,6 +72,9 @@ Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks
   through the model's initializer: `Sources/App` builds the live one, tests pass a stub
   ([RECIPES](docs/RECIPES.md#networking) has one). Pure logic stays a plain type the
   model calls directly, as `Greeter` is.
+- AppKit: only where no SwiftUI API does the job, bridged at the layer that is missing:
+  a view, a window property or the window's structure
+  ([RECIPES](docs/RECIPES.md#appkit-bridges)). No swizzling, private API or polling.
 - Tests: Swift Testing (`@Test`, `#expect`) on `AppCore` models and services.
   `swift test` does not compile asset or string catalogs, so unit tests never assert
   localized text or images; `make smoke` covers resources in the real `.app`.
