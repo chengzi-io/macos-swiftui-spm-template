@@ -20,9 +20,9 @@ flowchart TB
 
 ## What you get
 
-- A thin `App.xcodeproj`: the app target (`@main`, assets, icon) and a UI test target,
-  both buildable folders, with every build setting in `Configs/*.xcconfig`. Agents add
-  files without touching the project file.
+- A thin `Pomelo.xcodeproj`: the app target (`@main`, assets, icon) and a UI test
+  target, both buildable folders, with every build setting in `Configs/*.xcconfig`.
+  Agents add files without touching the project file.
 - All code in the local package `Packages/AppModules`, one target per layer: `AppRoot`,
   a target per feature, `Services` (protocols and mocks) and `ServicesLive` (system
   APIs, network, Sparkle). The compiler keeps features away from live services.

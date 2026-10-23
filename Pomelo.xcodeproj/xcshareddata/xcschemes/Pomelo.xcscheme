@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "0A0000000000000000000020"
-               BuildableName = "SwiftUITemplate.app"
-               BlueprintName = "App"
-               ReferencedContainer = "container:App.xcodeproj">
+               BuildableName = "Pomelo.app"
+               BlueprintName = "Pomelo"
+               ReferencedContainer = "container:Pomelo.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -48,9 +48,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "0A0000000000000000000030"
-               BuildableName = "AppUITests.xctest"
-               BlueprintName = "AppUITests"
-               ReferencedContainer = "container:App.xcodeproj">
+               BuildableName = "PomeloUITests.xctest"
+               BlueprintName = "PomeloUITests"
+               ReferencedContainer = "container:Pomelo.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -70,9 +70,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0A0000000000000000000020"
-            BuildableName = "SwiftUITemplate.app"
-            BlueprintName = "App"
-            ReferencedContainer = "container:App.xcodeproj">
+            BuildableName = "Pomelo.app"
+            BlueprintName = "Pomelo"
+            ReferencedContainer = "container:Pomelo.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -87,9 +87,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0A0000000000000000000020"
-            BuildableName = "SwiftUITemplate.app"
-            BlueprintName = "App"
-            ReferencedContainer = "container:App.xcodeproj">
+            BuildableName = "Pomelo.app"
+            BlueprintName = "Pomelo"
+            ReferencedContainer = "container:Pomelo.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

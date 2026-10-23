@@ -19,7 +19,7 @@ make run     # build and launch the debug app
 ```mermaid
 flowchart LR
     pkg["Packages/AppModules<br/>all code, string catalogs,<br/>unit tests"] --> xb
-    shell["App.xcodeproj + App/<br/>@main, assets, AppIcon.icon"] --> xb
+    shell["Pomelo.xcodeproj + Pomelo/<br/>@main, assets, AppIcon.icon"] --> xb
     cfg["Configs/<br/>Identity.xcconfig, build settings,<br/>Info.plist, entitlements"] --> xb
     xb["xcodebuild<br/>compile, embed Sparkle,<br/>compile icon, sign"] --> app[".app"] --> smoke["scripts/smoke.sh<br/>check, launch"]
     pkg --> st["swift test<br/>unit tests, seconds"]
@@ -59,10 +59,10 @@ Try the Chinese UI with `make run ARGS="-AppleLanguages '(zh-Hans)'"`.
 ## Layout
 
 ```text
-App.xcodeproj/             the shell: App and AppUITests targets, shared App scheme
-App/                       @main (composition root), app delegate, assets, AppIcon.icon,
+Pomelo.xcodeproj/          the shell: Pomelo and PomeloUITests targets, shared Pomelo scheme
+Pomelo/                    @main (composition root), app delegate, assets, AppIcon.icon,
                            privacy manifest
-AppUITests/                XCUITest: a few critical flows
+PomeloUITests/             XCUITest: a few critical flows
 Configs/                   Identity.xcconfig (app identity), build settings, Info.plist,
                            entitlements
 Packages/AppModules/       the local Swift package with all the code
@@ -82,7 +82,7 @@ Where code goes and the rules it follows: [AGENTS.md](../AGENTS.md).
 
 ## Editors
 
-- Xcode: `xed App.xcodeproj`. Its Run button builds and launches the real `.app`
+- Xcode: `xed Pomelo.xcodeproj`. Its Run button builds and launches the real `.app`
   (bundle identifier, sandbox, Info.plist), with the debugger attached. Previews run
   in the package targets.
 - VS Code / Cursor: the Swift extension (sourcekit-lsp) works on

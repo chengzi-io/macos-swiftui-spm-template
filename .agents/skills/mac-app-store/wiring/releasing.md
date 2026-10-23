@@ -2,7 +2,7 @@
 
 `make release-mas` archives the App Store app without Sparkle (the App Store updates
 the app): the `AppStore` target when the Developer ID release stays beside it, the
-`App` target when the App Store is the only channel. It re-signs the app with Apple
+`Pomelo` target when the App Store is the only channel. It re-signs the app with Apple
 Distribution, embeds the provisioning profile, adds the application and team
 identifier entitlements, and wraps it in `dist/mas/<App>-X.Y.Z.pkg` signed with the
 installer certificate. Uploading runs on your Mac; the release workflow does not do it.
@@ -20,5 +20,5 @@ installer certificate. Uploading runs on your Mac; the release workflow does not
      NOTARY_ISSUER_ID=<uuid> make upload-mas
    ```
 
-5. Keep `App/PrivacyInfo.xcprivacy` accurate (see [RECIPES.md](RECIPES.md)), then
+5. Keep `Pomelo/PrivacyInfo.xcprivacy` accurate (see [RECIPES.md](RECIPES.md)), then
    submit for review in App Store Connect.

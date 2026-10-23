@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Edits App.xcodeproj for the mac-app-store skill, so no one edits project.pbxproj by hand.
+"""Edits Pomelo.xcodeproj for the mac-app-store skill, so no one edits project.pbxproj by hand.
 
   xcodeproj.py link <target> <product>...
       Makes <target> link exactly these products of Packages/AppModules.
   xcodeproj.py add-app-store-target <product>...
-      Adds the AppStore target (the App target's buildable folders and
+      Adds the AppStore target (the Pomelo target's buildable folders and
       Configs/AppStore.xcconfig) linking these products, and its shared scheme.
 
 Runs from anywhere inside the project. Fails, changing nothing, when the project is not
@@ -19,7 +19,8 @@ import uuid
 from pathlib import Path
 
 PACKAGE = "Packages/AppModules"
-PROJECT = "App.xcodeproj"
+PROJECT = "Pomelo.xcodeproj"
+APP_TARGET = "Pomelo"
 
 
 def die(message):
@@ -185,9 +186,9 @@ def add_file_reference(project, group, name, file_type):
 def add_app_store_target(project, base, products, available):
     if project.target("AppStore"):
         die(f"{PROJECT} already has an AppStore target")
-    app = project.target("App")
+    app = project.target(APP_TARGET)
     if not app:
-        die(f"no App target in {PROJECT}")
+        die(f"no {APP_TARGET} target in {PROJECT}")
     for name in ("AppStore.xcconfig", "AppStore-Info.plist", "AppStore.entitlements"):
         if not (base / "Configs" / name).is_file():
             die(f"no Configs/{name}; copy it from the skill's wiring/ first")

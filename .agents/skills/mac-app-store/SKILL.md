@@ -15,12 +15,12 @@ no Sparkle entitlements.
 
 It is written for apps made from macos-swiftui-spm-template, once its init has run:
 
-- `App.xcodeproj` has the `App` target: its code is the buildable folder `App/`, its
-  settings `Configs/App.xcconfig`. All other code is the local package
+- `Pomelo.xcodeproj` has the `Pomelo` target: its code is the buildable folder
+  `Pomelo/`, its settings `Configs/App.xcconfig`. All other code is the local package
   `Packages/AppModules`.
 - `Services/UpdaterService.swift` declares `UpdaterService` and `MockUpdaterService`;
-  `ServicesLive/LiveUpdaterService.swift` wraps Sparkle. `App/MainApp.swift` builds the
-  updater, `AppModel.updater` holds it, and `AppRoot/AppScenes.swift` shows
+  `ServicesLive/LiveUpdaterService.swift` wraps Sparkle. `Pomelo/MainApp.swift` builds
+  the updater, `AppModel.updater` holds it, and `AppRoot/AppScenes.swift` shows
   `CheckForUpdatesButton` and hands the updater to `SettingsView`.
 - `scripts/build-app.sh debug|release` archives with xcodebuild and re-signs;
   `scripts/common.sh` exports `Configs/Identity.xcconfig` (`TEAM_ID`, `BUNDLE_ID`) and
@@ -28,7 +28,7 @@ It is written for apps made from macos-swiftui-spm-template, once its init has r
 - `Configs/App.entitlements` turns the App Sandbox on, which the App Store requires.
 
 `<skill>` below is this skill's directory, for example `.agents/skills/mac-app-store`.
-`<skill>/wiring/xcodeproj.py` makes every change to `App.xcodeproj`; never edit
+`<skill>/wiring/xcodeproj.py` makes every change to `Pomelo.xcodeproj`; never edit
 `project.pbxproj` by hand. It refuses, changing nothing, when the project is not shaped
 as it expects.
 
@@ -42,8 +42,8 @@ Ask the user, unless they already said:
 
 | Channel | What changes |
 | --- | --- |
-| Both | The Developer ID release stays. A second app target, `AppStore`, builds the same app from `App/` without Sparkle |
-| App Store only | Sparkle and the GitHub DMG release go; the `App` target is the App Store app |
+| Both | The Developer ID release stays. A second app target, `AppStore`, builds the same app from `Pomelo/` without Sparkle |
+| App Store only | Sparkle and the GitHub DMG release go; the `Pomelo` target is the App Store app |
 
 Then do step 2, and 3a or 3b.
 
@@ -131,7 +131,7 @@ Then do step 2, and 3a or 3b.
    Store build).`), and the toggle sits inside `if let updater { … }`. If that leaves
    the App Store build's Settings empty, tell the user.
 
-   `App/MainApp.swift`: import `SparkleUpdater` instead of `ServicesLive` (keep
+   `Pomelo/MainApp.swift`: import `SparkleUpdater` instead of `ServicesLive` (keep
    `ServicesLive` if it still exists), and build no updater for the App Store:
 
    ```swift
@@ -168,19 +168,19 @@ Then do step 2, and 3a or 3b.
 4. The project, from the repository root:
 
    ```bash
-   python3 <skill>/wiring/xcodeproj.py link App AppRoot Services SparkleUpdater
+   python3 <skill>/wiring/xcodeproj.py link Pomelo AppRoot Services SparkleUpdater
    python3 <skill>/wiring/xcodeproj.py add-app-store-target AppRoot Services
    ```
 
-   Name the products `App/MainApp.swift` imports, plus `ServicesLive` while it exists.
-   The AppStore target compiles the same `App/` folder, so there is one `@main`;
-   `APP_STORE` tells the two builds apart. The script also writes the shared
+   Name the products `Pomelo/MainApp.swift` imports, plus `ServicesLive` while it
+   exists. The AppStore target compiles the same `Pomelo/` folder, so there is one
+   `@main`; `APP_STORE` tells the two builds apart. The script also writes the shared
    `AppStore` scheme, which `build-app.sh mas` archives.
 
 5. In `AGENTS.md` and `docs/DEVELOPMENT.md`, where they describe the layout, add the
    `AppStore` target and `SparkleUpdater`.
 
-6. `make fmt`, then `make ci`. `xcodebuild -list -project App.xcodeproj` lists the
+6. `make fmt`, then `make ci`. `xcodebuild -list -project Pomelo.xcodeproj` lists the
    `AppStore` target and scheme.
 
 The Developer ID release, Sparkle and their docs stay as they are.
@@ -196,17 +196,17 @@ the header comment and the usage. Then remove:
   and mock). A target left without sources (`ServicesLive` and `Services` in a fresh
   template) goes with its product and every dependency on it.
 - The updater in the app: `AppModel.updater`, `makeUpdater` and its imports in
-  `App/MainApp.swift`, `AppRoot/CheckForUpdatesButton.swift` and the `.commands` in
+  `Pomelo/MainApp.swift`, `AppRoot/CheckForUpdatesButton.swift` and the `.commands` in
   `AppScenes`, the toggle in `SettingsView`, and their entries in the string catalogs.
   A catalog left empty goes with its target's `resources:`. A Settings screen left
   empty (a fresh template) goes too: the `SettingsFeature` target and the `Settings`
   scene.
 - `Configs/Info.plist`: `SUEnableInstallerLauncherService`, `SUFeedURL` and
   `SUPublicEDKey`. `Configs/App.entitlements`: the Sparkle mach-lookup exception.
-- In the project, link only what `App/MainApp.swift` imports (`AppRoot` in a fresh
-  template): `python3 <skill>/wiring/xcodeproj.py link App AppRoot`. With no remote
+- In the project, link only what `Pomelo/MainApp.swift` imports (`AppRoot` in a fresh
+  template): `python3 <skill>/wiring/xcodeproj.py link Pomelo AppRoot`. With no remote
   package left, Xcode deletes
-  `App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` and SwiftPM
+  `Pomelo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` and SwiftPM
   deletes `Packages/AppModules/Package.resolved`; commit the deletions.
 - `scripts/common.sh`: `RELEASES_URL`, `SPARKLE_PUBLIC_KEY` (it reads `SUPublicEDKey`,
   which is gone, and would fail every script), `ARCHIVE`, `RELEASE_APP`, `SPARKLE_BIN`,

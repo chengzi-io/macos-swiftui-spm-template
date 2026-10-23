@@ -132,7 +132,7 @@ Next:
      (look at the images in Packages/AppModules/Tests/**/__Snapshots__ and commit
      them), then make ci and make run
   2. Replace the Greeting demo (Packages/AppModules/Sources/Features/Greeting) and the
-     icon (App/AppIcon.icon in Icon Composer, or the app-icon skill in
+     icon (Pomelo/AppIcon.icon in Icon Composer, or the app-icon skill in
      .agents/skills/app-icon), and say what the app does at the top of README.md.
   3. One-time release setup: docs/RELEASING.md (make github-setup, GitHub App,
      make sparkle-keys, optional Developer ID).

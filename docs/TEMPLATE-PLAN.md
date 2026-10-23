@@ -9,7 +9,7 @@
 - **开发**：用模板新建仓库 → 运行 `scripts/init.sh` → `make run` 出窗口 → 直接写业务代码。
 - **发布**：PR 以 squash 方式合并进 `main` → release-please 维护发版 PR → 合并后自动打 tag、创建草稿 Release → CI 构建、校验并上传 DMG、dSYM、appcast，然后公开 Release → 已安装的应用通过 Sparkle 自动更新。
 
-原则：薄 Xcode 工程（`App.xcodeproj`，只放壳）加本地 Swift 包（`Packages/AppModules`，放全部代码），2026-10-23 起取代原来的「纯 `Package.swift`，不提交 `.xcodeproj`」（见第 4 节末尾）；一个命令入口（Makefile）；每项都有可执行的验收方式；依赖尽量少；和 chengzi-io 其他模板以及 `github-repo-scaffold` skill 的约定保持一致。
+原则：薄 Xcode 工程（`Pomelo.xcodeproj`，只放壳）加本地 Swift 包（`Packages/AppModules`，放全部代码），2026-10-23 起取代原来的「纯 `Package.swift`，不提交 `.xcodeproj`」（见第 4 节末尾）；一个命令入口（Makefile）；每项都有可执行的验收方式；依赖尽量少；和 chengzi-io 其他模板以及 `github-repo-scaffold` skill 的约定保持一致。
 
 ---
 
@@ -104,12 +104,12 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 
 | ID | 项 | 落地位置 | 状态 |
 |----|----|----------|------|
-| A1 | 工程与目录 | `App.xcodeproj`（App、AppUITests 两个 target，buildable folders）、`Packages/AppModules`（AppRoot、`Features/<Name>`、Services、ServicesLive，测试目录镜像 Sources） | ✅ |
+| A1 | 工程与目录 | `Pomelo.xcodeproj`（Pomelo、PomeloUITests 两个 target，buildable folders）、`Packages/AppModules`（AppRoot、`Features/<Name>`、Services、ServicesLive，测试目录镜像 Sources） | ✅ |
 | A2 | 应用身份单一来源 | `Configs/Identity.xcconfig`（Xcode 和脚本读同一份） | ✅ |
-| A3 | App 入口骨架 | `App/MainApp.swift`（组装根，环境变量 `UI_TESTING=1` 时换 mock）、`AppDelegate.swift`；场景在 `AppRoot/AppScenes.swift` | ✅ |
+| A3 | App 入口骨架 | `Pomelo/MainApp.swift`（组装根，环境变量 `UI_TESTING=1` 时换 mock）、`AppDelegate.swift`；场景在 `AppRoot/AppScenes.swift` | ✅ |
 | A4 | 资源与本地化（en、zh-Hans） | 每个带文案的 target 一份 `Resources/Localizable.xcstrings` | ✅ |
-| A5 | App 图标与强调色 | `App/AppIcon.icon`（Icon Composer 格式：两层 SVG 加渐变填充，自绘橙子切面）、`App/Assets.xcassets`（强调色） | ✅ macOS 15 / 🟡 macOS 14、26 |
-| A6 | Info.plist / Entitlements / 隐私清单 | `Configs/Info.plist`、`Configs/App.entitlements`、`App/PrivacyInfo.xcprivacy` | ✅ |
+| A5 | App 图标与强调色 | `Pomelo/AppIcon.icon`（Icon Composer 格式：两层 SVG 加渐变填充，自绘橙子切面）、`Pomelo/Assets.xcassets`（强调色） | ✅ macOS 15 / 🟡 macOS 14、26 |
+| A6 | Info.plist / Entitlements / 隐私清单 | `Configs/Info.plist`、`Configs/App.entitlements`、`Pomelo/PrivacyInfo.xcprivacy` | ✅ |
 | A7 | `.app` 构建脚本 | `scripts/build-app.sh`（debug：xcodebuild build；release：xcodebuild archive 加重签） | ✅ |
 | A8 | 本地运行与调试 | `make run`、`scripts/run.sh` | ✅ |
 | A9 | 忽略规则与编辑器配置 | `.gitignore`、`.editorconfig` | ✅ |
@@ -118,7 +118,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | B1 | 编译严格度 | `Packages/AppModules/Package.swift` 的 `swiftSettings`、`Configs/Project.xcconfig` | ✅ |
 | B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint`；`scripts/lint-rules.sh` 拦旧 API 和越层 import | ✅ |
 | B3 | Git hooks | `lefthook.yml`（pre-commit 格式化） | ✅ |
-| B4 | 测试 | `make test`：`GreetingFeatureTests`（Swift Testing，2 个模型用例和 3 个快照用例）；`make test:ui`：`AppUITests`（XCUITest，1 个用例） | ✅ |
+| B4 | 测试 | `make test`：`GreetingFeatureTests`（Swift Testing，2 个模型用例和 3 个快照用例）；`make test:ui`：`PomeloUITests`（XCUITest，1 个用例） | ✅ |
 | B5 | `.app` 冒烟测试 | `scripts/smoke.sh`，同时用于 debug 包和 release 包；检查签名、Info.plist、资源包、`Assets.car` 和 `AppIcon.icns`，然后启动应用 | ✅ |
 | C1 | 日志 | 每个模块一个内部 `Log`（各自的 category）、`make logs` | ✅ |
 | C2 | 错误处理约定 | `AppModel` 示例 + AGENTS.md | ✅ |
@@ -128,7 +128,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | C6 | 网络 | `docs/RECIPES.md`，`network.client` 已开 | 📄 |
 | C7 | 菜单栏 App | `docs/RECIPES.md` | 📄 |
 | C8 | 崩溃上报 | `docs/RECIPES.md` | 📄 |
-| C9 | 隐私清单 | `App/PrivacyInfo.xcprivacy`（随所有构建打包） | ✅ |
+| C9 | 隐私清单 | `Pomelo/PrivacyInfo.xcprivacy`（随所有构建打包） | ✅ |
 | C10 | 全局快捷键 | `docs/RECIPES.md`（KeyboardShortcuts 3.1.0） | 📄 |
 | E1 | 命令单一入口 | `Makefile`（`make help`） | ✅ |
 | E2 | AI 约定 | `AGENTS.md`、`CLAUDE.md` | ✅ |
@@ -151,7 +151,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SUPublicEDKey` 对得上 | ✅ 本地（含反例） |
 | H1 | Sparkle 自动更新 | `Services/UpdaterService.swift`（协议和 mock）、`ServicesLive/LiveUpdaterService.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
 | H2 | Homebrew Cask | `.agents/skills/homebrew-cask`，只能由用户启动，先按 `TEAM_ID` 和仓库知名度选渠道。官方 `homebrew/cask`：有 Developer ID 且仓库够知名时，skill 写好带 `desc` 和 `livecheck`（`:github_latest`）的 cask，在 `homebrew/cask` 的检出里检查，经用户同意后提 PR（说明用了 AI，提交不带 AI trailer）；收录后 BrewTestBot 自动更新，项目里不加 job、不建 tap。自建 tap：每次发版由单独的 `homebrew` job 下载已公开的 DMG，生成 cask 推到 tap；有 Developer ID 时是普通 cask（C），ad-hoc 时二选一：caveats 提示「仍要打开」（A）或安装后清掉 quarantine（B），两种都在 README 加 `[!IMPORTANT]` 提醒。还写了从自建 tap 转到官方库的步骤 | 🟡（自建 tap 的三种 cask 都过了 `brew style` 和 `brew audit`，A、B 用本地 tap 真装过；官方 cask 模板过了 `brew style`，`brew audit --new` 只因本仓库未公开、不够知名和下载 404 而失败；真实的 tap 推送和官方 PR 都没做过） |
-| H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（Sparkle 拆到 `SparkleUpdater` target，新增共用 `App/` 的 `AppStore` target，不链接 Sparkle，用 `APP_STORE` 编译条件区分）或只上 App Store（删掉 Sparkle 和 DMG 发布，`App` target 就是 App Store 版）；带 `wiring/xcodeproj.py`（改 pbxproj 的唯一入口）、带 mas 配置的 `build-app.sh`、`release-mas.sh` 和 RELEASING 的一节 | 🟡（2026-10-23 按新结构重写，两种方案都在仓库副本里按 skill 走过一遍，签名用的是替代身份） |
+| H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（Sparkle 拆到 `SparkleUpdater` target，新增共用 `Pomelo/` 的 `AppStore` target，不链接 Sparkle，用 `APP_STORE` 编译条件区分）或只上 App Store（删掉 Sparkle 和 DMG 发布，`Pomelo` target 就是 App Store 版）；带 `wiring/xcodeproj.py`（改 pbxproj 的唯一入口）、带 mas 配置的 `build-app.sh`、`release-mas.sh` 和 RELEASING 的一节 | 🟡（2026-10-23 按新结构重写，两种方案都在仓库副本里按 skill 走过一遍，签名用的是替代身份） |
 | H4 | 测试版通道 | `docs/RELEASING.md` | 📄 |
 
 ---
@@ -193,7 +193,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 |----|------|
 | UI 测试占用鼠标键盘 | Mac 上没有模拟器，`make test:ui` 运行时不能同时用电脑；本地首次运行要输入管理员密码，或先免认证开启 Automation Mode。CI 上的 `automationmodetool` 步骤还没在 runner 上跑过 |
 | `mac-app-store` skill | 2026-10-23 按新结构重写，两种方案只用替代身份构建、签名、打包到 `.pkg`，从没提交过 App Store Connect；`altool --upload-app` 没实际上传过 |
-| `dmg` skill 的设计文件 | `Bundle/` 没了，改放 `Configs/DMG/`（不能放 `App/`：那是 buildable folder，里面的 `.swift` 会编进 app） |
+| `dmg` skill 的设计文件 | `Bundle/` 没了，改放 `Configs/DMG/`（不能放 `Pomelo/`：那是 buildable folder，里面的 `.swift` 会编进 app） |
 | 视图快照 | 参考图只对录制它的 macOS 大版本有效：本机和 CI 都是 macOS 15，换版本时两边一起换并整体重录、逐张看图。CI 上（15.7.9 对本机 15.7.2）能否通过、`Snapshot review` 检查和标签流程，都要 push 到 GitHub 后才能验证 |
 | 结构调整后的 Developer ID 重签 | 重签逻辑和调整前相同，entitlements 改从 Xcode 签好的 app 里取；只验证了 ad-hoc 路径 |
 | 漏写 `bundle: .module` 不会报错 | 已写进 AGENTS.md 的规则 |

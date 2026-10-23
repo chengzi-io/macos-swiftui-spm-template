@@ -15,7 +15,7 @@ background never has text: it is one image for every language, and the arrow nee
 It is written for apps made from macos-swiftui-spm-template:
 
 - `Configs/Identity.xcconfig` sets `APP_NAME` and `APP_DISPLAY_NAME` as plain
-  `KEY = value` lines; `App/AppIcon.icon` is the app icon.
+  `KEY = value` lines; `Pomelo/AppIcon.icon` is the app icon.
 - `make app` builds the debug app at `.build/xcode/Build/Products/Debug/$APP_NAME.app`,
   with `Contents/Resources/AppIcon.icns`.
 - `scripts/make-dmg.sh <app> <dmg>` makes the unsigned DMG and `scripts/package-dmg.sh`
@@ -99,7 +99,7 @@ Show the user the screenshot. Unless they already said which level they want, as
 
 ## 3. Read the brand
 
-The brand is the app icon. Take the colors from `App/AppIcon.icon/icon.json` (the
+The brand is the app icon. Take the colors from `Pomelo/AppIcon.icon/icon.json` (the
 `fill`) and its layers in `Assets/`, and look at the icon in `.build/dmg/dmg.png`. Pick
 the motif: a shape from the icon that still reads at 30–60 pt.
 

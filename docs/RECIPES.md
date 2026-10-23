@@ -130,7 +130,7 @@ struct LaunchAtLoginToggle: View {
 Keep the binding's `set:` a closure: passing the method `setEnabled` itself crashes the
 Swift 6.2.3 compiler. Add `Launch at login`, `Turned off in System Settings.` and
 `Open Login Items…` to `Features/Settings/Resources/Localizable.xcstrings` in `en` and
-`zh-Hans`. `App/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under
+`zh-Hans`. `Pomelo/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under
 `UI_TESTING=1`) and `AppModel` hands it to `SettingsView`. Check it with the installed
 app in `/Applications` rather than a debug build.
 
@@ -521,7 +521,7 @@ Either way, ask for consent where your privacy policy requires it.
 - Tokens and passwords: Keychain through `SecItemAdd` / `SecItemCopyMatching` in a
   small service. Ad-hoc builds change signature on every update, so the keychain may
   ask the user to allow access again (see docs/RELEASING.md, 4a).
-- Structured data: SwiftData. `App/MainApp.swift` builds the `ModelContainer` (an
+- Structured data: SwiftData. `Pomelo/MainApp.swift` builds the `ModelContainer` (an
   in-memory one under `UI_TESTING=1`) and hands it to `AppScenes`, which sets
   `.modelContainer(...)` on the scene. The store lives in the sandbox container under Application Support.
 - Plain files: `URL.applicationSupportDirectory`, which resolves inside
@@ -529,7 +529,7 @@ Either way, ask for consent where your privacy policy requires it.
 
 ## Privacy manifest
 
-`App/PrivacyInfo.xcprivacy` ships in every build and declares UserDefaults
+`Pomelo/PrivacyInfo.xcprivacy` ships in every build and declares UserDefaults
 (`CA92.1`: the app reads its own defaults). Add an entry when code or an SDK uses
 another required-reason API (file timestamps, disk space, system boot time, active
 keyboards) or collects data. The App Store checks it; Developer ID builds carry it

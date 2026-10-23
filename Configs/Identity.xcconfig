@@ -2,9 +2,9 @@
 // scripts/common.sh reads these lines as plain KEY = value: no quotes, no $(...)
 // references, and no "//" inside a value (xcconfig starts a comment there).
 
-APP_NAME = SwiftUITemplate
-APP_DISPLAY_NAME = SwiftUI Template
-BUNDLE_ID = io.chengzi.SwiftUITemplate
+APP_NAME = Pomelo
+APP_DISPLAY_NAME = Pomelo
+BUNDLE_ID = io.chengzi.Pomelo
 APP_CATEGORY = public.app-category.developer-tools
 COPYRIGHT = Copyright © 2026 ChengZi
 

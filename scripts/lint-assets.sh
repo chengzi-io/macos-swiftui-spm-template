@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Compiles App/Assets.xcassets and App/AppIcon.icon with actool and fails on any
+# Compiles Pomelo/Assets.xcassets and Pomelo/AppIcon.icon with actool and fails on any
 # warning. When a layer's image is missing, actool only warns, and Xcode's build
 # passes with the icon from an earlier build still in the app.
 
@@ -12,7 +12,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 # Absolute paths: actool hands the work to a long-lived ibtoold, which resolves relative
 # paths against its own working directory, possibly another checkout.
-xcrun actool "$ROOT/App/Assets.xcassets" "$ROOT/App/AppIcon.icon" \
+xcrun actool "$ROOT/Pomelo/Assets.xcassets" "$ROOT/Pomelo/AppIcon.icon" \
     --compile "$tmp" \
     --platform macosx \
     --minimum-deployment-target "$min_macos" \

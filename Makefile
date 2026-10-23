@@ -6,7 +6,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 PACKAGE := Packages/AppModules
-SWIFT_PATHS := App AppUITests $(PACKAGE)/Package.swift $(PACKAGE)/Sources $(PACKAGE)/Tests
+SWIFT_PATHS := Pomelo PomeloUITests $(PACKAGE)/Package.swift $(PACKAGE)/Sources $(PACKAGE)/Tests
 BUNDLE_ID := $(shell sed -nE 's/^BUNDLE_ID[[:space:]]*=[[:space:]]*//p' Configs/Identity.xcconfig)
 
 .PHONY: help
@@ -51,8 +51,8 @@ snapshots: ## Record new and changed view snapshots in __Snapshots__/ (review th
 # `make test` and `make ci`; GitHub CI runs them.
 .PHONY: test\:ui
 test\:ui: ## Run the UI tests; they take over the mouse and keyboard while they run
-	xcodebuild test -quiet -project App.xcodeproj -scheme App -derivedDataPath .build/xcode \
-		-destination "platform=macOS,arch=$$(uname -m)" -only-testing:AppUITests
+	xcodebuild test -quiet -project Pomelo.xcodeproj -scheme Pomelo -derivedDataPath .build/xcode \
+		-destination "platform=macOS,arch=$$(uname -m)" -only-testing:PomeloUITests
 
 .PHONY: fmt
 fmt: ## Format Swift sources in place

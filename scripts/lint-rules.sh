@@ -6,7 +6,7 @@
 
 source "$(dirname "$0")/common.sh"
 
-swift_paths=(App AppUITests "$PACKAGE_DIR/Sources" "$PACKAGE_DIR/Tests")
+swift_paths=(Pomelo PomeloUITests "$PACKAGE_DIR/Sources" "$PACKAGE_DIR/Tests")
 status=0
 
 # check <message> <extended regex> <paths...>: reports every matching line.

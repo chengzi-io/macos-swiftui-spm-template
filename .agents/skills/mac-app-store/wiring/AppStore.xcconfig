@@ -1,6 +1,6 @@
-// AppStore target: the App target's settings for the App Store build, which carries no
-// Sparkle (the App Store updates the app). scripts/build-app.sh mas archives it and
-// signs it for the App Store.
+// AppStore target: the Pomelo target's settings for the App Store build, which
+// carries no Sparkle (the App Store updates the app). scripts/build-app.sh mas
+// archives it and signs it for the App Store.
 
 #include "App.xcconfig"
 

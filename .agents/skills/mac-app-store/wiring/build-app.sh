@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds $APP_NAME.app from App.xcodeproj.
+# Builds $APP_NAME.app from Pomelo.xcodeproj.
 #   debug   → $DEBUG_APP, ad-hoc signed, debugger can attach
 #   release → dist/$APP_NAME.app, universal; Developer ID + hardened runtime, or ad-hoc
 #   mas     → dist/mas/$APP_NAME.app, universal, no Sparkle; Apple Distribution signed
@@ -11,7 +11,7 @@ source "$(dirname "$0")/common.sh"
 
 xcodebuild_args=(
     -quiet
-    -project App.xcodeproj
+    -project Pomelo.xcodeproj
     -derivedDataPath "$DERIVED_DATA"
     MARKETING_VERSION="$VERSION"
     CURRENT_PROJECT_VERSION="$BUILD_NUMBER"
@@ -21,7 +21,7 @@ config=${1:-}
 case $config in
     debug)
         log "xcodebuild Debug ($VERSION build $BUILD_NUMBER)"
-        xcodebuild build "${xcodebuild_args[@]}" -scheme App -configuration Debug \
+        xcodebuild build "${xcodebuild_args[@]}" -scheme Pomelo -configuration Debug \
             -destination "platform=macOS,arch=$(uname -m)"
         codesign --verify --deep --strict "$DEBUG_APP"
         echo "$DEBUG_APP"
@@ -30,7 +30,7 @@ case $config in
     release)
         [[ -n ${GITHUB_REPOSITORY:-} && -n ${SPARKLE_PUBLIC_KEY:-} ]] ||
             die "release builds need GITHUB_REPOSITORY in Configs/Identity.xcconfig and SUPublicEDKey in Configs/Info.plist (see make sparkle-keys)"
-        scheme=App
+        scheme=Pomelo
         archive=$ARCHIVE
         app=$RELEASE_APP
         identity=$(signing_identity)
