@@ -1,9 +1,12 @@
 # AGENTS.md
 
-macOS SwiftUI app. A thin Xcode project (`Pomelo.xcodeproj`) builds, signs and packages
+macOS SwiftUI app. A thin Xcode project (`<App>.xcodeproj`) builds, signs and packages
 the app; all code lives in the local Swift package `Packages/AppModules`; `scripts/`
-ships it. Setup and the layout live in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md), the
-commands in `make help`; this file is the rules of engagement.
+ships it. `<App>` stands for the app's name (`APP_NAME`): the project, its app target
+and scheme, and the folders `<App>/` and `<App>UITests/` carry it, and
+`scripts/rename.sh <Name>` renames them together. Setup and the layout live in
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md), the commands in `make help`; this file is
+the rules of engagement.
 
 <!-- template-only:start -->
 ## Before init
@@ -42,10 +45,10 @@ On macOS 15 it does not launch; the make targets do all of it but previews.
 ## Where things go
 
 ```text
-Pomelo/                       @main, the composition root: builds the live services
+<App>/                        @main, the composition root: builds the live services
                               (mocks under UI_TESTING=1) and hands them to AppRoot.
                               Plus the app delegate, assets, AppIcon.icon. No views.
-PomeloUITests/                XCUITest, a few critical flows; launches with UI_TESTING=1
+<App>UITests/                 XCUITest, a few critical flows; launches with UI_TESTING=1
 Configs/Identity.xcconfig     app identity (name, bundle id, team, repository): only here
 Configs/*.xcconfig            build settings; Info.plist and App.entitlements beside them
 Packages/AppModules/Sources/
@@ -67,11 +70,11 @@ NSEvent helpers ([RECIPES](docs/RECIPES.md#appkit-bridges)).
 Dependencies, enforced by `Package.swift`:
 
 ```text
-Pomelo ──► AppRoot ──► <Name>Feature ──► Services (and Models, DesignSystem, AppKitBridge)
+<App> ──► AppRoot ──► <Name>Feature ──► Services (and Models, DesignSystem, AppKitBridge)
  └────► ServicesLive ──► Services
 ```
 
-A feature never depends on `ServicesLive` or on another feature; only `Pomelo` knows the
+A feature never depends on `ServicesLive` or on another feature; only `<App>` knows the
 live services. `README.md` is the app's page for its users; developer docs go in
 `docs/`. Skills live in `.agents/skills/`, and `.claude/skills/` links to each one: link
 a new skill the same way.
@@ -126,15 +129,17 @@ a new skill the same way.
   Never record any other way (`SNAPSHOT_TESTING_RECORD`, deleting references), and
   never add the `snapshots-reviewed` label: that label is the user saying they compared
   the images, and the `Snapshot review` check waits for it.
-- App identity changes in `Configs/Identity.xcconfig` only.
+- App identity changes in `Configs/Identity.xcconfig` only, except the name:
+  `scripts/rename.sh <Name>` changes `APP_NAME` and the project, targets and folders
+  named after it.
 
 ## Never
 
-- add files to `project.pbxproj` by hand: `Pomelo/` and `PomeloUITests/` are buildable
+- add files to `project.pbxproj` by hand: `<App>/` and `<App>UITests/` are buildable
   folders that pick up new files; put build settings in `Configs/*.xcconfig`, not the
   project
 - add the package with Xcode's "Add Local…": Xcode builds that reference with
-  `-suppress-warnings`, which breaks the build; `Pomelo.xcodeproj` references the
+  `-suppress-warnings`, which breaks the build; `<App>.xcodeproj` references the
   package folder
 - add Tuist or XcodeGen
 - ship or test against `swift build` output; only `make app` and `make release` produce
@@ -161,11 +166,11 @@ a new skill the same way.
    `en` and `zh-Hans`.
 4. Work outside the process gets a service: protocol and mock in `Services`, live
    implementation in `ServicesLive` ([RECIPES](docs/RECIPES.md#networking) has one).
-   `Pomelo/MainApp.swift` builds the live one and the mock under `UI_TESTING=1`, and
+   `<App>/MainApp.swift` builds the live one and the mock under `UI_TESTING=1`, and
    passes it through `AppModel`.
 5. `AppModel` owns the feature's model; `AppScenes` shows its view.
 6. Test the model in `Tests/Features/<Name>Tests/` with mocks, and snapshot its view. A
-   flow worth guarding end to end gets an XCUITest in `PomeloUITests/`.
+   flow worth guarding end to end gets an XCUITest in `<App>UITests/`.
 7. New capability (network, files, camera…)? Add the entitlement to
    `Configs/App.entitlements` and its usage description as
    `INFOPLIST_KEY_NS…UsageDescription` in `Configs/App.xcconfig`.

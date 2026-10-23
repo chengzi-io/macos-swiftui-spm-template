@@ -6,7 +6,12 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 PACKAGE := Packages/AppModules
-SWIFT_PATHS := Pomelo PomeloUITests $(PACKAGE)/Package.swift $(PACKAGE)/Sources $(PACKAGE)/Tests
+# The app's Xcode project names the app target, its scheme and its source folder.
+APP_TARGET := $(patsubst %.xcodeproj/project.pbxproj,%,$(wildcard *.xcodeproj/project.pbxproj))
+ifneq ($(words $(APP_TARGET)),1)
+$(error expected one Xcode project at the repository root, found: $(APP_TARGET))
+endif
+SWIFT_PATHS := $(APP_TARGET) $(APP_TARGET)UITests $(PACKAGE)/Package.swift $(PACKAGE)/Sources $(PACKAGE)/Tests
 BUNDLE_ID := $(shell sed -nE 's/^BUNDLE_ID[[:space:]]*=[[:space:]]*//p' Configs/Identity.xcconfig)
 
 .PHONY: help
@@ -51,8 +56,9 @@ snapshots: ## Record new and changed view snapshots in __Snapshots__/ (review th
 # `make test` and `make ci`; GitHub CI runs them.
 .PHONY: test\:ui
 test\:ui: ## Run the UI tests; they take over the mouse and keyboard while they run
-	xcodebuild test -quiet -project Pomelo.xcodeproj -scheme Pomelo -derivedDataPath .build/xcode \
-		-destination "platform=macOS,arch=$$(uname -m)" -only-testing:PomeloUITests
+	xcodebuild test -quiet -project $(APP_TARGET).xcodeproj -scheme $(APP_TARGET) \
+		-derivedDataPath .build/xcode -destination "platform=macOS,arch=$$(uname -m)" \
+		-only-testing:$(APP_TARGET)UITests
 
 .PHONY: fmt
 fmt: ## Format Swift sources in place

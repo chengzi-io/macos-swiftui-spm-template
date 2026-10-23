@@ -1,22 +1,22 @@
 ---
 name: app-icon
-description: Create this app's icon (Pomelo/AppIcon.icon, Icon Composer layers with Liquid Glass) from the user's logo or image, as drawn SVG layers, or through an image-model prompt. Renders every appearance and sets it beside installed apps. Use when the user asks for an app icon or a logo.
+description: Create this app's icon (<App>/AppIcon.icon, Icon Composer layers with Liquid Glass) from the user's logo or image, as drawn SVG layers, or through an image-model prompt. Renders every appearance and sets it beside installed apps. Use when the user asks for an app icon or a logo.
 ---
 
 # App icon
 
 The icon has to hold up next to the best icons in the user's Dock, in every appearance
 and at 32 pt. A weak icon is worse than the template's, so nothing replaces
-`Pomelo/AppIcon.icon` until the user has seen the draft beside other apps and approved
+`<App>/AppIcon.icon` until the user has seen the draft beside other apps and approved
 it.
 
 ## What this skill expects from the project
 
 It is written for apps made from macos-swiftui-spm-template:
 
-- The icon is `Pomelo/AppIcon.icon`; `make lint` (`scripts/lint-assets.sh`) compiles it
-  with actool and fails on its warnings, and `make ci` lints, builds and smoke-tests
-  the app.
+- The icon is `<App>/AppIcon.icon`, where `<App>` is the app's name, as in
+  `<App>.xcodeproj`. `make lint` (`scripts/lint-assets.sh`) compiles it with actool and
+  fails on its warnings, and `make ci` lints, builds and smoke-tests the app.
 - `README.md` and `Configs/Identity.xcconfig` say what the app does and what it is
   called.
 - Xcode 26 is selected, with Icon Composer: its `ictool` renders the checks.
@@ -45,7 +45,7 @@ AppIcon.icon/
 
 Everything Icon Composer sets lives in `icon.json`; write it directly. `C` is a color
 string: `"srgb:1.00000,0.67059,0.20000,1.00000"` (r, g, b, alpha), `display-p3:…`, or
-`gray:1.00000,1.00000` (white, alpha). The current `Pomelo/AppIcon.icon` is a working
+`gray:1.00000,1.00000` (white, alpha). The current `<App>/AppIcon.icon` is a working
 example.
 
 | Where | Property | Value | Effect |
@@ -81,7 +81,7 @@ Icon Composer).
 
 ## 1. Start
 
-Read `README.md`, `Configs/Identity.xcconfig` and the current `Pomelo/AppIcon.icon`. Then ask the
+Read `README.md`, `Configs/Identity.xcconfig` and the current `<App>/AppIcon.icon`. Then ask the
 user, in one message, only for what is still missing:
 
 - what the app does and for whom, in one sentence;
@@ -140,7 +140,7 @@ Show the sheet. The user picks one or two, or asks for another round.
 ## 4. Draw
 
 Build the pick as layers in `.build/app-icon/<letter>.icon` (start from a copy of
-`Pomelo/AppIcon.icon`), in two or three variants of color and depth.
+`<App>/AppIcon.icon`), in two or three variants of color and depth.
 
 - Construct it: circles, arcs, rounded rectangles, one stroke width and one corner
   radius throughout. Center it optically, a touch above the geometric center.
@@ -203,12 +203,12 @@ Look at both sheets after every change, and fix before showing the user:
 
 Show the user both sheets of each variant. They pick, ask for changes, or reject. After
 two rounds without a pick, stop and say so: suggest the image-model path (5) if it was
-not tried, or a designer. Never put a draft the user has not approved into `Pomelo/`.
+not tried, or a designer. Never put a draft the user has not approved into `<App>/`.
 
 ## 8. Finish
 
-1. Replace `Pomelo/AppIcon.icon` with the approved draft, old layer files included.
+1. Replace `<App>/AppIcon.icon` with the approved draft, old layer files included.
 2. `make ci`.
 3. Tell the user that Icon Composer (Xcode › Open Developer Tool) edits the same file, if
    they want to tune it by hand; run `check-icon.sh` again after they save.
-4. Commit `Pomelo/AppIcon.icon`, for example `feat(icon): add the app icon`.
+4. Commit `<App>/AppIcon.icon`, for example `feat(icon): add the app icon`.

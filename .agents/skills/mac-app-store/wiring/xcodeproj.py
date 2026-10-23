@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Edits Pomelo.xcodeproj for the mac-app-store skill, so no one edits project.pbxproj by hand.
+"""Edits <App>.xcodeproj for the mac-app-store skill, so no one edits project.pbxproj by hand.
 
   xcodeproj.py link <target> <product>...
       Makes <target> link exactly these products of Packages/AppModules.
   xcodeproj.py add-app-store-target <product>...
-      Adds the AppStore target (the Pomelo target's buildable folders and
+      Adds the AppStore target (the <App> target's buildable folders and
       Configs/AppStore.xcconfig) linking these products, and its shared scheme.
 
 Runs from anywhere inside the project. Fails, changing nothing, when the project is not
@@ -19,8 +19,9 @@ import uuid
 from pathlib import Path
 
 PACKAGE = "Packages/AppModules"
-PROJECT = "Pomelo.xcodeproj"
-APP_TARGET = "Pomelo"
+# main sets them from the one <App>.xcodeproj at the root; the app target is <App>.
+PROJECT = None
+APP_TARGET = None
 
 
 def die(message):
@@ -294,10 +295,14 @@ def add_app_store_target(project, base, products, available):
 def main():
     if len(sys.argv) < 3 or sys.argv[1] not in ("link", "add-app-store-target"):
         die(__doc__.split("\n\n")[1].strip())
+    global PROJECT, APP_TARGET
     base = root()
+    projects = sorted(p.parent.name for p in base.glob("*.xcodeproj/project.pbxproj"))
+    if len(projects) != 1:
+        die(f"expected one Xcode project at {base}, found: {', '.join(projects) or 'none'}")
+    PROJECT = projects[0]
+    APP_TARGET = PROJECT[: -len(".xcodeproj")]
     pbxproj = base / PROJECT / "project.pbxproj"
-    if not pbxproj.is_file():
-        die(f"no {pbxproj}")
     project = Project(pbxproj)
     available = package_products(base)
     if sys.argv[1] == "link":

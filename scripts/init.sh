@@ -51,6 +51,9 @@ for value in "$display_name" "$holder" "$codeowner"; do
 done
 year=$(date +%Y)
 
+# First, while the tree is clean, as rename.sh requires.
+[[ $name == "$APP_TARGET" ]] || "$ROOT/scripts/rename.sh" "$name"
+
 log "app identity: $name ($bundle_id), releases from $repo"
 set_identity() { sed -i '' -E -e "s|^$1[[:space:]]*=.*|$1 = $2|" -e 's/[[:space:]]+$//' Configs/Identity.xcconfig; }
 set_identity APP_NAME "$name"
@@ -124,7 +127,7 @@ rm -f docs/TEMPLATE-PLAN.md docs/ACCEPTANCE.md "$ROOT/scripts/init.sh"
 
 cat >&2 <<EOF
 
-Done. Review with \`git diff\`, then commit, for example:
+Done. Review with \`git diff HEAD\` (renames are staged), then commit, for example:
   git add -A && git commit -m "chore: initialize $name from template"
 
 Next:
@@ -132,7 +135,7 @@ Next:
      (look at the images in Packages/AppModules/Tests/**/__Snapshots__ and commit
      them), then make ci and make run
   2. Replace the Greeting demo (Packages/AppModules/Sources/Features/Greeting) and the
-     icon (Pomelo/AppIcon.icon in Icon Composer, or the app-icon skill in
+     icon ($name/AppIcon.icon in Icon Composer, or the app-icon skill in
      .agents/skills/app-icon), and say what the app does at the top of README.md.
   3. One-time release setup: docs/RELEASING.md (make github-setup, GitHub App,
      make sparkle-keys, optional Developer ID).

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds $APP_NAME.app from Pomelo.xcodeproj.
+# Builds $APP_NAME.app from $APP_TARGET.xcodeproj.
 #   debug   → $DEBUG_APP, ad-hoc signed, debugger can attach
 #   release → dist/$APP_NAME.app, universal; Developer ID + hardened runtime, or ad-hoc
 # Prints the .app path on stdout. version.txt and the commit count become the
@@ -9,8 +9,8 @@ source "$(dirname "$0")/common.sh"
 
 xcodebuild_args=(
     -quiet
-    -project Pomelo.xcodeproj
-    -scheme Pomelo
+    -project "$APP_TARGET.xcodeproj"
+    -scheme "$APP_TARGET"
     -derivedDataPath "$DERIVED_DATA"
     MARKETING_VERSION="$VERSION"
     CURRENT_PROJECT_VERSION="$BUILD_NUMBER"

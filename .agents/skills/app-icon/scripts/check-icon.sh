@@ -8,7 +8,8 @@
 # Fails on property names this Xcode ignores (lint-icon.swift) and on anything actool
 # rejects or warns about, as the app build does.
 # Runs from anywhere inside the project; paths are relative to its root.
-#   check-icon.sh [path.icon] [app ...]    default apps: Safari, Notes, Photos, App Store
+#   check-icon.sh [path.icon] [app ...]    default icon: <App>/AppIcon.icon, beside
+#       <App>.xcodeproj; default apps: Safari, Notes, Photos, App Store
 set -euo pipefail
 
 die() {
@@ -18,7 +19,13 @@ die() {
 
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$(git rev-parse --show-toplevel)"
-icon=${1:-Pomelo/AppIcon.icon}
+if [[ $# -gt 0 ]]; then
+    icon=$1
+else
+    projects=(*.xcodeproj/project.pbxproj)
+    [[ ${#projects[@]} -eq 1 && -f ${projects[0]} ]] || die "no single Xcode project here; pass the .icon path"
+    icon=${projects[0]%.xcodeproj/project.pbxproj}/AppIcon.icon
+fi
 [[ -f $icon/icon.json ]] || die "no icon.json in $icon"
 if [[ $# -gt 1 ]]; then
     shift

@@ -35,6 +35,15 @@ log() {
     echo "==> $*" >&2
 }
 
+# The app's Xcode project names the app target, its scheme and its source folder:
+# <App>.xcodeproj, <App>/, <App>UITests/ (scripts/rename.sh renames them together).
+# Only a folder with a project.pbxproj counts: Xcode can leave its window state behind
+# in an old project path.
+projects=(*.xcodeproj/project.pbxproj)
+[[ ${#projects[@]} -eq 1 && -f ${projects[0]} ]] ||
+    die "expected one Xcode project at the repository root, found: ${projects[*]}"
+APP_TARGET=${projects[0]%.xcodeproj/project.pbxproj}
+
 # Sets SUPublicEDKey in Configs/Info.plist in place, keeping the file's formatting
 # (plutil and PlistBuddy rewrite it with tabs).
 set_sparkle_public_key() {

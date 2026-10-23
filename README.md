@@ -20,9 +20,10 @@ flowchart TB
 
 ## What you get
 
-- A thin `Pomelo.xcodeproj`: the app target (`@main`, assets, icon) and a UI test
-  target, both buildable folders, with every build setting in `Configs/*.xcconfig`.
-  Agents add files without touching the project file.
+- A thin Xcode project named after the app (`Pomelo.xcodeproj` in the template): the
+  app target (`@main`, assets, icon) and a UI test target, both buildable folders, with
+  every build setting in `Configs/*.xcconfig`. Agents add files without touching the
+  project file; `scripts/rename.sh` renames the app, the project and its folders.
 - All code in the local package `Packages/AppModules`, one target per layer: `AppRoot`,
   a target per feature, `Services` (protocols and mocks) and `ServicesLive` (system
   APIs, network, Sparkle). The compiler keeps features away from live services.
@@ -71,9 +72,11 @@ make snapshots   # record the demo's view snapshots on this Mac; look at them, c
 make run         # build and launch the debug app
 ```
 
-`scripts/init.sh` writes the app identity into `Configs/Identity.xcconfig`, points releases and
-updates at your repository, runs CI on your Mac's macOS version and drops the demo's view
-snapshots (they hold the template Mac's controls), resets the version to `0.0.0`, updates LICENSE, CODEOWNERS
+`scripts/init.sh` writes the app identity into `Configs/Identity.xcconfig`, names the
+Xcode project, its targets and the source folders after the app (`scripts/rename.sh`,
+which stays for later renames), points releases and updates at your repository, runs
+CI on your Mac's macOS version and drops the demo's view snapshots (they hold the
+template Mac's controls), resets the version to `0.0.0`, updates LICENSE, CODEOWNERS
 and the issue templates, and replaces this README with a short page for your app's
 users. It removes the template's own planning docs, then itself.
 

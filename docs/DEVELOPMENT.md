@@ -19,7 +19,7 @@ make run     # build and launch the debug app
 ```mermaid
 flowchart LR
     pkg["Packages/AppModules<br/>all code, string catalogs,<br/>unit tests"] --> xb
-    shell["Pomelo.xcodeproj + Pomelo/<br/>@main, assets, AppIcon.icon"] --> xb
+    shell["Xcode project + app folder<br/>@main, assets, AppIcon.icon"] --> xb
     cfg["Configs/<br/>Identity.xcconfig, build settings,<br/>Info.plist, entitlements"] --> xb
     xb["xcodebuild<br/>compile, embed Sparkle,<br/>compile icon, sign"] --> app[".app"] --> smoke["scripts/smoke.sh<br/>check, launch"]
     pkg --> st["swift test<br/>unit tests, seconds"]
@@ -58,11 +58,15 @@ Try the Chinese UI with `make run ARGS="-AppleLanguages '(zh-Hans)'"`.
 
 ## Layout
 
+`<App>` is the app's name (`APP_NAME`). `scripts/rename.sh <Name>` renames the app,
+the Xcode project, its targets, the scheme and the folders together; the bundle
+identifier stays.
+
 ```text
-Pomelo.xcodeproj/          the shell: Pomelo and PomeloUITests targets, shared Pomelo scheme
-Pomelo/                    @main (composition root), app delegate, assets, AppIcon.icon,
+<App>.xcodeproj/           the shell: <App> and <App>UITests targets, shared <App> scheme
+<App>/                     @main (composition root), app delegate, assets, AppIcon.icon,
                            privacy manifest
-PomeloUITests/             XCUITest: a few critical flows
+<App>UITests/              XCUITest: a few critical flows
 Configs/                   Identity.xcconfig (app identity), build settings, Info.plist,
                            entitlements
 Packages/AppModules/       the local Swift package with all the code
@@ -82,7 +86,7 @@ Where code goes and the rules it follows: [AGENTS.md](../AGENTS.md).
 
 ## Editors
 
-- Xcode: `xed Pomelo.xcodeproj`. Its Run button builds and launches the real `.app`
+- Xcode: `xed <App>.xcodeproj`. Its Run button builds and launches the real `.app`
   (bundle identifier, sandbox, Info.plist), with the debugger attached. Previews run
   in the package targets.
 - VS Code / Cursor: the Swift extension (sourcekit-lsp) works on
