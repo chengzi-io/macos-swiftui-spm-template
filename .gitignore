@@ -3,6 +3,9 @@
 .swiftpm/
 dist/
 
+# Xcode per-user state
+xcuserdata/
+
 # Signing keys and secrets; the one-time release setup exports some of them here
 *.p12
 *.p8

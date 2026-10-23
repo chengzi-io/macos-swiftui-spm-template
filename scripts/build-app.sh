@@ -1,131 +1,61 @@
 #!/usr/bin/env bash
-# Builds $APP_NAME.app from the Swift package.
-#   debug   → .build/app/Debug/$APP_NAME.app, ad-hoc signed, debugger can attach
+# Builds $APP_NAME.app from App.xcodeproj.
+#   debug   → $DEBUG_APP, ad-hoc signed, debugger can attach
 #   release → dist/$APP_NAME.app, universal; Developer ID + hardened runtime, or ad-hoc
-# Prints the .app path on stdout.
-#
-# `swift build` output is not shippable: it copies .xcassets/.xcstrings raw and its
-# Bundle.module looks outside Contents/Resources. xcodebuild compiles resources and
-# generates an accessor that reads Bundle.main.resourceURL.
+# Prints the .app path on stdout. version.txt and the commit count become the
+# version; Xcode's own builds keep the placeholders in Configs/App.xcconfig.
 
 source "$(dirname "$0")/common.sh"
 
-derived_data=.build/xcode
-config=${1:-}
-case "$config" in
+xcodebuild_args=(
+    -quiet
+    -project App.xcodeproj
+    -scheme App
+    -derivedDataPath "$DERIVED_DATA"
+    MARKETING_VERSION="$VERSION"
+    CURRENT_PROJECT_VERSION="$BUILD_NUMBER"
+)
+
+case ${1:-} in
     debug)
-        xc_config=Debug
-        app=$DEBUG_APP
-        build_args=(-destination "platform=macOS,arch=$(uname -m)")
+        log "xcodebuild Debug ($VERSION build $BUILD_NUMBER)"
+        xcodebuild build "${xcodebuild_args[@]}" -configuration Debug \
+            -destination "platform=macOS,arch=$(uname -m)"
+        codesign --verify --deep --strict "$DEBUG_APP"
+        echo "$DEBUG_APP"
+        exit 0
         ;;
-    release)
-        xc_config=Release
-        app=$RELEASE_APP
-        build_args=(-destination 'generic/platform=macOS' ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO)
-        ;;
+    release) ;;
     *) die "usage: build-app.sh debug|release" ;;
 esac
 
+[[ -n ${GITHUB_REPOSITORY:-} && -n ${SPARKLE_PUBLIC_KEY:-} ]] ||
+    die "release builds need GITHUB_REPOSITORY in Configs/Identity.xcconfig and SUPublicEDKey in Configs/Info.plist (see make sparkle-keys)"
+
+log "xcodebuild archive Release ($VERSION build $BUILD_NUMBER)"
+rm -rf "$ARCHIVE"
+xcodebuild archive "${xcodebuild_args[@]}" -configuration Release \
+    -destination 'generic/platform=macOS' -archivePath "$ARCHIVE"
+
+app=$RELEASE_APP
+rm -rf "$app"
+mkdir -p "$(dirname "$app")"
+ditto "$ARCHIVE/Products/Applications/$APP_NAME.app" "$app"
+
+# Xcode signs ad-hoc. Re-sign with the release identity, keeping the entitlements
+# Xcode resolved from Configs/App.entitlements.
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-
-min_macos=$(swift package dump-package | jq -r '.platforms[] | select(.platformName == "macos") | .version')
-[[ -n "$min_macos" ]] || die "Package.swift declares no macOS platform"
-
-log "xcodebuild $config"
-xcodebuild build -quiet -scheme App -configuration "$xc_config" -derivedDataPath "$derived_data" "${build_args[@]}"
-products="$derived_data/Build/Products/$xc_config"
-
-log "assemble $app"
-rm -rf "$app"
-mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-ditto "$products/App" "$app/Contents/MacOS/$APP_NAME"
-shopt -s nullglob
-for bundle in "$products"/*.bundle; do
-    ditto "$bundle" "$app/Contents/Resources/$(basename "$bundle")"
-done
-frameworks=("$products"/*.framework "$products"/PackageFrameworks/*.framework)
-for framework in ${frameworks[@]+"${frameworks[@]}"}; do
-    ditto "$framework" "$app/Contents/Frameworks/$(basename "$framework")"
-done
-shopt -u nullglob
-ditto Bundle/PrivacyInfo.xcprivacy "$app/Contents/Resources/PrivacyInfo.xcprivacy"
-
-# AppIcon.icon (Icon Composer) becomes Liquid Glass on macOS 26; actool also bakes
-# flattened images for older systems into Assets.car, plus AppIcon.icns.
-# Absolute paths: actool hands the work to a long-lived ibtoold, which resolves relative
-# paths against its own working directory, possibly another checkout.
-log "compile Bundle/Assets.xcassets and Bundle/AppIcon.icon"
-xcrun actool "$ROOT/Bundle/Assets.xcassets" "$ROOT/Bundle/AppIcon.icon" \
-    --compile "$ROOT/$app/Contents/Resources" \
-    --platform macosx \
-    --minimum-deployment-target "$min_macos" \
-    --app-icon AppIcon \
-    --accent-color AccentColor \
-    --output-partial-info-plist "$tmp/assets.plist" \
-    --errors --warnings \
-    --output-format human-readable-text >"$tmp/actool.log" 2>&1 || {
-    cat "$tmp/actool.log" >&2
-    die "actool failed"
-}
-# A layer whose image is missing is only a warning; actool exits 0 without the icon.
-if grep -q 'warning:' "$tmp/actool.log"; then
-    cat "$tmp/actool.log" >&2
-    die "actool warned"
-fi
-
-log "write Info.plist ($VERSION build $BUILD_NUMBER)"
-plist="$app/Contents/Info.plist"
-cp Bundle/Info.plist "$plist"
-set_string() { plutil -replace "$1" -string "$2" "$plist"; }
-set_string CFBundleExecutable "$APP_NAME"
-set_string CFBundleIdentifier "$BUNDLE_ID"
-set_string CFBundleName "$APP_NAME"
-set_string CFBundleDisplayName "$APP_DISPLAY_NAME"
-set_string CFBundleShortVersionString "$VERSION"
-set_string CFBundleVersion "$BUILD_NUMBER"
-set_string LSMinimumSystemVersion "$min_macos"
-set_string LSApplicationCategoryType "$APP_CATEGORY"
-set_string NSHumanReadableCopyright "$COPYRIGHT"
-/usr/libexec/PlistBuddy -c "Merge $tmp/assets.plist" "$plist" >/dev/null
-
 entitlements="$tmp/app.entitlements"
-cp Bundle/App.entitlements "$entitlements"
+codesign -d --entitlements - --xml "$app" >"$entitlements"
 
-sparkle="$app/Contents/Frameworks/Sparkle.framework"
-if [[ -d $sparkle ]]; then
-    # Sandboxed Sparkle installs through its Installer XPC service (sparkle-project.org/documentation/sandboxing).
-    /usr/libexec/PlistBuddy -c "Add :SUEnableInstallerLauncherService bool true" "$plist"
-    /usr/libexec/PlistBuddy \
-        -c "Add :com.apple.security.temporary-exception.mach-lookup.global-name array" \
-        -c "Add :com.apple.security.temporary-exception.mach-lookup.global-name:0 string $BUNDLE_ID-spks" \
-        -c "Add :com.apple.security.temporary-exception.mach-lookup.global-name:1 string $BUNDLE_ID-spki" \
-        "$entitlements"
-    if [[ $config == release ]]; then
-        [[ -n ${RELEASES_URL:-} && -n ${SPARKLE_PUBLIC_KEY:-} ]] ||
-            die "release builds need RELEASES_URL and SPARKLE_PUBLIC_KEY in Bundle/app.env (see make sparkle-keys)"
-        set_string SUFeedURL "$RELEASES_URL/latest/download/appcast.xml"
-        set_string SUPublicEDKey "$SPARKLE_PUBLIC_KEY"
-    fi
+identity=$(signing_identity)
+sign_args=(--force --sign "$identity")
+# Hardened runtime exists for notarization. Its library validation needs a Team ID,
+# which ad-hoc code lacks, so an ad-hoc app would refuse its own Sparkle.framework.
+if [[ $identity != "-" ]]; then
+    sign_args+=(--options runtime --timestamp)
 fi
-plutil -lint -s "$plist"
-
-case $config in
-    debug)
-        identity="-"
-        /usr/libexec/PlistBuddy -c "Add :com.apple.security.get-task-allow bool true" "$entitlements"
-        sign_args=(--force --sign -)
-        ;;
-    release)
-        identity=$(signing_identity)
-        sign_args=(--force --sign "$identity")
-        # Hardened runtime exists for notarization. Its library validation needs a Team ID,
-        # which ad-hoc code lacks, so an ad-hoc app would refuse its own Sparkle.framework.
-        if [[ $identity != "-" ]]; then
-            sign_args+=(--options runtime --timestamp)
-        fi
-        ;;
-esac
 
 log "codesign (identity: $identity)"
 # Inside out, no --deep: nested code keeps its own entitlements.

@@ -11,8 +11,8 @@ source "$(dirname "$0")/common.sh"
 dmg="dist/$APP_NAME-$VERSION.dmg"
 [[ -f $dmg ]] || die "no DMG at $dmg; run make release-dmg first"
 
-swift package resolve >&2
-sparkle_bin=.build/artifacts/sparkle/Sparkle/bin
+swift package --package-path "$PACKAGE_DIR" resolve >&2
+sparkle_bin=$SPARKLE_BIN
 [[ -x $sparkle_bin/generate_appcast ]] || die "Sparkle tools missing at $sparkle_bin"
 
 tmp=$(mktemp -d)

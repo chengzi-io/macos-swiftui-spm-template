@@ -14,7 +14,7 @@ dmg=$(scripts/package-dmg.sh)
 scripts/verify-dmg.sh "$dmg"
 
 log "archive dSYM"
-ditto -c -k --keepParent .build/xcode/Build/Products/Release/App.dSYM "dist/$APP_NAME-$VERSION.dSYM.zip"
+ditto -c -k --keepParent "$ARCHIVE/dSYMs/$APP_NAME.app.dSYM" "dist/$APP_NAME-$VERSION.dSYM.zip"
 
 scripts/appcast.sh >/dev/null
 

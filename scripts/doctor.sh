@@ -17,6 +17,13 @@ xcode_version=$(xcodebuild -version | awk 'NR == 1 { print $2 }')
 [[ ${xcode_version%%.*} == "$xcode_major" ]] || die "Xcode $xcode_version found; this repo needs Xcode $xcode_major.x"
 ok "Xcode $xcode_version"
 
+# Coding agents build, test and render previews through Xcode with it (Xcode 26.3+).
+if xcrun --find mcpbridge >/dev/null 2>&1; then
+    ok "xcrun mcpbridge (Xcode MCP server for agents)"
+else
+    warn "no xcrun mcpbridge: agents need Xcode 26.3 or later to work through Xcode"
+fi
+
 swift format --version >/dev/null || die "swift format missing from the toolchain"
 ok "swift format $(swift format --version)"
 

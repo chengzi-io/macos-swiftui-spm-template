@@ -46,18 +46,20 @@ holder=${holder:-$owner}
 codeowner=${codeowner:-@$owner}
 for value in "$display_name" "$holder" "$codeowner"; do
     [[ $value != *[\"\$\\\`\|\&]* ]] || die "values cannot contain \" \$ \\ \` | or &: $value"
+    # Identity.xcconfig would read the rest of the line as a comment.
+    [[ $value != *//* ]] || die "values cannot contain //: $value"
 done
 year=$(date +%Y)
 
 log "app identity: $name ($bundle_id), releases from $repo"
-set_env() { sed -i '' "s|^$1=.*|$1=$2|" Bundle/app.env; }
-set_env APP_NAME "$name"
-set_env APP_DISPLAY_NAME "\"$display_name\""
-set_env BUNDLE_ID "$bundle_id"
-set_env COPYRIGHT "\"Copyright © $year $holder\""
-set_env RELEASES_URL "https://github.com/$repo/releases"
-set_env SPARKLE_PUBLIC_KEY ""
-set_env TEAM_ID ""
+set_identity() { sed -i '' -E -e "s|^$1[[:space:]]*=.*|$1 = $2|" -e 's/[[:space:]]+$//' Configs/Identity.xcconfig; }
+set_identity APP_NAME "$name"
+set_identity APP_DISPLAY_NAME "$display_name"
+set_identity BUNDLE_ID "$bundle_id"
+set_identity COPYRIGHT "Copyright © $year $holder"
+set_identity GITHUB_REPOSITORY "$repo"
+set_identity TEAM_ID ""
+set_sparkle_public_key ""
 
 log "reset version to 0.0.0"
 echo 0.0.0 >version.txt
@@ -90,7 +92,7 @@ cat >README.md <<EOF
 Download the DMG from the [latest release](https://github.com/$repo/releases/latest),
 open it and drag $name to Applications. $display_name runs on macOS 14 or later.
 
-<!-- Delete this paragraph once TEAM_ID is set in Bundle/app.env: apps signed with a
+<!-- Delete this paragraph once TEAM_ID is set in Configs/Identity.xcconfig: apps signed with a
      Developer ID open without it. -->
 macOS blocks the first launch because the app is not notarized yet: open System
 Settings → Privacy & Security and click **Open Anyway**, once.
@@ -120,7 +122,8 @@ Done. Review with \`git diff\`, then commit, for example:
 
 Next:
   1. make setup && make run
-  2. Replace the Greeter demo and the icon (Icon Composer, or the app-icon skill in
+  2. Replace the Greeting demo (Packages/AppModules/Sources/Features/Greeting) and the
+     icon (App/AppIcon.icon in Icon Composer, or the app-icon skill in
      .agents/skills/app-icon), and say what the app does at the top of README.md.
   3. One-time release setup: docs/RELEASING.md (make github-setup, GitHub App,
      make sparkle-keys, optional Developer ID).

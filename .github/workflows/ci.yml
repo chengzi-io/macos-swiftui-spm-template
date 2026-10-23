@@ -27,7 +27,13 @@ jobs:
           fetch-depth: 0
       - uses: actions/cache@v6
         with:
-          path: .build
-          key: build-${{ runner.os }}-xcode-26.2-${{ hashFiles('Package.resolved') }}
+          path: |
+            .build
+            Packages/AppModules/.build
+          key: build-${{ runner.os }}-xcode-26.2-${{ hashFiles('**/Package.resolved') }}
           restore-keys: build-${{ runner.os }}-xcode-26.2-
       - run: make ci
+      # UI tests drive the mouse and keyboard; macOS asks for an admin password the
+      # first time unless automation mode is enabled up front.
+      - run: sudo automationmodetool enable-automationmode-without-authentication
+      - run: make test:ui

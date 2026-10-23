@@ -5,12 +5,13 @@ SHELL := /bin/bash
 .SHELLFLAGS := -euo pipefail -c
 .DEFAULT_GOAL := help
 
-SWIFT_PATHS := Sources Tests Package.swift
-ENV := source Bundle/app.env
+PACKAGE := Packages/AppModules
+SWIFT_PATHS := App AppUITests $(PACKAGE)/Package.swift $(PACKAGE)/Sources $(PACKAGE)/Tests
+BUNDLE_ID := $(shell sed -nE 's/^BUNDLE_ID[[:space:]]*=[[:space:]]*//p' Configs/Identity.xcconfig)
 
 .PHONY: help
 help: ## List targets
-	@awk 'BEGIN { FS = ":.*## " } /^##@/ { printf "\n%s\n", substr($$0, 5) } /^[a-z-]+:.*## / { printf "  %-18s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@awk '/^##@/ { printf "\n%s\n", substr($$0, 5) } /^([a-z-]|\\:)+:.*## / { match($$0, /^([a-z-]|\\:)+/); target = substr($$0, 1, RLENGTH); gsub(/\\/, "", target); split($$0, parts, "## "); printf "  %-18s %s\n", target, parts[2] }' $(MAKEFILE_LIST)
 
 ##@ Setup
 
@@ -34,13 +35,16 @@ github-setup: ## One-time GitHub settings: squash only, branch protection, relea
 
 ##@ Develop
 
-.PHONY: build
-build: ## Compile with swift build (fast; not shippable)
-	swift build
-
 .PHONY: test
-test: ## Run unit tests with swift test
-	swift test
+test: ## Run the package unit tests with swift test (fast: no app, no UI)
+	swift test --package-path $(PACKAGE)
+
+# UI tests drive the real mouse and keyboard on this Mac, so they stay out of
+# `make test` and `make ci`; GitHub CI runs them.
+.PHONY: test\:ui
+test\:ui: ## Run the UI tests; they take over the mouse and keyboard while they run
+	xcodebuild test -quiet -project App.xcodeproj -scheme App -derivedDataPath .build/xcode \
+		-destination "platform=macOS,arch=$$(uname -m)" -only-testing:AppUITests
 
 .PHONY: fmt
 fmt: ## Format Swift sources in place
@@ -51,7 +55,7 @@ lint: ## Check formatting (fails on any finding)
 	swift format lint --strict --recursive --parallel $(SWIFT_PATHS)
 
 .PHONY: app
-app: ## Build the debug .app in .build/app/Debug (ad-hoc signed)
+app: ## Build the debug .app with xcodebuild (ad-hoc signed)
 	scripts/build-app.sh debug
 
 .PHONY: run
@@ -60,7 +64,7 @@ run: ## Build and run the debug .app, logs in this terminal; pass ARGS="..."
 
 .PHONY: logs
 logs: ## Stream this app's unified logs
-	@$(ENV) && log stream --level debug --predicate "subsystem == \"$$BUNDLE_ID\""
+	log stream --level debug --predicate 'subsystem == "$(BUNDLE_ID)"'
 
 .PHONY: smoke
 smoke: ## Smoke-test the debug .app (or APP=path)
@@ -69,7 +73,7 @@ smoke: ## Smoke-test the debug .app (or APP=path)
 ##@ Verify
 
 .PHONY: ci
-ci: lint test app smoke ## Everything CI runs; the definition of done
+ci: lint test app smoke ## The definition of done; CI runs this, then make test:ui
 
 ##@ Release (CI runs `make release` after release-please creates the tag)
 
@@ -90,9 +94,9 @@ release: ## Full release into dist/: app, notarization, DMG, dSYM, appcast, chec
 	scripts/release.sh
 
 .PHONY: sparkle-keys
-sparkle-keys: ## Create the Sparkle EdDSA key and write its public half to Bundle/app.env
+sparkle-keys: ## Create the Sparkle EdDSA key and write its public half to Configs/Info.plist
 	scripts/sparkle-keys.sh
 
 .PHONY: clean
 clean: ## Remove build output
-	rm -rf .build dist
+	rm -rf .build dist $(PACKAGE)/.build

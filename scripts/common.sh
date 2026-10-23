@@ -1,4 +1,5 @@
-# Sourced by scripts/*.sh. Runs from the repo root with Bundle/app.env loaded.
+# Sourced by scripts/*.sh. Runs from the repo root with the app identity
+# (Configs/Identity.xcconfig) exported.
 # macOS ships bash 3.2: no associative arrays, no mapfile, guard empty arrays.
 
 set -euo pipefail
@@ -6,15 +7,24 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$ROOT"
 
-set -a
-# shellcheck source=../Bundle/app.env
-source Bundle/app.env
-set +a
+# Identity.xcconfig is plain KEY = value lines; Xcode reads the same file.
+while IFS= read -r line; do
+    if [[ $line =~ ^([A-Z_][A-Z0-9_]*)[[:space:]]*=[[:space:]]*(.*[^[:space:]])?[[:space:]]*$ ]]; then
+        export "${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
+    fi
+done <Configs/Identity.xcconfig
+export RELEASES_URL="https://github.com/$GITHUB_REPOSITORY/releases"
+SPARKLE_PUBLIC_KEY=$(plutil -extract SUPublicEDKey raw Configs/Info.plist)
+export SPARKLE_PUBLIC_KEY
 
+PACKAGE_DIR=Packages/AppModules
+DERIVED_DATA=.build/xcode
 VERSION=$(tr -d '[:space:]' < version.txt)
 BUILD_NUMBER=$(git rev-list --count HEAD)
-DEBUG_APP=".build/app/Debug/$APP_NAME.app"
+DEBUG_APP="$DERIVED_DATA/Build/Products/Debug/$APP_NAME.app"
+ARCHIVE="$DERIVED_DATA/$APP_NAME.xcarchive"
 RELEASE_APP="dist/$APP_NAME.app"
+SPARKLE_BIN="$PACKAGE_DIR/.build/artifacts/sparkle/Sparkle/bin"
 
 die() {
     echo "error: $*" >&2
@@ -23,6 +33,13 @@ die() {
 
 log() {
     echo "==> $*" >&2
+}
+
+# Sets SUPublicEDKey in Configs/Info.plist in place, keeping the file's formatting
+# (plutil and PlistBuddy rewrite it with tabs).
+set_sparkle_public_key() {
+    sed -i '' -e '/<key>SUPublicEDKey<\/key>/{' -e 'n' -e "s|<string>.*</string>|<string>$1</string>|" -e '}' Configs/Info.plist
+    [[ $(plutil -extract SUPublicEDKey raw Configs/Info.plist) == "$1" ]] || die "could not set SUPublicEDKey in Configs/Info.plist"
 }
 
 # Prints the SHA-1 of the first valid codesigning identity for TEAM_ID whose name
