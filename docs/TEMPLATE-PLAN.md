@@ -87,6 +87,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V50 | 库的源码注释写明快照只能在录制参考图的同一系统上比对；本机 macOS 15，CI 原来是 macOS 26（Liquid Glass 控件）。GitHub 的 macos-15 镜像是 macOS 15.7.9，带 Xcode 26.2 和 26.3 | CI 和发版 job 改到 `macos-15`，快照在 CI 上照常比对；容差 `perceptualPrecision: 0.98` 吸收小版本间的抗锯齿差别，内边距改 4 pt 仍失败 |
 | V51 | NSView 策略按主屏幕的缩放出图，CI 的虚拟显示器可能是 1x；自己建 2x 的 `NSBitmapImageRep` 再 `cacheDisplay`，交给 `Snapshotting<NSImage, NSImage>`，尺寸固定。快照默认录制模式改成 `.never`（读 `SNAPSHOT_TESTING_RECORD`，缺省 never）后，删掉参考图再跑只会失败、不会补录 | 只有 `make snapshots` 录制；`.claude/settings.json` 对它和 `gh pr edit` 设 `ask`（Claude Code 文档：ask 规则在 auto 模式下也会问，但匹配时跳过命令前的环境变量赋值，所以拦不住 `SNAPSHOT_TESTING_RECORD=… swift test`，那条靠 AGENTS.md） |
 | V52 | 重录能让任何截图失败重新通过，所以快照测试只能发现界面变了，判断不了对不对 | `Snapshot review` 检查（`scripts/check-snapshot-review.sh`）：PR 改了 `__Snapshots__/` 就失败，直到有 `snapshots-reviewed` 标签；之后再推改动截图的提交会摘掉标签。分支保护把它列为必过检查 |
+| V53 | 参考图是模板作者那台 Mac 的控件样子；别的 macOS 大版本初始化后，第一次 `make ci` 就会失败（快照默认不录、CI 也不再跳过） | init 删掉示例的参考图，把两个 workflow 的 `runs-on` 设成本机的 macOS 大版本（macos-15、macos-26 镜像都有 Xcode 26.2）；AGENTS.md 的 init 步骤加上 `make snapshots`；`make doctor` 在 CI runner 和本机大版本不一致时 warn |
 | V43 | 图标图层的图片缺失时，Xcode 构建只有一条 `Icon export exited with status 255` 警告，照样成功；删掉 `.app` 重新构建，里面仍有更早构建留下的 AppIcon.icns，所以冒烟测试也通过（V28 的保证在 Xcode 构建里丢了） | `scripts/lint-assets.sh` 在 `make lint` 里单独跑 actool，有警告即失败 |
 
 ---
