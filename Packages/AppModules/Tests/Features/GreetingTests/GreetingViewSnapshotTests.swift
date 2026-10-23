@@ -6,21 +6,28 @@ import Testing
 
 @testable import GreetingFeature
 
-// References are images of this Mac's controls; another macOS version draws them
-// differently, so CI, on another version, skips them.
+/// A plain test run never writes a reference, so a missing or changed image fails.
+/// `make snapshots` records, with SNAPSHOT_TESTING_RECORD=failed.
+private nonisolated let recording =
+    ProcessInfo.processInfo.environment["SNAPSHOT_TESTING_RECORD"]
+    .flatMap(SnapshotTestingConfiguration.Record.init(rawValue:)) ?? .never
+
 @MainActor
-@Suite(.disabled(if: ProcessInfo.processInfo.environment["CI"] != nil, "references come from the developer's macOS"))
+@Suite(.snapshots(record: recording))
 struct GreetingViewSnapshotTests {
-    @Test func empty() {
-        assertSnapshot(of: hosting(GreetingView(model: GreetingModel())), as: .image)
+    @Test func empty() throws {
+        assertSnapshot(of: try render(GreetingView(model: GreetingModel())), as: .image(perceptualPrecision: 0.98))
     }
 
-    @Test func greeted() {
-        assertSnapshot(of: hosting(GreetingView(model: greetedModel())), as: .image)
+    @Test func greeted() throws {
+        assertSnapshot(of: try render(GreetingView(model: greetedModel())), as: .image(perceptualPrecision: 0.98))
     }
 
-    @Test func greetedDark() {
-        assertSnapshot(of: hosting(GreetingView(model: greetedModel()), appearance: .darkAqua), as: .image)
+    @Test func greetedDark() throws {
+        assertSnapshot(
+            of: try render(GreetingView(model: greetedModel()), appearance: .darkAqua),
+            as: .image(perceptualPrecision: 0.98)
+        )
     }
 
     private func greetedModel() -> GreetingModel {
@@ -30,12 +37,33 @@ struct GreetingViewSnapshotTests {
         return model
     }
 
-    private func hosting(_ view: some View, appearance: NSAppearance.Name = .aqua) -> NSView {
+    /// Renders at 2x on every Mac, whatever the main display's scale: a CI runner's
+    /// virtual display would otherwise give 1x images.
+    private func render(_ view: some View, appearance: NSAppearance.Name = .aqua) throws -> NSImage {
         // Outside a window nothing draws the window background, and dark text would sit on
         // transparent pixels.
         let hosting = NSHostingView(rootView: view.background(Color(nsColor: .windowBackgroundColor)))
         hosting.appearance = NSAppearance(named: appearance)
-        hosting.frame = CGRect(origin: .zero, size: hosting.fittingSize)
-        return hosting
+        let size = hosting.fittingSize
+        hosting.frame = CGRect(origin: .zero, size: size)
+        let bitmap = try #require(
+            NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: Int(size.width * 2),
+                pixelsHigh: Int(size.height * 2),
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bytesPerRow: 0,
+                bitsPerPixel: 0
+            )
+        )
+        bitmap.size = size
+        hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+        let image = NSImage(size: size)
+        image.addRepresentation(bitmap)
+        return image
     }
 }

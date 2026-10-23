@@ -27,6 +27,9 @@ make run     # build and launch the debug app; logs go to the terminal (or .buil
 make fmt     # format Swift sources (the pre-commit hook formats staged files too)
 ```
 
+`make snapshots` records view snapshots; only after the user has seen the images (see
+Rules).
+
 `make test:ui` runs the XCUITests. They take over the user's mouse and keyboard, so run
 them only when the user asks; GitHub CI runs them on every PR.
 
@@ -112,12 +115,16 @@ a new skill the same way.
   never assert localized text or images; `make smoke` covers resources in the real
   `.app`. XCTest only for UI tests.
 - Views get snapshot tests (swift-snapshot-testing; `GreetingViewSnapshotTests` is the
-  pattern): through `NSHostingView`, light and dark, in English. The PNGs in
-  `__Snapshots__/` beside the test are how an agent sees a view without Xcode: read
-  them. A new snapshot test fails once while it records its reference; look at the
-  image, then run it again. After an intended change, `SNAPSHOT_TESTING_RECORD=failed
-  make test` re-records; look at every changed image before committing. References are
-  this Mac's controls, so CI, on another macOS version, skips them.
+  pattern): rendered at 2x through `NSHostingView`, light and dark, in English. The PNGs
+  in `__Snapshots__/` beside the test are how an agent sees a view without Xcode: read
+  them. Tests never record: a missing or changed reference fails, and the failure names
+  the reference and the new image.
+- Recording a snapshot is the user's call. When one fails after a change you meant to
+  make, or a new test has no reference, read the old and the new image, show the user
+  what changed, and wait for their yes; then `make snapshots` (Claude Code asks too).
+  Never record any other way (`SNAPSHOT_TESTING_RECORD`, deleting references), and
+  never add the `snapshots-reviewed` label: that label is the user saying they compared
+  the images, and the `Snapshot review` check waits for it.
 - App identity changes in `Configs/Identity.xcconfig` only.
 
 ## Never

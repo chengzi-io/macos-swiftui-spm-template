@@ -39,6 +39,14 @@ github-setup: ## One-time GitHub settings: squash only, branch protection, relea
 test: ## Run the package unit tests with swift test (fast: no app, no UI)
 	swift test --package-path $(PACKAGE)
 
+# Records the view snapshots that are missing or differ. A recording run reports each
+# image it writes as an issue, so the second run is the one that has to pass. Agents run
+# it only after the user has seen the old and new images (.claude/settings.json asks).
+.PHONY: snapshots
+snapshots: ## Record new and changed view snapshots in __Snapshots__/ (review them before committing)
+	-SNAPSHOT_TESTING_RECORD=failed swift test --package-path $(PACKAGE)
+	swift test --package-path $(PACKAGE)
+
 # UI tests drive the real mouse and keyboard on this Mac, so they stay out of
 # `make test` and `make ci`; GitHub CI runs them.
 .PHONY: test\:ui
