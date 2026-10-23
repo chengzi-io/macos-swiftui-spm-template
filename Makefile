@@ -51,9 +51,10 @@ fmt: ## Format Swift sources in place
 	swift format format --in-place --recursive --parallel $(SWIFT_PATHS)
 
 .PHONY: lint
-lint: ## Check formatting and the rules in scripts/lint-rules.sh (fails on any finding)
+lint: ## Check formatting, scripts/lint-rules.sh and the asset catalogs (fails on any finding)
 	swift format lint --strict --recursive --parallel $(SWIFT_PATHS)
 	scripts/lint-rules.sh
+	scripts/lint-assets.sh
 
 .PHONY: app
 app: ## Build the debug .app with xcodebuild (ad-hoc signed)

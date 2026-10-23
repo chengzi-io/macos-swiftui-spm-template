@@ -78,6 +78,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | V40 | Mac 上的 XCUITest 在真实桌面上启动应用并发送真实的鼠标键盘事件；本机 Automation Mode 关闭且需要认证，`automationmodetool enable-automationmode-without-authentication` 可免认证开启（man page） | UI 测试不进 `make ci`，由 GitHub CI 跑 |
 | V41 | Xcode 26.4 起要求 macOS Tahoe 26.2；26.3 是最后一个支持 macOS Sequoia 的版本（Apple 的系统要求页） | 本机（macOS 15.7）停在 26.3 |
 | V42 | 本机 PATH 里的 `grep` 是 Homebrew 的 ugrep，其他机器和 CI 是 BSD grep | `lint-rules.sh` 写死 `/usr/bin/grep` |
+| V43 | 图标图层的图片缺失时，Xcode 构建只有一条 `Icon export exited with status 255` 警告，照样成功；删掉 `.app` 重新构建，里面仍有更早构建留下的 AppIcon.icns，所以冒烟测试也通过（V28 的保证在 Xcode 构建里丢了） | `scripts/lint-assets.sh` 在 `make lint` 里单独跑 actool，有警告即失败 |
 
 ---
 
