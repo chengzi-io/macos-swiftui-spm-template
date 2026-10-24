@@ -1,7 +1,8 @@
 // swift-tools-version: 6.2
 import PackageDescription
 
-// Services run wherever their caller does; UI modules default to MainActor.
+// Domain and Platform modules run wherever their caller does; UI modules default to
+// MainActor.
 let common: [SwiftSetting] = [
     .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
     .enableUpcomingFeature("InferIsolatedConformances"),
@@ -20,8 +21,8 @@ let package = Package(
     products: [
         // Linked by the Xcode app target, the composition root.
         .library(name: "AppRoot", targets: ["AppRoot"]),
-        .library(name: "Services", targets: ["Services"]),
-        .library(name: "ServicesLive", targets: ["ServicesLive"]),
+        .library(name: "Platform", targets: ["Platform"]),
+        .library(name: "PlatformLive", targets: ["PlatformLive"]),
     ],
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0"),
@@ -30,7 +31,7 @@ let package = Package(
     targets: [
         .target(
             name: "AppRoot",
-            dependencies: ["GreetingFeature", "SettingsFeature", "Services"],
+            dependencies: ["GreetingFeature", "SettingsFeature", "Platform"],
             resources: [.process("Resources")],
             swiftSettings: ui
         ),
@@ -42,18 +43,20 @@ let package = Package(
         ),
         .target(
             name: "SettingsFeature",
-            dependencies: ["Services"],
+            dependencies: ["Platform"],
             path: "Sources/Features/Settings",
             resources: [.process("Resources")],
             swiftSettings: ui
         ),
         .target(
-            name: "Services",
+            name: "Platform",
+            path: "Sources/Platform/Core",
             swiftSettings: common
         ),
         .target(
-            name: "ServicesLive",
-            dependencies: ["Services", .product(name: "Sparkle", package: "Sparkle")],
+            name: "PlatformLive",
+            dependencies: ["Platform", .product(name: "Sparkle", package: "Sparkle")],
+            path: "Sources/Platform/Live",
             swiftSettings: common
         ),
         .testTarget(

@@ -10,7 +10,7 @@ logged once and shown by the view.
 changes system state, so it is a service. The user can switch the item off in System
 Settings > General > Login Items; the status then reads `requiresApproval`, and only
 System Settings can switch it back on. The protocol, its status and its mock go in
-`Services`:
+`Platform/Core/LaunchAtLogin/`:
 
 ```swift
 public enum LaunchAtLoginStatus: Sendable {
@@ -40,11 +40,11 @@ public final class MockLaunchAtLoginService: LaunchAtLoginService {
 }
 ```
 
-The live one goes in `ServicesLive`:
+The live one goes in `Platform/Live/LaunchAtLogin/`:
 
 ```swift
 import ServiceManagement
-import Services
+import Platform
 
 @MainActor
 public final class LiveLaunchAtLoginService: LaunchAtLoginService {
@@ -81,7 +81,7 @@ the way there:
 ```swift
 import AppKit
 import OSLog
-import Services
+import Platform
 import SwiftUI
 
 struct LaunchAtLoginToggle: View {
@@ -138,7 +138,8 @@ app in `/Applications` rather than a debug build.
 
 `URLSession` with async/await and `Codable`; no networking library. The sandbox already
 grants `com.apple.security.network.client` (Sparkle needs it). The protocol, the types
-it returns, its error and its mock go in `Services`:
+it returns, its error and its mock go in the Core of the domain that uses them; release
+notes are about the app itself, so `Platform/Core/ReleaseNotes/`:
 
 ```swift
 public struct ReleaseNotes: Decodable, Sendable {
@@ -164,11 +165,11 @@ public struct MockReleaseNotesService: ReleaseNotesService {
 }
 ```
 
-The request goes in `ServicesLive`:
+The request goes in `Platform/Live/ReleaseNotes/`:
 
 ```swift
 import Foundation
-import Services
+import Platform
 
 public struct LiveReleaseNotesService: ReleaseNotesService {
     let url: URL
@@ -185,7 +186,7 @@ public struct LiveReleaseNotesService: ReleaseNotesService {
 }
 ```
 
-`Services` and `ServicesLive` are not MainActor by default, so `ReleaseNotes` decodes
+`Platform` and `PlatformLive` are not MainActor by default, so `ReleaseNotes` decodes
 off the main actor as it is. A `nonisolated async` function still runs on its caller's
 actor; `@concurrent` moves the request and the decoding off the main actor a model
 calls from. Tests and previews pass `MockReleaseNotesService`; they never hit the
@@ -201,7 +202,7 @@ a separator between groups. Menus belong to `AppRoot`, beside `CheckForUpdatesBu
 
 ```swift
 import AppKit
-import Services
+import Platform
 import SwiftUI
 
 /// Content of a `MenuBarExtra` in its default `.menu` style; each `Divider()` becomes a
@@ -398,9 +399,10 @@ starts to depend on timing, notifications or delays. Never swizzle, call private
 poll to reapply a value.
 
 Steps 1 and 2 are representables, and they live in an `AppKitBridge` target that
-features depend on (`make lint` rejects them in a feature). Create it the first time:
-`Sources/AppKitBridge/`, and in `Package.swift`
-`.target(name: "AppKitBridge", swiftSettings: ui)`.
+features depend on (`make lint` rejects them in a feature). It is a kit: it knows
+nothing of the app. Create it the first time: `Sources/Kits/AppKitBridge/`, and in
+`Package.swift`
+`.target(name: "AppKitBridge", path: "Sources/Kits/AppKitBridge", swiftSettings: ui)`.
 
 Step 2 reads the window from a view placed in it:
 
@@ -506,7 +508,7 @@ Developer ID apps get no crash reports from Apple; they stay in
 
 - **Sentry**: add `https://github.com/getsentry/sentry-cocoa` to
   `Package.swift` with an `exact:` version as a dependency of
-  `ServicesLive`, start it from a function there that
+  `PlatformLive`, start it from a function there that
   `AppDelegate.applicationDidFinishLaunching` calls, and upload
   `dist/*.dSYM.zip` with `sentry-cli debug-files upload` in the publish job. Declare
   the collected data in the privacy manifest.

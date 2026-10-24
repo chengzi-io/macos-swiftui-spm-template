@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		0A0000000000000000000054 /* AppRoot in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000000000000000000051 /* AppRoot */; };
-		0A0000000000000000000055 /* Services in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000000000000000000052 /* Services */; };
-		0A0000000000000000000056 /* ServicesLive in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000000000000000000053 /* ServicesLive */; };
+		0A0000000000000000000055 /* Platform in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000000000000000000052 /* Platform */; };
+		0A0000000000000000000056 /* PlatformLive in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000000000000000000053 /* PlatformLive */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,8 +53,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				0A0000000000000000000054 /* AppRoot in Frameworks */,
-				0A0000000000000000000055 /* Services in Frameworks */,
-				0A0000000000000000000056 /* ServicesLive in Frameworks */,
+				0A0000000000000000000055 /* Platform in Frameworks */,
+				0A0000000000000000000056 /* PlatformLive in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -122,8 +122,8 @@
 			name = Pomelo;
 			packageProductDependencies = (
 				0A0000000000000000000051 /* AppRoot */,
-				0A0000000000000000000052 /* Services */,
-				0A0000000000000000000053 /* ServicesLive */,
+				0A0000000000000000000052 /* Platform */,
+				0A0000000000000000000053 /* PlatformLive */,
 			);
 			productName = Pomelo;
 			productReference = 0A0000000000000000000010 /* Pomelo.app */;
@@ -314,13 +314,13 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = AppRoot;
 		};
-		0A0000000000000000000052 /* Services */ = {
+		0A0000000000000000000052 /* Platform */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = Services;
+			productName = Platform;
 		};
-		0A0000000000000000000053 /* ServicesLive */ = {
+		0A0000000000000000000053 /* PlatformLive */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = ServicesLive;
+			productName = PlatformLive;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

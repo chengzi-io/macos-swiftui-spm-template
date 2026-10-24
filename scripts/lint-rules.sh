@@ -7,6 +7,10 @@
 source "$(dirname "$0")/common.sh"
 
 swift_paths=(App/Application App/UITests Sources Tests)
+# Platform and each domain: Core/ holds protocols, types, logic and mocks, Live/ the live
+# implementations.
+core_paths=(Sources/*/Core)
+live_paths=(Sources/*/Live)
 status=0
 
 # check <message> <extended regex> <paths...>: reports every matching line.
@@ -30,10 +34,10 @@ check "use NavigationStack or NavigationSplitView, not NavigationView" \
     '\bNavigationView\b' "${swift_paths[@]}"
 check "use foregroundStyle(_:), not foregroundColor(_:)" \
     '\.foregroundColor\(' "${swift_paths[@]}"
-check "Services and ServicesLive hold no views; UI belongs in a feature" \
-    '^import SwiftUI\b' Sources/Services Sources/ServicesLive
-check "Services holds protocols and mocks only; system frameworks belong in ServicesLive" \
-    '^import (AppKit|IOKit|Network|Sparkle)\b' Sources/Services
+check "Core and Live hold no views; UI belongs in a feature" \
+    '^import SwiftUI\b' "${core_paths[@]}" "${live_paths[@]}"
+check "Core holds protocols, types, logic and mocks; system frameworks belong in Live" \
+    '^import (AppKit|IOKit|Network|Sparkle)\b' "${core_paths[@]}"
 check "wrap AppKit views in an AppKitBridge target, not in a feature" \
     '\bNS(View|ViewController)Representable\b' Sources/Features Sources/AppRoot
 

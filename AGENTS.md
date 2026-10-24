@@ -50,9 +50,12 @@ Sources/
                               commands, Settings), app-wide menus
   Features/<Name>/            target <Name>Feature: <Name>View, <Name>Model, logic only
                               it uses, Resources/Localizable.xcstrings
-  Services/                   a protocol for each thing outside the process, its types,
-                              its error enum and a Mock<Name>Service
-  ServicesLive/               Live<Name>Service: system APIs, network, files, Sparkle
+  Platform/                   what any Mac app needs from the system: updates, launch
+                              at login, notifications, preferences
+    Core/<Name>/              target Platform: a protocol for each thing outside the
+                              process, its types, its error enum and a Mock<Name>Service
+    Live/<Name>/              target PlatformLive: Live<Name>Service (system APIs,
+                              network, files, Sparkle)
 Tests/                        Swift Testing, mirroring Sources/ (<Name>FeatureTests)
 App/                          the Xcode shell: <App>.xcodeproj, targets <App> and
                               <App>UITests
@@ -65,42 +68,58 @@ App/                          the Xcode shell: <App>.xcodeproj, targets <App> an
   Package.swift               empty: keeps App/ out of the root package in Xcode
 ```
 
-Create these targets the first time something needs them, not before: `Models/` for
-value types and pure logic that several features share, `DesignSystem/` for shared
-SwiftUI components, `AppKitBridge/` for `NSViewRepresentable` wrappers and NSWindow or
-NSEvent helpers ([RECIPES](docs/RECIPES.md#appkit-bridges)).
+Create these the first time something needs them, not before:
+
+- `Sources/<Domain>/` for what this app is about (`Monitor`, `Library`, `Sync`), split
+  as `Platform` is: `Core/<Name>/` is target `<Domain>` (protocols, value types, pure
+  logic and models that several features share, mocks), `Live/<Name>/` is target
+  `<Domain>Live`. A domain with nothing outside the process has no `Live/`. A domain is
+  a group of capabilities that change together, not one per service. Its tests:
+  `<Domain>Tests` in `Tests/<Domain>Tests/`.
+- `Sources/DesignSystem/` for shared SwiftUI components.
+- `Sources/Kits/<Name>/` for code that knows nothing of this app: a wrapper of a C or
+  private interface, or `AppKitBridge` for `NSViewRepresentable` wrappers and NSWindow
+  or NSEvent helpers ([RECIPES](docs/RECIPES.md#appkit-bridges)).
+
+What the user sees is a feature; what any Mac app needs is `Platform`; what this app is
+about is a domain; what knows nothing of this app is a kit. A target is one folder
+tree, and two targets' folders cannot nest (SwiftPM reports overlapping sources): hence
+`Core/` and `Live/` side by side, each grouped by capability.
 
 Dependencies, enforced by `Package.swift`:
 
 ```text
-<App> ──► AppRoot ──► <Name>Feature ──► Services (and Models, DesignSystem, AppKitBridge)
- └────► ServicesLive ──► Services
+<App> ──► AppRoot ──► <Name>Feature ──► <Domain>, Platform (and DesignSystem, Kits)
+ └────► <Domain>Live, PlatformLive ──► their Core (and Kits)
 ```
 
-A feature never depends on `ServicesLive` or on another feature; only `<App>` knows the
-live services. `README.md` is the app's page for its users; developer docs go in
-`docs/`. Skills live in `.agents/skills/`, and `.claude/skills/` links to each one: link
-a new skill the same way.
+A feature never depends on a `…Live` target or on another feature; only `<App>` knows
+the live services. A domain may use another domain's Core, never in a cycle; a kit
+depends on no module of the app. `README.md` is the app's page for its users;
+developer docs go in `docs/`. Skills live in `.agents/skills/`, and `.claude/skills/`
+links to each one: link a new skill the same way.
 
 ## Rules
 
 - Something outside the process (system API, network, files, UserDefaults, Keychain,
-  the clock) that a model needs is a service: protocol and mock in `Services`, live
-  implementation in `ServicesLive`. Pure logic (formatting, parsing, calculation, state
-  machines) stays a plain type the model calls directly, as `Greeter` is; it gets no
-  protocol. For time, take `any Clock<Duration>`.
+  the clock) that a model needs is a service: protocol and mock in the Core of
+  `Platform` or its domain, live implementation in the matching Live. Pure logic
+  (formatting, parsing, calculation, state machines) stays a plain type the model calls
+  directly, as `Greeter` is; it gets no protocol. For time, take `any Clock<Duration>`.
 - Models are `@Observable` and reach views through initializers, never
   `.environment(...)`: a missing initializer argument fails the build, a missing
-  environment object crashes at run time. `AppModel` owns the feature models.
+  environment object crashes at run time. `AppModel` owns the feature models and the
+  models a domain shares among features.
 - Every view has a `#Preview` built from mocks.
 - Package resources need `bundle: .module`: `Text("Key", bundle: .module)`,
   `String(localized: "Key", bundle: .module)`, `Image("name", bundle: .module)`.
   Without it SwiftUI looks in the main bundle and shows the raw key; nothing fails at
   compile time. Each target with strings has its own `Localizable.xcstrings` (en,
   zh-Hans).
-- Feature targets and AppRoot are MainActor by default; `Services` and `ServicesLive`
-  are not. Mark UI-bound services `@MainActor`, and background work `@concurrent`: a
-  plain `nonisolated async` function runs on its caller's actor.
+- Feature targets and AppRoot are MainActor by default; `Platform`, the domains and
+  their Live targets are not. Mark UI-bound services and a domain's models
+  `@MainActor`, and background work `@concurrent`: a plain `nonisolated async` function
+  runs on its caller's actor.
 - In MainActor-by-default targets `Bundle.module` is MainActor-isolated, so nonisolated
   code (Error types, Sendable values) cannot read it. Resolve user-facing text in views
   or models, as `GreeterError.message` does. Value types decoded or passed off the main
@@ -168,8 +187,9 @@ a new skill the same way.
    the reference PNGs otherwise); and `<Name>Feature` in `AppRoot`'s dependencies.
 3. Add every user-facing string to the feature's `Resources/Localizable.xcstrings` in
    `en` and `zh-Hans`.
-4. Work outside the process gets a service: protocol and mock in `Services`, live
-   implementation in `ServicesLive` ([RECIPES](docs/RECIPES.md#networking) has one).
+4. Work outside the process gets a service: protocol and mock in `Platform/Core/` or a
+   domain's `Core/`, live implementation in the matching `Live/`
+   ([RECIPES](docs/RECIPES.md#networking) has one).
    `App/Application/MainApp.swift` builds the live one and the mock under
    `UI_TESTING=1`, and passes it through `AppModel`.
 5. `AppModel` owns the feature's model; `AppScenes` shows its view.

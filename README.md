@@ -21,9 +21,9 @@ flowchart TB
 ## What you get
 
 - All code in the Swift package at the repository root (`Package.swift`, `Sources/`,
-  `Tests/`), one target per layer: `AppRoot`, a target per feature, `Services`
-  (protocols and mocks) and `ServicesLive` (system APIs, network, Sparkle). The
-  compiler keeps features away from live services.
+  `Tests/`): `AppRoot`, a target per feature, and `Platform`, split into `Core`
+  (protocols and mocks) and `Live` (system APIs, network, Sparkle); the app's own
+  domains get the same split. The compiler keeps features away from live services.
 - A thin Xcode project in `App/`, named after the app (`App/Pomelo.xcodeproj` in the
   template): the app target (`@main`, assets, icon) and a UI test target, both
   buildable folders, with every build setting in `App/Configs/*.xcconfig`. Agents add

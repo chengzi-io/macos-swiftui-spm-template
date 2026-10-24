@@ -106,7 +106,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 
 | ID | 项 | 落地位置 | 状态 |
 |----|----|----------|------|
-| A1 | 工程与目录 | `App/Pomelo.xcodeproj`（Pomelo、PomeloUITests 两个 target，buildable folders）、`Package.swift`、`Sources/`、`Tests/` 在仓库根（AppRoot、`Features/<Name>`、Services、ServicesLive，测试目录镜像 Sources） | ✅ |
+| A1 | 工程与目录 | `App/Pomelo.xcodeproj`（Pomelo、PomeloUITests 两个 target，buildable folders）、`Package.swift`、`Sources/`、`Tests/` 在仓库根（AppRoot、`Features/<Name>`、`Platform/Core`、`Platform/Live`，测试目录镜像 Sources） | ✅ |
 | A2 | 应用身份单一来源 | `Configs/Identity.xcconfig`（Xcode 和脚本读同一份） | ✅ |
 | A3 | App 入口骨架 | `App/Application/MainApp.swift`（组装根，环境变量 `UI_TESTING=1` 时换 mock）、`AppDelegate.swift`；场景在 `AppRoot/AppScenes.swift` | ✅ |
 | A4 | 资源与本地化（en、zh-Hans） | 每个带文案的 target 一份 `Resources/Localizable.xcstrings` | ✅ |
@@ -151,7 +151,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | G7 | 发布说明 | release-please 的 CHANGELOG；ad-hoc 构建自动追加打开方式说明 | 🟡 |
 | G8 | dSYM 存档 | Release 资产 + 保留 90 天的 workflow artifact | ✅ 本地 / 🟡 CI |
 | G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SUPublicEDKey` 对得上 | ✅ 本地（含反例） |
-| H1 | Sparkle 自动更新 | `Services/UpdaterService.swift`（协议和 mock）、`ServicesLive/LiveUpdaterService.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
+| H1 | Sparkle 自动更新 | `Platform/Core/Updater/UpdaterService.swift`（协议和 mock）、`Platform/Live/Updater/LiveUpdaterService.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
 | H2 | Homebrew Cask | `.agents/skills/homebrew-cask`，只能由用户启动，先按 `TEAM_ID` 和仓库知名度选渠道。官方 `homebrew/cask`：有 Developer ID 且仓库够知名时，skill 写好带 `desc` 和 `livecheck`（`:github_latest`）的 cask，在 `homebrew/cask` 的检出里检查，经用户同意后提 PR（说明用了 AI，提交不带 AI trailer）；收录后 BrewTestBot 自动更新，项目里不加 job、不建 tap。自建 tap：每次发版由单独的 `homebrew` job 下载已公开的 DMG，生成 cask 推到 tap；有 Developer ID 时是普通 cask（C），ad-hoc 时二选一：caveats 提示「仍要打开」（A）或安装后清掉 quarantine（B），两种都在 README 加 `[!IMPORTANT]` 提醒。还写了从自建 tap 转到官方库的步骤 | 🟡（自建 tap 的三种 cask 都过了 `brew style` 和 `brew audit`，A、B 用本地 tap 真装过；官方 cask 模板过了 `brew style`，`brew audit --new` 只因本仓库未公开、不够知名和下载 404 而失败；真实的 tap 推送和官方 PR 都没做过） |
 | H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（Sparkle 拆到 `SparkleUpdater` target，新增共用 `App/Application/` 的 `AppStore` target，不链接 Sparkle，用 `APP_STORE` 编译条件区分）或只上 App Store（删掉 Sparkle 和 DMG 发布，`Pomelo` target 就是 App Store 版）；带 `wiring/xcodeproj.py`（改 pbxproj 的唯一入口）、带 mas 配置的 `build-app.sh`、`release-mas.sh` 和 RELEASING 的一节 | 🟡（2026-10-23 按新结构重写，两种方案都在仓库副本里按 skill 走过一遍，签名用的是替代身份） |
 | H4 | 测试版通道 | `docs/RELEASING.md` | 📄 |
@@ -188,6 +188,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **结构调整：薄 Xcode 工程 + 本地包（2026-10-23）**。纯 SPM 要自写脚本拼 `.app`（V1–V3、V5、V11、V22、V25），建不了 XCUITest 和 App 扩展，Xcode 的 Run 跑的也不是真正的应用。现在 `App.xcodeproj` 只有 App 和 AppUITests 两个 target，用 buildable folders，构建设置全在 `Configs/*.xcconfig`，加文件不碰 pbxproj；全部代码在 `Packages/AppModules`，按层拆 target：`AppRoot`、每个功能一个 `<Name>Feature`、`Services`（协议和 mock）、`ServicesLive`（真实实现，Sparkle 只链接到这里）。功能 target 不依赖 `ServicesLive`，在功能里直接 new 真实实现会编译失败。原来 App target 里的 `Updates`（`ObservableObject`）改成 `UpdaterService` 协议加 `LiveUpdaterService`；设置页的「默认名字」示例删掉，以免两个功能共用一个 UserDefaults 键。身份从 `Bundle/app.env` 搬到 `Configs/Identity.xcconfig`，Sparkle 公钥搬到 `Configs/Info.plist`。新增 `make test:ui`（不进 `make ci`，V40）和 `scripts/lint-rules.sh`。
 - **工程改名（2026-10-23）**：`App.xcodeproj`、`App`/`AppUITests` 两个 target、`App` scheme 和 `App/`、`AppUITests/` 目录改用 app 名，模板里是 Pomelo（先试过 `SwiftUITemplate`，太长）。改名放进 `scripts/rename.sh`，init 调用它，init 删掉自己后它还在，首次发布前改名也用它，名字、显示名、bundle id 一起改；发布后再改名或 bundle id 等于换了一个 app（Sparkle 更新、用户数据、Homebrew），脚本拒绝（V56）。先试过的做法是 init 把模板名当占位词全局替换：模板里安全，但 init 之后 app 名可能是 `Notes`、`Timer` 这样的常见词，再全局替换会改坏别处，所以文档改写 `<App>`、脚本从工程推出名字。用这个模板做的多个 app 在 Xcode 最近项目列表里不再都叫 App。`Configs/App.xcconfig`、`App.entitlements` 按角色命名，和 `UITests.xcconfig` 对应，不改名。rename.sh 拒绝工程里已有的词（`Products`、`Debug` 等）和已存在的路径（如 `Configs`），都在写文件之前。
 - **结构调整二：包到仓库根，壳进 `App/`（2026-10-23）**：`Packages/AppModules` 的 `Package.swift`、`Sources/`、`Tests/` 移到仓库根，包名从 `AppModules` 改成 app 名；工程、壳的源码、UI 测试和 `Configs/` 移进 `App/`，源码目录叫 `App/Application/`、`App/UITests/`（按角色命名，避免在 Xcode 里和同名的包并排；`App/Sources/` 会和根目录的 `Sources/` 混淆）。参照的是薄壳 app 的做法（V57），之前举的 IceCubes 等厚工程不适用。脚本从 `App/` 里唯一带 `project.pbxproj` 的工程推出 `<App>`，`PACKAGE_DIR` 和 `--package-path` 去掉；SwiftPM 的 `.build` 和 DerivedData（`.build/xcode`）现在在同一个目录。
+- **结构调整三：按领域分目录（2026-10-24）**：按技术层分的 `Services`、`ServicesLive` 在服务一多时会各平铺几十个文件，每个功能 import 的都是同一个大模块。现在换成 `Platform/Core`（target `Platform`）和 `Platform/Live`（target `PlatformLive`），里面按能力分子目录（`Updater/`）。`Platform` 只放任何 Mac app 都需要的系统集成；app 自己的业务按领域建 `Sources/<Domain>/{Core,Live}`，和 app 无关的封装放 `Sources/Kits/`（`AppKitBridge` 也归这里）。`Models/` 取消，多个功能共用的类型、纯逻辑和 model 放进领域的 Core。Core 和 Live 并列，而不是 `<能力>/Live` 嵌套：SwiftPM 不允许两个 target 的目录嵌套（实测报 `overlapping sources`），每个能力一对 target 又太多。`lint-rules.sh` 的两条 import 检查从 `Sources/Services` 推广到所有 `Sources/*/Core` 和 `Sources/*/Live`。
 
 ---
 

@@ -1,4 +1,4 @@
-import Services
+import Platform
 import SwiftUI
 
 /// A view of its own, as in Sparkle's SwiftUI setup guide, which needs one for the

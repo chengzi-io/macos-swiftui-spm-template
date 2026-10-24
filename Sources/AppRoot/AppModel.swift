@@ -1,6 +1,6 @@
 import GreetingFeature
 import Observation
-import Services
+import Platform
 
 /// Root of the model tree: owns each feature's model and the services they share.
 @Observable

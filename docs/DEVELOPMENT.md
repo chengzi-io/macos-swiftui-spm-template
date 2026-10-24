@@ -67,8 +67,9 @@ Package.swift              the package with all the code: targets, platforms, Sw
                            settings, Sparkle
 Sources/AppRoot/           root model, scenes, menu commands
 Sources/Features/<Name>/   one target per feature: view, model, string catalog
-Sources/Services/          protocols for what reaches outside the process, and mocks
-Sources/ServicesLive/      the live implementations: system APIs, network, Sparkle
+Sources/Platform/Core/     protocols for what reaches outside the process, and mocks
+Sources/Platform/Live/     the live implementations: system APIs, network, Sparkle
+Sources/<Domain>/          the app's own domains, Core/ and Live/ as in Platform
 Tests/                     Swift Testing, mirroring Sources/
 App/                       the Xcode shell
   <App>.xcodeproj/         <App> and <App>UITests targets, shared <App> scheme

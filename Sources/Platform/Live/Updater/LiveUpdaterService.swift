@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import Services
+import Platform
 import Sparkle
 
 /// Sparkle's standard updater. Debug builds never start it: they carry no public key.

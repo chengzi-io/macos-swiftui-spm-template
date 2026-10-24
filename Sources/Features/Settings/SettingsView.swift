@@ -1,4 +1,4 @@
-import Services
+import Platform
 import SwiftUI
 
 public struct SettingsView: View {
