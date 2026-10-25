@@ -9,11 +9,18 @@ import Sparkle
 public final class LiveUpdaterService: UpdaterService {
     public private(set) var canCheckForUpdates = false
     public var automaticallyChecksForUpdates: Bool {
-        didSet { controller.updater.automaticallyChecksForUpdates = automaticallyChecksForUpdates }
+        didSet {
+            // Only a change from the toggle: writing Sparkle's own value back would
+            // reschedule its checks for nothing.
+            guard controller.updater.automaticallyChecksForUpdates != automaticallyChecksForUpdates
+            else { return }
+            controller.updater.automaticallyChecksForUpdates = automaticallyChecksForUpdates
+        }
     }
 
     @ObservationIgnored private let controller: SPUStandardUpdaterController
     @ObservationIgnored private var canCheckObservation: NSKeyValueObservation?
+    @ObservationIgnored private var automaticChecksObservation: NSKeyValueObservation?
 
     public init() {
         #if DEBUG
@@ -27,11 +34,18 @@ public final class LiveUpdaterService: UpdaterService {
             userDriverDelegate: nil
         )
         automaticallyChecksForUpdates = controller.updater.automaticallyChecksForUpdates
-        // Sparkle changes canCheckForUpdates on the main thread.
+        // Sparkle changes both on the main thread. It sets automaticallyChecksForUpdates
+        // itself when the user answers its question on the second launch.
         canCheckObservation = controller.updater.observe(\.canCheckForUpdates, options: [.initial, .new]) {
             [weak self] updater, _ in
             MainActor.assumeIsolated {
                 self?.canCheckForUpdates = updater.canCheckForUpdates
+            }
+        }
+        automaticChecksObservation = controller.updater.observe(\.automaticallyChecksForUpdates, options: [.new]) {
+            [weak self] updater, _ in
+            MainActor.assumeIsolated {
+                self?.automaticallyChecksForUpdates = updater.automaticallyChecksForUpdates
             }
         }
     }
