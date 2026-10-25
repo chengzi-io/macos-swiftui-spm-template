@@ -3,7 +3,8 @@ import Observation
 import Platform
 import Sparkle
 
-/// Sparkle's standard updater. Debug builds never start it: they carry no public key.
+/// Sparkle's standard updater. Debug builds never start it, so a build under development
+/// never offers to replace itself with the latest release.
 @MainActor
 @Observable
 public final class LiveUpdaterService: UpdaterService {
