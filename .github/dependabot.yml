@@ -4,8 +4,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # fix: Sparkle ships inside the app, and only feat and fix make a release that gets
+    # its update to users.
     commit-message:
-      prefix: chore
+      prefix: fix
       include: scope
     open-pull-requests-limit: 5
   - package-ecosystem: github-actions
