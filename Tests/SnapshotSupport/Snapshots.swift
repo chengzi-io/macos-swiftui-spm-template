@@ -14,6 +14,12 @@ public nonisolated let recording =
 /// Renders at 2x on every Mac, whatever the main display's scale: a CI runner's virtual
 /// display would otherwise give 1x images.
 public func render(_ view: some View, appearance: NSAppearance.Name = .aqua) throws -> NSImage {
+    // Controls draw in the Mac's accent color, so a Mac set to purple would record purple
+    // checkboxes. Pin blue (4), what an unset accent draws on a CI runner, for this
+    // process only.
+    var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
+    arguments["AppleAccentColor"] = 4
+    UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
     // Outside a window nothing draws the window background, and dark text would sit on
     // transparent pixels.
     let hosting = NSHostingView(rootView: view.background(Color(nsColor: .windowBackgroundColor)))

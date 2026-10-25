@@ -171,7 +171,8 @@ same way.
 - Screens get snapshot tests (swift-snapshot-testing; `NotesViewSnapshotTests` is the
   pattern): each screen in the states that tell it apart (empty, filled, failed), light
   and dark, in English; a subview shows in its screen's snapshot. `SnapshotSupport`'s
-  `render` draws them at 2x through `NSHostingView`. The PNGs in `__Snapshots__/`
+  `render` draws them at 2x through `NSHostingView`, with controls in the default blue
+  accent whatever the Mac's setting and the app's. The PNGs in `__Snapshots__/`
   beside the test are how an agent sees a view without Xcode: read them. Tests never
   record: a missing or changed reference fails, and the failure names the reference and
   the new image.
