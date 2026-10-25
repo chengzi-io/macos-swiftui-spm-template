@@ -35,10 +35,16 @@ public protocol LaunchAtLoginService: AnyObject {
 @MainActor
 public final class MockLaunchAtLoginService: LaunchAtLoginService {
     public var status: LaunchAtLoginStatus
+    /// Thrown by `setEnabled(_:)`, for tests of a change that fails.
+    public var failure: LaunchAtLoginError?
 
-    public init(status: LaunchAtLoginStatus = .disabled) { self.status = status }
+    public init(status: LaunchAtLoginStatus = .disabled, failure: LaunchAtLoginError? = nil) {
+        self.status = status
+        self.failure = failure
+    }
 
     public func setEnabled(_ enabled: Bool) throws(LaunchAtLoginError) {
+        if let failure { throw failure }
         status = enabled ? .enabled : .disabled
     }
 
@@ -49,8 +55,8 @@ public final class MockLaunchAtLoginService: LaunchAtLoginService {
 The live one goes in `Platform/Live/LaunchAtLogin/`:
 
 ```swift
-import ServiceManagement
 import Platform
+import ServiceManagement
 
 @MainActor
 public final class LiveLaunchAtLoginService: LaunchAtLoginService {
@@ -84,9 +90,9 @@ public final class LiveLaunchAtLoginService: LaunchAtLoginService {
 }
 ```
 
-The toggle goes in a General pane in `Features/Settings`: a `GeneralSettingsView` tab
-before Updates in `SettingsView`, and a `Log.swift` beside it, as every module that
-logs has:
+The switch goes in a General pane in `Features/Settings`: a `GeneralSettingsView` tab
+before Updates in `SettingsView`. Its model catches and logs a failed change, so the
+feature gets a `Log.swift`, as every module that logs has:
 
 ```swift
 import Foundation
@@ -100,48 +106,29 @@ nonisolated enum Log {
 }
 ```
 
-When System Settings turned the item off, the toggle says so and offers the way there;
-when the change fails, it says that too:
+The model holds the status and whether the last change failed. The user can change the
+item in System Settings, so it reads the status again when asked:
 
 ```swift
-import AppKit
 import OSLog
+import Observation
 import Platform
-import SwiftUI
 
-struct LaunchAtLoginToggle: View {
-    let service: any LaunchAtLoginService
-    @State private var status = LaunchAtLoginStatus.disabled
-    @State private var failed = false
+@Observable
+public final class LaunchAtLoginModel {
+    public private(set) var status = LaunchAtLoginStatus.disabled
+    public private(set) var failed = false
+    private let service: any LaunchAtLoginService
 
-    var body: some View {
-        VStack(alignment: .leading) {
-            Toggle(isOn: Binding(get: { status == .enabled }, set: { setEnabled($0) })) {
-                Text("Launch at login", bundle: .module)
-            }
-            .disabled(status == .requiresApproval)
-            if status == .requiresApproval {
-                Text("Turned off in System Settings.", bundle: .module)
-                    .foregroundStyle(.secondary)
-                Button {
-                    service.openLoginItemsSettings()
-                } label: {
-                    Text("Open Login Items…", bundle: .module)
-                }
-            }
-            if failed {
-                Text("The login item could not be changed.", bundle: .module)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .onAppear { status = service.status }
-        // Back from System Settings, the Settings window is still open.
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            status = service.status
-        }
+    public init(service: any LaunchAtLoginService) {
+        self.service = service
     }
 
-    private func setEnabled(_ enabled: Bool) {
+    public func refresh() {
+        status = service.status
+    }
+
+    public func setEnabled(_ enabled: Bool) {
         do {
             try service.setEnabled(enabled)
             failed = false
@@ -151,10 +138,54 @@ struct LaunchAtLoginToggle: View {
         }
         status = service.status
     }
+
+    public func openLoginItemsSettings() {
+        service.openLoginItemsSettings()
+    }
+}
+```
+
+When System Settings turned the item off, the toggle says so and offers the way there;
+when the change fails, it says that too:
+
+```swift
+import AppKit
+import Platform
+import SwiftUI
+
+struct LaunchAtLoginToggle: View {
+    let model: LaunchAtLoginModel
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Toggle(isOn: Binding(get: { model.status == .enabled }, set: { model.setEnabled($0) })) {
+                Text("Launch at login", bundle: .module)
+            }
+            .disabled(model.status == .requiresApproval)
+            if model.status == .requiresApproval {
+                Text("Turned off in System Settings.", bundle: .module)
+                    .foregroundStyle(.secondary)
+                Button {
+                    model.openLoginItemsSettings()
+                } label: {
+                    Text("Open Login Items…", bundle: .module)
+                }
+            }
+            if model.failed {
+                Text("The login item could not be changed.", bundle: .module)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .onAppear { model.refresh() }
+        // Back from System Settings, the Settings window is still open.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            model.refresh()
+        }
+    }
 }
 
 #Preview {
-    LaunchAtLoginToggle(service: MockLaunchAtLoginService(status: .requiresApproval))
+    LaunchAtLoginToggle(model: LaunchAtLoginModel(service: MockLaunchAtLoginService(status: .requiresApproval)))
         .padding()
 }
 ```
@@ -164,8 +195,29 @@ Swift 6.2.3 compiler. Add `Launch at login`, `Turned off in System Settings.`,
 `Open Login Items…` and `The login item could not be changed.` to
 `Features/Settings/Resources/Localizable.xcstrings` in `en` and `zh-Hans`.
 `App/Application/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under
-`UI_TESTING=1`) and passes it through `AppModel`; `AppScenes` hands it to
-`SettingsView`. Check it with the installed app in `/Applications` rather than a debug
+`UI_TESTING=1`) and passes it to `AppModel`, which owns a
+`LaunchAtLoginModel(service:)`; `AppScenes` hands that to `SettingsView`. Test the model
+in `Tests/Features/SettingsTests/` with the mock:
+
+```swift
+import Platform
+import SettingsFeature
+import Testing
+
+@MainActor
+struct LaunchAtLoginModelTests {
+    struct Refused: Error {}
+
+    @Test func failedChangeShowsAMessageAndKeepsTheStatus() {
+        let model = LaunchAtLoginModel(service: MockLaunchAtLoginService(failure: .failed(Refused())))
+        model.setEnabled(true)
+        #expect(model.failed)
+        #expect(model.status == .disabled)
+    }
+}
+```
+
+Check the item itself with the installed app in `/Applications` rather than a debug
 build.
 
 ## Networking
@@ -374,7 +426,8 @@ where the user picks it, and a check against shortcuts the system or the app's m
 already use. [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) does
 all three and stores the choice in `UserDefaults`; it works in the sandbox and on the
 Mac App Store without a permission prompt. It owns the hotkey, the storage and the
-recorder, so there is no service to write. Add it to `Package.swift`,
+recorder, and no model logic sits between them, so there is no service to write (the
+exception in AGENTS.md's service rule). Add it to `Package.swift`,
 and its product to the dependencies of `SettingsFeature` and `AppRoot`:
 
 ```swift

@@ -136,6 +136,10 @@ same way.
   `Platform` or its domain, live implementation in the matching Live. Pure logic
   (formatting, parsing, calculation, state machines) stays a plain type the model calls
   directly, as `WordCount` is; it gets no protocol. For time, take `any Clock<Duration>`.
+  A package that owns the outside access, its storage and the control the user sees,
+  with no logic of the app's in between, gets no service (KeyboardShortcuts in
+  [RECIPES](docs/RECIPES.md#global-keyboard-shortcuts)): a model test would have nothing
+  to swap.
 - Models are `@Observable` and reach views through initializers, never
   `.environment(...)`: a missing initializer argument fails the build, a missing
   environment object crashes at run time. A feature's `<Name>Model` owns its screens'
