@@ -29,9 +29,9 @@ It is written for apps made from macos-swiftui-spm-template, once its init has r
   `AppModules`, which lists every module `App/Application/` imports.
 - Updates go through an `UpdaterService` protocol in a Core target
   (`grep -rln 'protocol UpdaterService' Sources` finds it; `Sources/Platform/Core/` in
-  the template), and the one file that imports Sparkle implements it. `App/Application/MainApp.swift` builds the
-  updater (a mock under `UI_TESTING=1`), and the app hands it down from there to every
-  view that shows an update control.
+  the template), and the one file that imports Sparkle implements it.
+  `App/Application/MainApp.swift` builds the updater (a mock under `UI_TESTING=1`), and
+  the app hands it down from there to every view that shows an update control.
 - `scripts/build-app.sh debug|release` archives with xcodebuild and re-signs;
   `scripts/common.sh` exports `App/Configs/Identity.xcconfig` (`TEAM_ID`, `BUNDLE_ID`) and
   defines `die`, `log` and `find_identity`.
@@ -63,13 +63,12 @@ Then do step 2, and 3a or 3b.
 ## 2. Add the App Store build
 
 1. `<skill>/wiring/build-app.sh` is the template's `scripts/build-app.sh` with a `mas`
-   configuration. If no commit since init touched the project's script
-   (`git log --oneline -- scripts/build-app.sh`), copy it over; otherwise add the `mas`
-   parts to the project's script, which `diff scripts/build-app.sh
-   <skill>/wiring/build-app.sh` shows. Then `cp <skill>/wiring/release-mas.sh scripts/`.
+   configuration. `diff scripts/build-app.sh <skill>/wiring/build-app.sh`: when every
+   difference is a `mas` part, copy it over; otherwise the project changed its script,
+   so add the `mas` parts to it. Then `cp <skill>/wiring/release-mas.sh scripts/`.
 2. In `scripts/common.sh`, let `find_identity` take a policy; installer certificates
-   are only listed under `basic`. Its comment and first two lines become these; the
-   rest of the function stays:
+   are only listed under `basic`. Its comment, its `local` line and its
+   `security find-identity` line become these; the rest of the function stays:
 
    ```bash
    # Prints the SHA-1 of the first valid identity for TEAM_ID whose name matches the
@@ -93,7 +92,8 @@ Then do step 2, and 3a or 3b.
 
 4. In `docs/RELEASING.md`, replace the `## Mac App Store (optional)` section, which only
    points to this skill, with `<skill>/wiring/releasing.md`. Its first paragraph names
-   the target for each channel; keep the one you picked.
+   the target for each channel; keep only the clause of the channel you picked (Both:
+   the `AppStore` target).
 
 ## 3a. Both: an AppStore target without Sparkle
 
@@ -121,10 +121,13 @@ Then do step 2, and 3a or 3b.
    ```
 
    A target needs sources: one left without any goes, with its directory, its place in
-   both products and every dependency on it. Every check in `scripts/lint-rules.sh`
-   whose paths include the folder the file left covers the new folder too (its
-   `Sources/*/Live` glob does not match `Sparkle/`), in its paths and its message; a
-   check that keeps Sparkle out of a folder does not.
+   both products and every dependency on it, imports included. In the template
+   `PlatformLive` holds nothing else, so it goes and `MainApp` imports `SparkleUpdater`
+   in its place. Every check in `scripts/lint-rules.sh` whose paths include the folder
+   the file left covers the new folder too, in its paths and its message: its
+   `Sources/*/Live` glob does not match `Sparkle/`, so
+   `live_paths=(Sources/*/Live Sources/Platform/Sparkle)`. A check that keeps Sparkle
+   out of a folder does not.
 
 2. The App Store build has no updater. When you are done:
 
@@ -165,7 +168,10 @@ Then do step 2, and 3a or 3b.
      you read it). Settings left with one tab shows that pane alone, without the tabs;
      a sidebar window left with one pane is the user's call: ask. Settings left with no
      pane at all is not in the App Store build: no Settings window, no Settings… menu
-     item.
+     item. A scene body takes no `if` before macOS 15 (the compiler can crash on one),
+     and the package cannot see `APP_STORE`: move the `Settings` scene into a `Scene`
+     type of its own in the package, and list it in `MainApp`'s body inside
+     `#if !APP_STORE`.
    - The Developer ID build behaves as before, and its tests pass unchanged: `swift
      test` builds without `APP_STORE`. Where a type decides what the App Store build
      shows (which panes it lists), test it with a nil updater too.
@@ -188,8 +194,8 @@ Then do step 2, and 3a or 3b.
    - from `AppStore.entitlements`, the mach-lookup exception's names that end in
      `-spks` and `-spki` (the whole key, and its comment, when no other name is left);
    - from `AppStore.entitlements`, `com.apple.security.network.client` too, unless the
-     app makes network requests of its own (`URLSession` and the like): the template
-     has it for Sparkle.
+     app makes network requests of its own (`grep -rln 'URLSession\|NWConnection'
+     Sources App` finds them): the template has it for Sparkle.
 
    `plutil -lint` both.
 
@@ -210,7 +216,9 @@ Then do step 2, and 3a or 3b.
    products and the dependencies, add the `AppStore` target, `SparkleUpdater` and
    `AppStoreModules`: a module added to `AppModules` goes in `AppStoreModules` too,
    unless it uses Sparkle. Where they say which target holds Sparkle, it is now
-   `SparkleUpdater`. Say that
+   `SparkleUpdater`; a target that went is gone from them too
+   (`grep -rn PlatformLive AGENTS.md docs` in the template; `docs/ARCHITECTURE.md`
+   describes an example app, so it stays). Say that
    `AppStore-Info.plist` and `AppStore.entitlements` are `Info.plist` and
    `App.entitlements` without Sparkle: a key added to one goes in the other too. In
    `docs/RECIPES.md`, code that passes `model.updater` on (`grep -n updater
@@ -225,9 +233,9 @@ Beyond that, the Developer ID release, Sparkle and their docs stay as they are.
 
 ## 3b. App Store only: remove Sparkle and the DMG release
 
-Every build is now the App Store app. When you are done, nothing of Sparkle, the DMG,
-notarization, the appcast or the Developer ID release is left, and every script still
-runs. Remove:
+Every build is now the App Store app; step 3a does not apply. When you are done,
+nothing of Sparkle, the DMG, notarization, the appcast or the Developer ID release is
+left, and every script still runs. Remove:
 
 - From `scripts/build-app.sh`, the `release` configuration and what only it used: the
   script archives `$APP_TARGET` and signs it for the App Store, with no `case` left
@@ -238,15 +246,19 @@ runs. Remove:
   the updater; every control that used it; the tests, snapshot references and string
   catalog entries of what you removed. Settings panes follow step 3a.2: a pane left
   with nothing to set goes, and so do the tabs around a single pane. A target left
-  without sources goes with its product and every dependency on it, and a string
-  catalog left empty with its target's `resources:`.
+  without sources goes with its place in `AppModules` and every dependency on it, and
+  a string catalog left empty with its target's `resources:`. In the template this
+  removes `Platform` and `PlatformLive`, which hold only the updater, and the whole
+  Settings feature (its target, tests, snapshot references and `Settings` scene),
+  whose one pane was Updates.
   `grep -rni 'sparkle\|updater' Sources Tests App` finds what is left.
   A snapshot reference whose view changed is recorded again only after the user has
   seen the images, as `AGENTS.md` says.
 - `App/Configs/Info.plist` and `App/Configs/App.entitlements`: what only Sparkle uses,
   as step 3a.3 lists it.
 - In `Package.swift`, `AppModules` lists only the modules `App/Application/` still
-  imports (`grep -h '^ *import' App/Application/*.swift`). Both `Package.resolved` files (at the root and in
+  imports (`grep -h '^ *import' App/Application/*.swift`). Both `Package.resolved`
+  files (at the root and in
   `App/<App>.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/`) drop the Sparkle pin
   on the next build; commit them.
 - `scripts/common.sh`: `SPARKLE_PUBLIC_KEY` first, which reads `SUPublicEDKey` and
@@ -286,19 +298,26 @@ GitHub App, which release-please still needs; without the `release` environment)
 the Mac App Store section from step 2, trimmed to the App Store target alone
 (`make release-mas` archives `<App>`); drop the release diagrams, draft releases, the
 Sparkle key, Developer ID, recovery, crash symbolication, Homebrew and beta sections.
-In `README.md` the install section points to the App Store. In `AGENTS.md`,
-`docs/DEVELOPMENT.md` and `docs/RECIPES.md`, drop Sparkle, the updater service, the
-DMG, notarization, the appcast, the publish job, the `dmg` and `homebrew-cask` skills
-and any settings pane that went. This finds what is left; read each hit:
+In `README.md` the install section points to the App Store, and an update section, if
+there is one, goes: the App Store updates the app. In `AGENTS.md`,
+`docs/DEVELOPMENT.md`, `docs/RECIPES.md` and `docs/ARCHITECTURE.md`, drop Sparkle, the
+updater service, the DMG, notarization, the appcast, the publish job, the `dmg` and
+`homebrew-cask` skills and any settings pane that went. A target or folder that went
+(`Platform`, a Settings feature) is described as one to create when first needed, and
+a recipe that puts a control in Settings starts by adding the Settings feature. This
+finds what is left; read each hit, and keep only those about building with Xcode
+(`dwarf-with-dsym`) or about the App Store:
 
 ```bash
-grep -rni 'sparkle\|appcast\|notariz\|SUPublicEDKey\|RELEASES_URL\|UpdaterService\|CheckForUpdates\|Autoupdate\|DMG\|Developer ID\|release environment\|publish job\|RELEASING.md, 4\|GITHUB_REPOSITORY\|homebrew-cask\|`make release`' \
+grep -rni 'sparkle\|appcast\|notariz\|SUPublicEDKey\|RELEASES_URL\|updater\|CheckForUpdates\|Autoupdate\|DMG\|dSYM\|Developer ID\|homebrew\|release environment\|publish job\|RELEASING.md, 4\|GITHUB_REPOSITORY\|`make release`' \
     --exclude-dir=.build --exclude-dir=.git --exclude-dir=.agents .
 ```
 
 `make fmt`, then `make ci`. `make ci` builds Debug only, so compile the Release
 configuration that `release-mas` archives too:
 `xcodebuild build -project App/<App>.xcodeproj -scheme <App> -configuration Release -derivedDataPath .build/xcode-release`.
+Its app has no `Contents/Frameworks/Sparkle.framework` and no `SU…` key in
+`Info.plist`.
 
 ## 4. What the user sets up
 
