@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
-      # Removes snapshots-reviewed when a push changes the references after the review.
+      # Removes snapshots-reviewed when a push follows the review.
       pull-requests: write
     steps:
       - uses: actions/checkout@v7
@@ -27,7 +27,5 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
           ACTION: ${{ github.event.action }}
-          BEFORE: ${{ github.event.before }}
-          AFTER: ${{ github.event.after }}
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
         run: scripts/check-snapshot-review.sh

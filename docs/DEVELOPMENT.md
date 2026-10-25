@@ -41,8 +41,8 @@ keeps the unit-test loop fast.
   first; an agent shows you the old and the new one and asks before it runs this, and
   Claude Code asks too (`.claude/settings.json`). A PR that changes references fails
   the `Snapshot review` check until you compare the images in Files changed (2-up,
-  swipe, onion skin) and add the `snapshots-reviewed` label; a later push that changes
-  them again removes the label. References hold one macOS major's controls, so CI runs
+  swipe, onion skin) and add the `snapshots-reviewed` label; any later push removes
+  it, so add it again after looking at the new commits. References hold one macOS major's controls, so CI runs
   on the macOS major of the Mac that records them: init sets `runs-on` to this Mac's,
   and `make doctor` warns when the two drift apart, after a macOS upgrade for one. Then
   set `runs-on` in `ci.yml` and `release.yml` to the new major and re-record.

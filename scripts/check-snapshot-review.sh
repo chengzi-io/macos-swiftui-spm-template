@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Pull request check: fails while the PR changes view snapshot references
 # (__Snapshots__/) and lacks the snapshots-reviewed label. The reviewer adds the label
-# after comparing old and new images in the PR's Files changed tab; a later push that
-# changes references again removes it. Runs on Linux, so it does not source common.sh.
-#   Reads PR, BASE, HEAD, ACTION, BEFORE, AFTER, LABELS (JSON array) and GH_TOKEN.
+# after comparing old and new images in the PR's Files changed tab; any later push
+# removes it while the PR changes references. Runs on Linux, so it does not source
+# common.sh.
+#   Reads PR, BASE, HEAD, ACTION, LABELS (JSON array) and GH_TOKEN.
 set -euo pipefail
 
 label=snapshots-reviewed
@@ -18,15 +19,14 @@ echo "changed snapshot references:"
 echo "$changed"
 
 reviewed=$(jq -r --arg label "$label" 'index($label) != null' <<<"$LABELS")
-if [[ $ACTION == synchronize && $reviewed == true ]]; then
-    # A force push can drop BEFORE from the history; then nothing proves the push left
-    # the references alone.
-    if ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null ||
-        [[ -n $(git diff --name-only "$BEFORE" "$AFTER" -- "$snapshots") ]]; then
-        gh pr edit "$PR" --remove-label "$label"
-        reviewed=false
-        echo "snapshot references changed after the review: removed $label"
+# The label covers the commit it was added on, whatever a later push changed: the run
+# for an earlier push may not have removed it yet, and a fork's read-only token cannot.
+if [[ $ACTION == synchronize ]]; then
+    if [[ $reviewed == true ]]; then
+        gh pr edit "$PR" --remove-label "$label" ||
+            echo "::warning::could not remove $label; remove it, compare the images and add it again"
     fi
+    reviewed=false
 fi
 
 if [[ $reviewed != true ]]; then
