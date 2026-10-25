@@ -66,7 +66,8 @@ bundle identifier) and the package, the Xcode project, its targets and the schem
 Package.swift              the package with all the code: targets, platforms, Swift
                            settings, Sparkle
 Sources/AppRoot/           root model, scenes, menu commands
-Sources/Features/<Name>/   one target per feature: view, model, string catalog
+Sources/Features/<Name>/   one target per area of the app: its screens, model, string
+                           catalog
 Sources/Platform/Core/     protocols for what reaches outside the process, and mocks
 Sources/Platform/Live/     the live implementations: system APIs, network, Sparkle
 Sources/<Domain>/          the app's own domains, Core/ and Live/ as in Platform
@@ -86,7 +87,8 @@ scripts/                   build, sign, notarize, package, publish, lint rules, 
 version.txt                current version, owned by release-please
 ```
 
-Where code goes and the rules it follows: [AGENTS.md](../AGENTS.md).
+Where code goes and the rules it follows: [AGENTS.md](../AGENTS.md); why, with a menu bar
+monitor as the example: [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Editors
 

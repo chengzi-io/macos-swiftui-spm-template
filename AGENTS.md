@@ -48,8 +48,9 @@ Package.swift                 the package <App>: targets, dependencies, Swift se
 Sources/
   AppRoot/                    AppModel (root of the model tree), AppScenes (windows,
                               commands, Settings), app-wide menus
-  Features/<Name>/            target <Name>Feature: <Name>View, <Name>Model, logic only
-                              it uses, Resources/Localizable.xcstrings
+  Features/<Name>/            target <Name>Feature: one area of the app, its screens (a
+                              folder each when there are several), <Name>Model, logic
+                              only it uses, Resources/Localizable.xcstrings
   Platform/                   what any Mac app needs from the system: updates, launch
                               at login, notifications, preferences
     Core/<Name>/              target Platform: a protocol for each thing outside the
@@ -77,28 +78,47 @@ Create these the first time something needs them, not before:
   `<Domain>Live`. A domain with nothing outside the process has no `Live/`. A domain is
   a group of capabilities that change together, not one per service. Its tests:
   `<Domain>Tests` in `Tests/<Domain>Tests/`.
-- `Sources/DesignSystem/` for shared SwiftUI components.
+- `Sources/DesignSystem/` for SwiftUI components that two features share and that know
+  no domain: a component showing a domain's data belongs to its feature.
 - `Sources/Kits/<Name>/` for code that knows nothing of this app: a wrapper of a C or
   private interface, or `AppKitBridge` for `NSViewRepresentable` wrappers and NSWindow
   or NSEvent helpers ([RECIPES](docs/RECIPES.md#appkit-bridges)).
+- An extension or helper (a widget, a login item) is another thin target in
+  `App/<Name>/`, linking the domain Cores and the Live it needs, never a feature or
+  `AppRoot`; its views go in a package target of their own.
 
 What the user sees is a feature; what any Mac app needs is `Platform`; what this app is
 about is a domain; what knows nothing of this app is a kit. A target is one folder
 tree, and two targets' folders cannot nest (SwiftPM reports overlapping sources): hence
 `Core/` and `Live/` side by side, each grouped by capability.
 
+A feature is an area the user works in, not a screen: screens that show the same data
+and change together (a menu bar item and its panel) share a target, a folder each.
+Split a target when part of it changes for other reasons. A grown app has some 8 to 15
+library targets; more usually means folders were made into modules.
+
 Dependencies, enforced by `Package.swift`:
 
 ```text
-<App> ──► AppRoot ──► <Name>Feature ──► <Domain>, Platform (and DesignSystem, Kits)
- └────► <Domain>Live, PlatformLive ──► their Core (and Kits)
+<App>          ──► AppRoot, <Domain>, <Domain>Live, Platform, PlatformLive
+AppRoot        ──► <Name>Feature, <Domain>, Platform
+<Name>Feature  ──► <Domain>, Platform, DesignSystem, Kits
+<Domain>       ──► another <Domain>, Platform, Kits
+…Live          ──► its Core, other Cores, Kits; never another Live
+DesignSystem   ──► Kits
 ```
 
-A feature never depends on a `…Live` target or on another feature; only `<App>` knows
-the live services. A domain may use another domain's Core, never in a cycle; a kit
-depends on no module of the app. `README.md` is the app's page for its users;
-developer docs go in `docs/`. Skills live in `.agents/skills/`, and `.claude/skills/`
-links to each one: link a new skill the same way.
+A feature never depends on another feature; only `<App>` knows the live services. A
+domain never depends on another in a cycle; a kit depends on no module of the app. A
+flow that spans domains and runs without a screen (a reading crosses a threshold, so
+notify) belongs to the domain that consumes the others' results, named for what it does
+(`Alerts` uses `Monitor`'s readings and `Platform`'s notifications), with the decision
+as a plain type; not to a Live, `MainApp` or a screen's model. Why, with a menu bar
+monitor as the example: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+`README.md` is the app's page for its users; developer docs go in `docs/`. Skills live
+in `.agents/skills/`, and `.claude/skills/` links to each one: link a new skill the
+same way.
 
 ## Rules
 
@@ -109,8 +129,10 @@ links to each one: link a new skill the same way.
   directly, as `WordCount` is; it gets no protocol. For time, take `any Clock<Duration>`.
 - Models are `@Observable` and reach views through initializers, never
   `.environment(...)`: a missing initializer argument fails the build, a missing
-  environment object crashes at run time. `AppModel` owns the feature models and the
-  models a domain shares among features.
+  environment object crashes at run time. A feature's `<Name>Model` owns its screens'
+  models and the state they share (the selection). `AppModel` owns the features'
+  models, the models a domain shares among features, and what is app-wide (the updater,
+  a global shortcut): a new screen changes its feature's model, not `AppModel`.
 - Every view has a `#Preview` built from mocks.
 - Package resources need `bundle: .module`: `Text("Key", bundle: .module)`,
   `String(localized: "Key", bundle: .module)`, `Image("name", bundle: .module)`.
@@ -141,11 +163,13 @@ links to each one: link a new skill the same way.
   every service. `swift test` does not compile asset or string catalogs, so unit tests
   never assert localized text or images; `make smoke` covers resources in the real
   `.app`. XCTest only for UI tests.
-- Views get snapshot tests (swift-snapshot-testing; `NotesViewSnapshotTests` is the
-  pattern): rendered at 2x through `NSHostingView` by `SnapshotSupport`'s `render`,
-  light and dark, in English. The PNGs in `__Snapshots__/` beside the test are how an
-  agent sees a view without Xcode: read them. Tests never record: a missing or changed
-  reference fails, and the failure names the reference and the new image.
+- Screens get snapshot tests (swift-snapshot-testing; `NotesViewSnapshotTests` is the
+  pattern): each screen in the states that tell it apart (empty, filled, failed), light
+  and dark, in English; a subview shows in its screen's snapshot. `SnapshotSupport`'s
+  `render` draws them at 2x through `NSHostingView`. The PNGs in `__Snapshots__/`
+  beside the test are how an agent sees a view without Xcode: read them. Tests never
+  record: a missing or changed reference fails, and the failure names the reference and
+  the new image.
 - Recording a snapshot is the user's call. When one fails after a change you meant to
   make, or a new test has no reference, read the old and the new image, show the user
   what changed, and wait for their yes; then `make snapshots` (Claude Code asks too).
@@ -180,7 +204,8 @@ links to each one: link a new skill the same way.
 ## Add a feature
 
 1. Add `Sources/Features/<Name>/` with `<Name>View.swift` and `<Name>Model.swift`;
-   `Features/Notes/` is the pattern.
+   `Features/Notes/` is the pattern. A new screen of an existing area goes in that
+   feature's folder, not a new target.
 2. Declare it in `Package.swift`: a `<Name>Feature` target with
    `path: "Sources/Features/<Name>"`, `resources: [.process("Resources")]` if it has
    strings and `swiftSettings: ui`; a `<Name>FeatureTests` test target at
@@ -199,8 +224,8 @@ links to each one: link a new skill the same way.
    in `MainApp`: which updater an app gets depends on its Xcode target (an App Store
    build carries no Sparkle), and package targets cannot see a target's build settings.
 5. `AppModel` owns the feature's model; `AppScenes` shows its view.
-6. Test the model in `Tests/Features/<Name>Tests/` with mocks, and snapshot its view. A
-   flow worth guarding end to end gets an XCUITest in `App/UITests/`.
+6. Test the model in `Tests/Features/<Name>Tests/` with mocks, and snapshot its
+   screens. A flow worth guarding end to end gets an XCUITest in `App/UITests/`.
 7. New capability (network, files, camera…)? Add the entitlement to
    `App/Configs/App.entitlements` and its usage description as
    `INFOPLIST_KEY_NS…UsageDescription` in `App/Configs/App.xcconfig`.
