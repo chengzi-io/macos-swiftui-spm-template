@@ -42,10 +42,12 @@ keeps the unit-test loop fast.
   Claude Code asks too (`.claude/settings.json`). A PR that changes references fails
   the `Snapshot review` check until you compare the images in Files changed (2-up,
   swipe, onion skin) and add the `snapshots-reviewed` label; any later push removes
-  it, so add it again after looking at the new commits. References hold one macOS major's controls, so CI runs
-  on the macOS major of the Mac that records them: init sets `runs-on` to this Mac's,
-  and `make doctor` warns when the two drift apart, after a macOS upgrade for one. Then
-  set `runs-on` in `ci.yml` and `release.yml` to the new major and re-record.
+  it, so add it again after looking at the new commits. References hold one macOS
+  major's controls, so CI runs on the macOS major of the Mac that records them: init
+  sets `runs-on` to this Mac's, and `make doctor` warns when the two drift apart, after
+  a macOS upgrade for one. Then set `runs-on` in `ci.yml` and `release.yml` to the new
+  major and re-record. When a snapshot test fails on CI, the images it drew are in the
+  run's `snapshot-failures` artifact.
 - `make ci` runs lint, the unit tests, the debug `.app` and its launch smoke test. It is
   the definition of done.
 - `make test:ui` runs the UI tests. On a Mac they drive the real mouse and keyboard,
