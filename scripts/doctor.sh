@@ -14,8 +14,12 @@ developer_dir=$(xcode-select -p)
 ok "xcode-select: $developer_dir"
 
 xcode_version=$(xcodebuild -version | awk 'NR == 1 { print $2 }')
-[[ ${xcode_version%%.*} == "$xcode_major" ]] || die "Xcode $xcode_version found; this repo needs Xcode $xcode_major.x"
-ok "Xcode $xcode_version"
+((${xcode_version%%.*} >= xcode_major)) || die "Xcode $xcode_version found; this repo needs Xcode $xcode_major or later"
+if ((${xcode_version%%.*} == xcode_major)); then
+    ok "Xcode $xcode_version"
+else
+    warn "Xcode $xcode_version: this repo is tested with Xcode $xcode_major.x"
+fi
 
 # Coding agents build, test and render previews through Xcode with it: Xcode 26.3+ on
 # macOS 26+. On macOS 15 it exists but fails to load a system framework at launch.
