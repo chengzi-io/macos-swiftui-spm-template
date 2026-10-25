@@ -46,6 +46,12 @@ if [[ $new != "$old" ]]; then
             die "$new is a name the Xcode project already uses; pick another"
             ;;
     esac
+    # The app target is a module too: it cannot share a package target's name, and one
+    # named after a SwiftUI type breaks lookups of that type.
+    if [[ $new == App || $new == Settings ]] ||
+        swift package dump-package | jq -e --arg name "$new" '.targets | any(.name == $name)' >/dev/null; then
+        die "$new is a package module's name or a SwiftUI type's; pick another"
+    fi
     [[ ! -e App/$new.xcodeproj ]] || die "App/$new.xcodeproj already exists; pick another name"
     schemes=$XCODE_PROJECT/xcshareddata/xcschemes
     [[ -f $schemes/$old.xcscheme ]] || die "no $schemes/$old.xcscheme"
