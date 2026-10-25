@@ -56,7 +56,8 @@ Sources/
                               process, its types, its error enum and a Mock<Name>Service
     Live/<Name>/              target PlatformLive: Live<Name>Service (system APIs,
                               network, files, Sparkle)
-Tests/                        Swift Testing, mirroring Sources/ (<Name>FeatureTests)
+Tests/                        Swift Testing, mirroring Sources/ (<Name>FeatureTests);
+                              SnapshotSupport renders views for the snapshot tests
 App/                          the Xcode shell: <App>.xcodeproj, targets <App> and
                               <App>UITests
   Application/                @main, the composition root: builds the live services
@@ -105,7 +106,7 @@ links to each one: link a new skill the same way.
   the clock) that a model needs is a service: protocol and mock in the Core of
   `Platform` or its domain, live implementation in the matching Live. Pure logic
   (formatting, parsing, calculation, state machines) stays a plain type the model calls
-  directly, as `Greeter` is; it gets no protocol. For time, take `any Clock<Duration>`.
+  directly, as `WordCount` is; it gets no protocol. For time, take `any Clock<Duration>`.
 - Models are `@Observable` and reach views through initializers, never
   `.environment(...)`: a missing initializer argument fails the build, a missing
   environment object crashes at run time. `AppModel` owns the feature models and the
@@ -122,8 +123,8 @@ links to each one: link a new skill the same way.
   runs on its caller's actor.
 - In MainActor-by-default targets `Bundle.module` is MainActor-isolated, so nonisolated
   code (Error types, Sendable values) cannot read it. Resolve user-facing text in views
-  or models, as `GreeterError.message` does. Value types decoded or passed off the main
-  actor there need `nonisolated struct …: Codable, Sendable`.
+  or models, as `NoteError.message` in `NotesModel.swift` does. Value types decoded or
+  passed off the main actor there need `nonisolated struct …: Codable, Sendable`.
 - Warnings are errors, in the package and in the app. Fix them; do not silence them.
   `MemberImportVisibility` is on: import every module whose members a file uses
   (`import OSLog` for `Logger` interpolation).
@@ -131,7 +132,7 @@ links to each one: link a new skill the same way.
   logs, and turns the error into state the view shows. No empty `catch`, no `try?` on
   errors that matter.
 - Logging: each module has an internal `Log` enum of `os.Logger`s with its own category
-  (`Log.greeting`); subsystem = bundle identifier. Dynamic values stay private unless
+  (`Log.notes`); subsystem = bundle identifier. Dynamic values stay private unless
   marked `privacy: .public`; never log tokens or personal data. `make logs` streams
   them.
 - Module names end in `Feature` (`SettingsFeature`), and no module is named after a
@@ -140,11 +141,11 @@ links to each one: link a new skill the same way.
   every service. `swift test` does not compile asset or string catalogs, so unit tests
   never assert localized text or images; `make smoke` covers resources in the real
   `.app`. XCTest only for UI tests.
-- Views get snapshot tests (swift-snapshot-testing; `GreetingViewSnapshotTests` is the
-  pattern): rendered at 2x through `NSHostingView`, light and dark, in English. The PNGs
-  in `__Snapshots__/` beside the test are how an agent sees a view without Xcode: read
-  them. Tests never record: a missing or changed reference fails, and the failure names
-  the reference and the new image.
+- Views get snapshot tests (swift-snapshot-testing; `NotesViewSnapshotTests` is the
+  pattern): rendered at 2x through `NSHostingView` by `SnapshotSupport`'s `render`,
+  light and dark, in English. The PNGs in `__Snapshots__/` beside the test are how an
+  agent sees a view without Xcode: read them. Tests never record: a missing or changed
+  reference fails, and the failure names the reference and the new image.
 - Recording a snapshot is the user's call. When one fails after a change you meant to
   make, or a new test has no reference, read the old and the new image, show the user
   what changed, and wait for their yes; then `make snapshots` (Claude Code asks too).
@@ -158,9 +159,9 @@ links to each one: link a new skill the same way.
 
 ## Never
 
-- add files to `project.pbxproj` by hand: `App/Application/` and `App/UITests/` are
-  buildable folders that pick up new files; put build settings in
-  `App/Configs/*.xcconfig`, not the project
+- edit `project.pbxproj` by hand: `App/Application/` and `App/UITests/` are buildable
+  folders that pick up new files; put build settings in `App/Configs/*.xcconfig`, not
+  the project; link package products with `scripts/xcodeproj.py link`
 - add the package with Xcode's "Add Local…": Xcode builds that reference with
   `-suppress-warnings`, which breaks the build; `App/<App>.xcodeproj` references the
   repository root as a folder
@@ -179,19 +180,24 @@ links to each one: link a new skill the same way.
 ## Add a feature
 
 1. Add `Sources/Features/<Name>/` with `<Name>View.swift` and `<Name>Model.swift`;
-   `Features/Greeting/` is the pattern.
+   `Features/Notes/` is the pattern.
 2. Declare it in `Package.swift`: a `<Name>Feature` target with
    `path: "Sources/Features/<Name>"`, `resources: [.process("Resources")]` if it has
    strings and `swiftSettings: ui`; a `<Name>FeatureTests` test target at
-   `Tests/Features/<Name>Tests` with `exclude: ["__Snapshots__"]` (SwiftPM warns about
-   the reference PNGs otherwise); and `<Name>Feature` in `AppRoot`'s dependencies.
+   `Tests/Features/<Name>Tests` that depends on `SnapshotSupport`, with
+   `exclude: ["__Snapshots__"]` (SwiftPM warns about the reference PNGs otherwise); and
+   `<Name>Feature` in `AppRoot`'s dependencies.
 3. Add every user-facing string to the feature's `Resources/Localizable.xcstrings` in
    `en` and `zh-Hans`.
 4. Work outside the process gets a service: protocol and mock in `Platform/Core/` or a
    domain's `Core/`, live implementation in the matching `Live/`
    ([RECIPES](docs/RECIPES.md#networking) has one).
    `App/Application/MainApp.swift` builds the live one and the mock under
-   `UI_TESTING=1`, and passes it through `AppModel`.
+   `UI_TESTING=1`, and passes it through `AppModel`. A new domain's two targets are
+   also products in `Package.swift`; `scripts/xcodeproj.py link <App> <product>…`, with
+   every product `MainApp.swift` imports, links them to the app. The composition stays
+   in `MainApp`: which updater an app gets depends on its Xcode target (an App Store
+   build carries no Sparkle), and package targets cannot see a target's build settings.
 5. `AppModel` owns the feature's model; `AppScenes` shows its view.
 6. Test the model in `Tests/Features/<Name>Tests/` with mocks, and snapshot its view. A
    flow worth guarding end to end gets an XCUITest in `App/UITests/`.
@@ -200,8 +206,9 @@ links to each one: link a new skill the same way.
    `INFOPLIST_KEY_NS…UsageDescription` in `App/Configs/App.xcconfig`.
 8. `make ci`.
 
-The Greeting demo (`Features/Greeting`, `GreetingModelTests`, `GreetingViewSnapshotTests`
-and its `__Snapshots__`, `GreetingUITests`) is a placeholder; replace it with the first
+The Notes demo is a placeholder: the `Notes` domain (`Sources/Notes`), `Features/Notes`,
+`NotesFeatureTests` and its `__Snapshots__`, `NotesUITests`, and their lines in
+`Package.swift`, `AppModel`, `AppScenes` and `MainApp.swift`. Replace it with the first
 real feature. Recipes for launch at login, networking, menu bar apps, global keyboard
 shortcuts, AppKit bridges and crash reporting: [docs/RECIPES.md](docs/RECIPES.md).
 

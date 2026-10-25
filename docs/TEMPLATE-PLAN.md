@@ -120,11 +120,11 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | B1 | 编译严格度 | `Package.swift` 的 `swiftSettings`、`App/Configs/Project.xcconfig` | ✅ |
 | B2 | 格式化与 lint | `.swift-format`、`make fmt` / `make lint`；`scripts/lint-rules.sh` 拦旧 API 和越层 import | ✅ |
 | B3 | Git hooks | `lefthook.yml`（pre-commit 格式化） | ✅ |
-| B4 | 测试 | `make test`：`GreetingFeatureTests`（Swift Testing，2 个模型用例和 3 个快照用例）；`make test:ui`：`PomeloUITests`（XCUITest，1 个用例） | ✅ |
+| B4 | 测试 | `make test`：`NotesFeatureTests`（Swift Testing，5 个模型用例、4 组 `WordCount` 参数和 3 个快照用例）、`SettingsFeatureTests`（2 个快照用例），共用 `SnapshotSupport` 的渲染；`make test:ui`：`PomeloUITests`（XCUITest，1 个用例） | ✅ |
 | B5 | `.app` 冒烟测试 | `scripts/smoke.sh`，同时用于 debug 包和 release 包；检查签名、Info.plist、资源包、`Assets.car` 和 `AppIcon.icns`，然后启动应用 | ✅ |
 | C1 | 日志 | 每个模块一个内部 `Log`（各自的 category）、`make logs` | ✅ |
 | C2 | 错误处理约定 | `AppModel` 示例 + AGENTS.md | ✅ |
-| C3 | 状态与依赖注入 | 模型经初始化器传给视图（漏传编译失败，`.environment` 漏注入运行时才崩），`AppModel` 持有各功能的模型；碰进程外资源（网络、文件、系统 API、时钟）的服务才写成协议，经初始化器注入，测试传 stub（RECIPES 的网络示例）；纯逻辑的 `Greeter` 是普通类型 | ✅ |
+| C3 | 状态与依赖注入 | 模型经初始化器传给视图（漏传编译失败，`.environment` 漏注入运行时才崩），`AppModel` 持有各功能的模型；碰进程外资源（网络、文件、系统 API、时钟）的服务才写成协议，经初始化器注入，测试传 stub（RECIPES 的网络示例）；纯逻辑的 `WordCount` 是普通类型 | ✅ |
 | C4 | 本地持久化 | Keychain / SwiftData 见 RECIPES（设置页的 `@AppStorage` 示例随结构调整删除） | 📄 |
 | C5 | 开机启动 | `docs/RECIPES.md` | 📄 |
 | C6 | 网络 | `docs/RECIPES.md`，`network.client` 已开 | 📄 |
@@ -189,6 +189,8 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **工程改名（2026-10-23）**：`App.xcodeproj`、`App`/`AppUITests` 两个 target、`App` scheme 和 `App/`、`AppUITests/` 目录改用 app 名，模板里是 Pomelo（先试过 `SwiftUITemplate`，太长）。改名放进 `scripts/rename.sh`，init 调用它，init 删掉自己后它还在，首次发布前改名也用它，名字、显示名、bundle id 一起改；发布后再改名或 bundle id 等于换了一个 app（Sparkle 更新、用户数据、Homebrew），脚本拒绝（V56）。先试过的做法是 init 把模板名当占位词全局替换：模板里安全，但 init 之后 app 名可能是 `Notes`、`Timer` 这样的常见词，再全局替换会改坏别处，所以文档改写 `<App>`、脚本从工程推出名字。用这个模板做的多个 app 在 Xcode 最近项目列表里不再都叫 App。`Configs/App.xcconfig`、`App.entitlements` 按角色命名，和 `UITests.xcconfig` 对应，不改名。rename.sh 拒绝工程里已有的词（`Products`、`Debug` 等）和已存在的路径（如 `Configs`），都在写文件之前。
 - **结构调整二：包到仓库根，壳进 `App/`（2026-10-23）**：`Packages/AppModules` 的 `Package.swift`、`Sources/`、`Tests/` 移到仓库根，包名从 `AppModules` 改成 app 名；工程、壳的源码、UI 测试和 `Configs/` 移进 `App/`，源码目录叫 `App/Application/`、`App/UITests/`（按角色命名，避免在 Xcode 里和同名的包并排；`App/Sources/` 会和根目录的 `Sources/` 混淆）。参照的是薄壳 app 的做法（V57），之前举的 IceCubes 等厚工程不适用。脚本从 `App/` 里唯一带 `project.pbxproj` 的工程推出 `<App>`，`PACKAGE_DIR` 和 `--package-path` 去掉；SwiftPM 的 `.build` 和 DerivedData（`.build/xcode`）现在在同一个目录。
 - **结构调整三：按领域分目录（2026-10-24）**：按技术层分的 `Services`、`ServicesLive` 在服务一多时会各平铺几十个文件，每个功能 import 的都是同一个大模块。现在换成 `Platform/Core`（target `Platform`）和 `Platform/Live`（target `PlatformLive`），里面按能力分子目录（`Updater/`）。`Platform` 只放任何 Mac app 都需要的系统集成；app 自己的业务按领域建 `Sources/<Domain>/{Core,Live}`，和 app 无关的封装放 `Sources/Kits/`（`AppKitBridge` 也归这里）。`Models/` 取消，多个功能共用的类型、纯逻辑和 model 放进领域的 Core。Core 和 Live 并列，而不是 `<能力>/Live` 嵌套：SwiftPM 不允许两个 target 的目录嵌套（实测报 `overlapping sources`），每个能力一对 target 又太多。`lint-rules.sh` 的两条 import 检查从 `Sources/Services` 推广到所有 `Sources/*/Core` 和 `Sources/*/Live`。
+- **示例换成单条便签（2026-10-24）**：Greeting 只演示了视图、模型和纯逻辑，领域的 Core/Live、服务的 Mock、后台读写（`@concurrent`）、服务抛错变成界面状态、字符串复数都没有覆盖。现在的示例是一条便签：`Notes` 领域（`NoteService` 和 `MockNoteService` 在 Core，`LiveNoteService` 写 Application Support 里的 `note.txt`），`NotesFeature` 里是编辑器、词数（纯逻辑 `WordCount`）、已保存/已编辑和保存按钮（⌘S）。`feat/notes-demo` 分支上的多条便签版本（列表、选中、菜单命令、每次输入都保存）对模板来说太大，没有采用。保存同一时间只跑一个，`load()` 只读第一次，这样新开窗口不会冲掉没保存的文字。app target 要多链接 `Notes`、`NotesLive` 两个产品，`rename.sh` 把这两个名字加进了保留词。
+- **设置窗口用顶部 tab、链接工具进 `scripts/`（2026-10-24）**：`SettingsView` 改成 `TabView`，macOS 把 tab 放在窗口的工具栏里，和 Safari、TextEdit 一样。起始只有「更新」一个 tab（版本号、自动检查、检查更新），app 自己的设置以后加在它前面的「通用」tab 里，不放占位内容。`CheckForUpdatesButton` 从 AppRoot 搬进 SettingsFeature，app 菜单和「更新」tab 共用；AppRoot 没有字符串了，去掉了它的字符串表。快照的渲染函数抽到 `Tests/SnapshotSupport`，两个测试 target 共用。新增领域时 app target 要多链接产品，考虑过把组装挪进包里的 `AppLive` target：包里的 target 看不到 Xcode target 的构建设置，App Store 版不能带 Sparkle（审核指南 2.4.5），用哪个 updater 只能由 app target 决定，所以组装留在 `MainApp`，改为把 mac-app-store skill 里 `xcodeproj.py` 的 `link` 命令搬进 `scripts/xcodeproj.py`。
 
 ---
 

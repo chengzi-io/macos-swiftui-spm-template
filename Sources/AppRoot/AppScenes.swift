@@ -1,4 +1,4 @@
-import GreetingFeature
+import NotesFeature
 import SettingsFeature
 import SwiftUI
 
@@ -13,7 +13,7 @@ public struct AppScenes: Scene {
 
     public var body: some Scene {
         WindowGroup {
-            GreetingView(model: model.greeting)
+            NotesView(model: model.notes)
         }
         .commands {
             CommandGroup(after: .appInfo) {

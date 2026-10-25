@@ -129,9 +129,10 @@ Next:
   1. make setup, then make snapshots to record the demo's view snapshots on this Mac
      (look at the images in Tests/**/__Snapshots__ and commit them), then make ci
      and make run
-  2. Replace the Greeting demo (Sources/Features/Greeting) and the icon
-     (App/Application/AppIcon.icon in Icon Composer, or the app-icon skill in
-     .agents/skills/app-icon), and say what the app does at the top of README.md.
+  2. Replace the Notes demo (Sources/Notes, Sources/Features/Notes; AGENTS.md
+     lists the rest) and the icon (App/Application/AppIcon.icon in Icon Composer,
+     or the app-icon skill in .agents/skills/app-icon), and say what the app does
+     at the top of README.md.
   3. One-time release setup: docs/RELEASING.md (make github-setup, GitHub App,
      make sparkle-keys, optional Developer ID).
 EOF

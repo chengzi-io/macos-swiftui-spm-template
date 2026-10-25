@@ -74,9 +74,10 @@ public final class LiveLaunchAtLoginService: LaunchAtLoginService {
 }
 ```
 
-The toggle goes in `Features/Settings`, with a `Log.swift` like Greeting's that declares
-a `settings` category. When System Settings turned the item off, it says so and offers
-the way there:
+The toggle goes in a General pane in `Features/Settings`: a `GeneralSettingsView` tab
+before Updates in `SettingsView`, with a `Log.swift` like the Notes demo's that
+declares a `settings` category. When System Settings turned the item off, it says so
+and offers the way there:
 
 ```swift
 import AppKit
@@ -197,12 +198,13 @@ network.
 ### Menu beside a window
 
 A `MenuBarExtra` in its default `.menu` style is a native menu, and each `Divider()` is
-a separator between groups. Menus belong to `AppRoot`, beside `CheckForUpdatesButton`:
+a separator between groups. Menus belong to `AppRoot`, beside `AppScenes`:
 `Sources/AppRoot/MenuBarMenu.swift`.
 
 ```swift
 import AppKit
 import Platform
+import SettingsFeature
 import SwiftUI
 
 /// Content of a `MenuBarExtra` in its default `.menu` style; each `Divider()` becomes a
@@ -254,11 +256,13 @@ MenuBarExtra {
 ```
 
 Add `About %@`, `Settings…` and `Quit` to `AppRoot/Resources/Localizable.xcstrings` in
-`en` and `zh-Hans`. Settings uses `openSettings` rather than `SettingsLink`, which cannot
-activate the app. Apple plans to deprecate `activate(ignoringOtherApps:)` (its
-documentation lists macOS 27), but Swift warns only once the deployment target reaches
-that release; `activate()` alone still leaves windows in the Stage Manager strip now
-and then. This was checked on macOS 15.7 with Stage Manager, not on macOS 26 or later.
+`en` and `zh-Hans`, creating it and `resources: [.process("Resources")]` on the
+`AppRoot` target if AppRoot has no strings yet. Settings uses `openSettings` rather than
+`SettingsLink`, which cannot activate the app. Apple plans to deprecate
+`activate(ignoringOtherApps:)` (its documentation lists macOS 27), but Swift warns only
+once the deployment target reaches that release; `activate()` alone still leaves
+windows in the Stage Manager strip now and then. This was checked on macOS 15.7 with
+Stage Manager, not on macOS 26 or later.
 
 An item that opens the main window is optional. Add it to `MenuBarMenu` as the first
 group, its title in the catalog, when people come back to a window from the menu bar;
@@ -290,7 +294,7 @@ app's view:
 
 ```swift
 MenuBarExtra {
-    GreetingView(model: model.greeting)
+    NotesView(model: model.notes)
 } label: {
     Image(systemName: "circle.hexagongrid")
 }
@@ -439,7 +443,7 @@ public struct WindowReader: NSViewRepresentable {
     }
 }
 
-// GreetingView(model: model).background(WindowReader { $0.level = .floating })
+// NotesView(model: model).background(WindowReader { $0.level = .floating })
 ```
 
 Step 3 is an `NSWindowController` in `AppRoot`, which owns the windows, with each column

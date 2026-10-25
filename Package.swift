@@ -21,6 +21,8 @@ let package = Package(
     products: [
         // Linked by the Xcode app target, the composition root.
         .library(name: "AppRoot", targets: ["AppRoot"]),
+        .library(name: "Notes", targets: ["Notes"]),
+        .library(name: "NotesLive", targets: ["NotesLive"]),
         .library(name: "Platform", targets: ["Platform"]),
         .library(name: "PlatformLive", targets: ["PlatformLive"]),
     ],
@@ -31,13 +33,13 @@ let package = Package(
     targets: [
         .target(
             name: "AppRoot",
-            dependencies: ["GreetingFeature", "SettingsFeature", "Platform"],
-            resources: [.process("Resources")],
+            dependencies: ["NotesFeature", "SettingsFeature", "Notes", "Platform"],
             swiftSettings: ui
         ),
         .target(
-            name: "GreetingFeature",
-            path: "Sources/Features/Greeting",
+            name: "NotesFeature",
+            dependencies: ["Notes"],
+            path: "Sources/Features/Notes",
             resources: [.process("Resources")],
             swiftSettings: ui
         ),
@@ -47,6 +49,17 @@ let package = Package(
             path: "Sources/Features/Settings",
             resources: [.process("Resources")],
             swiftSettings: ui
+        ),
+        .target(
+            name: "Notes",
+            path: "Sources/Notes/Core",
+            swiftSettings: common
+        ),
+        .target(
+            name: "NotesLive",
+            dependencies: ["Notes"],
+            path: "Sources/Notes/Live",
+            swiftSettings: common
         ),
         .target(
             name: "Platform",
@@ -59,13 +72,34 @@ let package = Package(
             path: "Sources/Platform/Live",
             swiftSettings: common
         ),
+        // The test targets' view renderer; nothing in the app depends on it.
+        .target(
+            name: "SnapshotSupport",
+            dependencies: [.product(name: "SnapshotTesting", package: "swift-snapshot-testing")],
+            path: "Tests/SnapshotSupport",
+            swiftSettings: ui
+        ),
         .testTarget(
-            name: "GreetingFeatureTests",
+            name: "NotesFeatureTests",
             dependencies: [
-                "GreetingFeature",
+                "NotesFeature",
+                "Notes",
+                "SnapshotSupport",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
-            path: "Tests/Features/GreetingTests",
+            path: "Tests/Features/NotesTests",
+            exclude: ["__Snapshots__"],
+            swiftSettings: ui
+        ),
+        .testTarget(
+            name: "SettingsFeatureTests",
+            dependencies: [
+                "SettingsFeature",
+                "Platform",
+                "SnapshotSupport",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ],
+            path: "Tests/Features/SettingsTests",
             exclude: ["__Snapshots__"],
             swiftSettings: ui
         ),

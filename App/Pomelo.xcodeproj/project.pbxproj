@@ -10,6 +10,8 @@
 		0A0000000000000000000054 /* AppRoot in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000000000000000000051 /* AppRoot */; };
 		0A0000000000000000000055 /* Platform in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000000000000000000052 /* Platform */; };
 		0A0000000000000000000056 /* PlatformLive in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000000000000000000053 /* PlatformLive */; };
+		44D85FB305684D99822F2215 /* Notes in Frameworks */ = {isa = PBXBuildFile; productRef = 1488DBF1938E43C0966D4210 /* Notes */; };
+		CD19FD8C56564753ABC8765C /* NotesLive in Frameworks */ = {isa = PBXBuildFile; productRef = 6692C123FD704587BB1D0978 /* NotesLive */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +57,8 @@
 				0A0000000000000000000054 /* AppRoot in Frameworks */,
 				0A0000000000000000000055 /* Platform in Frameworks */,
 				0A0000000000000000000056 /* PlatformLive in Frameworks */,
+				44D85FB305684D99822F2215 /* Notes in Frameworks */,
+				CD19FD8C56564753ABC8765C /* NotesLive in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,6 +128,8 @@
 				0A0000000000000000000051 /* AppRoot */,
 				0A0000000000000000000052 /* Platform */,
 				0A0000000000000000000053 /* PlatformLive */,
+				1488DBF1938E43C0966D4210 /* Notes */,
+				6692C123FD704587BB1D0978 /* NotesLive */,
 			);
 			productName = Pomelo;
 			productReference = 0A0000000000000000000010 /* Pomelo.app */;
@@ -321,6 +327,14 @@
 		0A0000000000000000000053 /* PlatformLive */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PlatformLive;
+		};
+		1488DBF1938E43C0966D4210 /* Notes */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Notes;
+		};
+		6692C123FD704587BB1D0978 /* NotesLive */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NotesLive;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

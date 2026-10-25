@@ -55,7 +55,7 @@ flowchart TB
 flowchart TD
     t["① Use this template, clone"] --> i["② scripts/init.sh<br/>app name, bundle id"]
     i --> s["③ make setup, make run"]
-    s --> f["④ replace the Greeting demo<br/>with your first feature"]
+    s --> f["④ replace the Notes demo<br/>with your first feature"]
     s --> b["⑤ replace the icon:<br/>Icon Composer or the app-icon skill"]
     f --> r["⑥ one-time release setup"]
     b --> r
