@@ -33,6 +33,11 @@ public_key=$(sparkle_public_key)
 [[ -n ${GITHUB_REPOSITORY:-} && -n $public_key ]] ||
     die "release builds need GITHUB_REPOSITORY in App/Configs/Identity.xcconfig and SUPublicEDKey in App/Configs/Info.plist (see make sparkle-keys)"
 
+# The build number counts commits, and a shallow clone has only the last few: the
+# release would get a lower number than the one before, and Sparkle would not offer it.
+[[ $(git rev-parse --is-shallow-repository) == false ]] ||
+    die "this clone is shallow, so the build number would go back; run git fetch --unshallow"
+
 log "xcodebuild archive Release ($VERSION build $BUILD_NUMBER)"
 rm -rf "$ARCHIVE"
 xcodebuild archive "${xcodebuild_args[@]}" -configuration Release \

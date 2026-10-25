@@ -49,6 +49,11 @@ case $config in
     *) die "usage: build-app.sh debug|release|mas" ;;
 esac
 
+# The build number counts commits, and a shallow clone has only the last few: the
+# release would get a lower number than the one before, and Sparkle would not offer it.
+[[ $(git rev-parse --is-shallow-repository) == false ]] ||
+    die "this clone is shallow, so the build number would go back; run git fetch --unshallow"
+
 log "xcodebuild archive $scheme ($VERSION build $BUILD_NUMBER)"
 rm -rf "$archive"
 xcodebuild archive "${xcodebuild_args[@]}" -scheme "$scheme" -configuration Release \
