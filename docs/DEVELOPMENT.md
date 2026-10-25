@@ -110,5 +110,5 @@ Skills live in `.agents/skills` (Codex and other agents), linked from `.claude/s
 PR titles are Conventional Commits ([CONTRIBUTING](../.github/CONTRIBUTING.md)); PRs are
 squash-merged, and release-please turns `feat` and `fix` into releases. The flow and the
 one-time setup: [RELEASING.md](RELEASING.md). Recipes for launch at login, networking,
-menu bar apps, global keyboard shortcuts, AppKit bridges, crash reporting, the Keychain
-and the privacy manifest: [RECIPES.md](RECIPES.md).
+menu bar apps, global keyboard shortcuts, AppKit bridges, crash reporting, the
+Keychain, SwiftData and the privacy manifest: [RECIPES.md](RECIPES.md).

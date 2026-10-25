@@ -139,7 +139,11 @@ same way.
   A package that owns the outside access, its storage and the control the user sees,
   with no logic of the app's in between, gets no service (KeyboardShortcuts in
   [RECIPES](docs/RECIPES.md#global-keyboard-shortcuts)): a model test would have nothing
-  to swap.
+  to swap. SwiftData is the other exception, since `@Query` keeps a view's list current:
+  the scene sets `.modelContainer(...)`, a view reads with `@Query` and never writes, its
+  feature's model inserts, deletes and saves through a `ModelContext`, and tests,
+  previews and snapshots use an in-memory store instead of a mock
+  ([RECIPES](docs/RECIPES.md#swiftdata)).
 - Models are `@Observable` and reach views through initializers, never
   `.environment(...)`: a missing initializer argument fails the build, a missing
   environment object crashes at run time. A feature's `<Name>Model` owns its screens'
@@ -263,9 +267,9 @@ lines in `Package.swift` (its targets and their place in `AppModules`), the `<Ap
 scheme's Test action, `AppModel`, `AppScenes` and `MainApp.swift`. Replace it with the
 first real feature, and point this file's examples (`WordCount`, `NoteError.message`,
 `Log.notes`, `NotesViewSnapshotTests`, `LiveNoteServiceTests`, `NotesFeatureTests`,
-`Features/Notes/`) at their counterparts in it. Recipes for launch at login, networking, menu bar apps, global keyboard
-shortcuts, AppKit bridges, crash reporting, the Keychain and the privacy manifest:
-[docs/RECIPES.md](docs/RECIPES.md).
+`Features/Notes/`) at their counterparts in it. Recipes for launch at login,
+networking, menu bar apps, global keyboard shortcuts, AppKit bridges, crash reporting,
+the Keychain, SwiftData and the privacy manifest: [docs/RECIPES.md](docs/RECIPES.md).
 
 Skills in `.agents/skills/`: `app-icon` makes the app icon. Skills that change the build
 or the release start only when the user asks for them by name: `dmg` designs the DMG
