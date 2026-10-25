@@ -4,6 +4,9 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -euo pipefail -c
 .DEFAULT_GOAL := help
+# Targets list their steps in order (ci: lint test app smoke); make -j would run smoke
+# against the previous build's app.
+.NOTPARALLEL:
 
 # App/<App>.xcodeproj names the app target and its scheme.
 APP_TARGET := $(patsubst App/%.xcodeproj/project.pbxproj,%,$(wildcard App/*.xcodeproj/project.pbxproj))
