@@ -65,7 +65,7 @@ step to the publish job, before the step that runs `make release`:
 
 ```yaml
       # scripts/make-dmg.sh builds the DMG window with dmgbuild, which needs Python 3.10+.
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.13'
 ```

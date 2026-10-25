@@ -197,7 +197,7 @@ Both need the user's GitHub account: ask before creating either for them.
          DEVELOPER_DIR: <the publish job's DEVELOPER_DIR>
          TAG: ${{ needs.release-please.outputs.tag_name }}
        steps:
-         - uses: actions/checkout@v7
+         - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
            with:
              ref: ${{ needs.release-please.outputs.tag_name }}
          - name: Download the published DMG
