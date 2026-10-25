@@ -1,21 +1,21 @@
 # Architecture
 
 How the code is split, why, and where a new piece goes. The rules are in
-[AGENTS.md](../AGENTS.md); this page explains them with two apps: the template's Notes
-demo, which is small, and a menu bar system monitor, the size the structure is for.
+[AGENTS.md](../AGENTS.md); this page explains them with one example, a menu bar system
+monitor, the size of app the structure is for.
 
 ## The pieces
 
-| Piece | What it holds | Notes demo | Monitor |
-| --- | --- | --- | --- |
-| Feature | an area the user works in: its screens and their model | `NotesFeature`: the editor | `MonitorFeature`: menu bar labels, panels |
-| Domain Core | what the app is about: protocols for what is outside the process, value types, pure logic, shared models, mocks | `Notes`: `NoteService` | `Monitor`: `CPUReader`, `Sampler`; `Alerts` |
-| Domain Live | the real implementations of those protocols | `NotesLive`: writes a file | `MonitorLive`: asks the kernel |
-| Platform | what any Mac app needs: updates, launch at login, notifications | `UpdaterService` | and `NotificationService` |
-| DesignSystem | the app's look: the spacing, radii, fonts and colors it repeats, and shared components; knows no domain | none: system styles only | `Spacing`, `StatusLevel` colors, `Sparkline` |
-| Kit | code that knows nothing of the app | none | `SMCKit` |
-| AppRoot | the root model and the scenes | `AppModel`, `AppScenes` | and the status items |
-| MainApp | builds the live services and hands them to AppRoot | | |
+| Piece | What it holds | In the monitor |
+| --- | --- | --- |
+| Feature | an area the user works in: its screens and their model | `MonitorFeature`: menu bar labels, panels |
+| Domain Core | what the app is about: protocols for what is outside the process, value types, pure logic, shared models, mocks | `Monitor`: `CPUReader`, `Sampler`; `Alerts` |
+| Domain Live | the real implementations of those protocols | `MonitorLive`: asks the kernel |
+| Platform | what any Mac app needs: updates, launch at login, notifications | `UpdaterService`, `NotificationService` |
+| DesignSystem | the app's look: the spacing, radii, fonts and colors it repeats, and shared components; knows no domain | `Spacing`, `StatusLevel` colors, `Sparkline` |
+| Kit | code that knows nothing of the app | `SMCKit` |
+| AppRoot | the root model and the scenes | `AppModel`, `AppScenes`, the status items |
+| MainApp | in the Xcode target: builds the live services and hands them to AppRoot | the live readers, or mocks |
 
 ## One rule holds it together
 
@@ -25,16 +25,16 @@ implementations.
 ```mermaid
 flowchart LR
     MainApp{"MainApp"}
-    MainApp -->|normally| Live["LiveNoteService<br/>writes note.txt"]
-    MainApp -->|UI_TESTING=1| Mock["MockNoteService"]
-    Live --> Protocol["NoteService"]
+    MainApp -->|normally| Live["LiveCPUReader<br/>asks the kernel"]
+    MainApp -->|UI_TESTING=1| Mock["MockCPUReader"]
+    Live --> Protocol["CPUReader"]
     Mock --> Protocol
-    Model["NotesModel"] --> Protocol
+    Sampler["Sampler"] --> Protocol
 ```
 
-- Tests and previews run the same model against a mock; nothing touches the disk.
-- A feature cannot create a `LiveNoteService`: it does not depend on `NotesLive`, so the
-  build fails.
+- Tests and previews run the same code against a mock; nothing asks the kernel.
+- A feature cannot create a `LiveCPUReader`: it does not depend on `MonitorLive`, so
+  `make test` fails on the import.
 - An App Store build and a direct build choose their updater in their own `MainApp`. A
   package target cannot see which Xcode target builds it, so the choice stays there.
 
@@ -73,7 +73,9 @@ App/Application/           MainApp: the live readers, or mocks under UI_TESTING=
 ```
 
 Ten library targets. CPU, memory and network are folders, not targets. `Alerts` has no
-Live: the one thing it needs from outside, notifications, is `Platform`'s.
+Live: the one thing it needs from outside, notifications, is `Platform`'s. The app
+target links one product, `AppModules`, which lists every module `MainApp` imports:
+`AppRoot`, `Monitor`, `MonitorLive`, `Alerts`, `Platform`, `PlatformLive`.
 
 ```mermaid
 flowchart TB
@@ -82,6 +84,9 @@ flowchart TB
     App --> PlatformLive
     AppRoot --> MonitorFeature
     AppRoot --> SettingsFeature
+    AppRoot --> Monitor
+    AppRoot --> Alerts
+    AppRoot --> Platform
     MonitorFeature --> Monitor
     MonitorFeature --> Alerts
     SettingsFeature --> Monitor
@@ -224,8 +229,9 @@ blue, so they show the system's default, not the app's accent.
 ### A Live needs another domain
 
 A Live uses its own Core, other domains' Cores and kits, never another Live, so a test
-swaps one Live at a time. A `SyncLive` that uploads notes uses the `Notes` types, not
-`NotesLive`. `scripts/lint-rules.sh` rejects `import …Live` in a Live.
+swaps one Live at a time. An `ExportLive` that writes readings to a CSV file uses
+`Monitor`'s types, not `MonitorLive`. `scripts/lint-rules.sh` rejects `import …Live` in
+a Live.
 
 ### A widget, or an App Store build
 

@@ -13,12 +13,12 @@ flowchart TD
     live --> users["installed apps update through Sparkle"]
 ```
 
-- **Versions.** `feat` bumps the minor version and `fix` the patch while the version is
-  below 1.0 (`bump-minor-pre-major`); `chore`, `docs`, `ci` and the like release
-  nothing. release-please writes the version to `version.txt` and
-  `.release-please-manifest.json`. `CFBundleShortVersionString` comes from
-  `version.txt`; `CFBundleVersion` is `git rev-list --count HEAD`, which only grows on
-  `main` and is what Sparkle compares.
+- **Versions.** `feat` bumps the minor version and `fix` the patch; below 1.0 a breaking
+  change bumps the minor version, not the major (`bump-minor-pre-major`). `chore`,
+  `docs`, `ci` and the like release nothing. release-please writes the version to
+  `version.txt` and `.release-please-manifest.json`. `CFBundleShortVersionString` comes
+  from `version.txt`; `CFBundleVersion` is `git rev-list --count HEAD`, which only grows
+  on `main` and is what Sparkle compares.
 - **Draft release.** Nobody sees it, and `releases/latest` keeps pointing at the
   previous version, until the publish job has uploaded every asset. The release-only
   steps (universal build, notarization, DMG, appcast) first run in that job; when one
@@ -116,8 +116,6 @@ first launch.
 | Permissions (camera, screen recording, accessibility…) and keychain items | May be asked for again after an update: every build has a new signature | Kept |
 | Homebrew cask (`homebrew-cask` skill) | Own tap only: blocked at first launch, or the cask clears the quarantine flag; you pick, and README.md says so | Installs, and can go to the official `homebrew/cask` |
 
-Ad-hoc updates were verified locally with two sandboxed builds (0.1.0 → 0.1.1).
-
 ### 4b. With a Developer ID
 
 1. Join the Apple Developer Program. Create a **Developer ID Application** certificate
@@ -189,10 +187,8 @@ days). Open source projects can leave it on the release; for closed source, remo
 asset upload in `scripts/publish-github.sh` and rely on the private workflow artifact.
 
 ```bash
-atos -o App.dSYM/Contents/Resources/DWARF/App -arch arm64 -l <load address> <address>
+atos -o <App>.app.dSYM/Contents/Resources/DWARF/<App> -arch arm64 -l <load address> <address>
 ```
-
-The dSYM matches by UUID, so the executable being renamed to `<App>` does not matter.
 
 ## Homebrew cask (optional)
 

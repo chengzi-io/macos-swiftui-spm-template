@@ -63,31 +63,18 @@ Try the Chinese UI with `make run ARGS="-AppleLanguages '(zh-Hans)'"`.
 bundle identifier) and the package, the Xcode project, its targets and the scheme.
 
 ```text
-Package.swift              the package with all the code: targets, platforms, Swift
-                           settings, Sparkle
-Sources/AppRoot/           root model, scenes, menu commands
-Sources/Features/<Name>/   one target per area of the app: its screens, model, string
-                           catalog
-Sources/Platform/Core/     protocols for what reaches outside the process, and mocks
-Sources/Platform/Live/     the live implementations: system APIs, network, Sparkle
-Sources/<Domain>/          the app's own domains, Core/ and Live/ as in Platform
-Tests/                     Swift Testing, mirroring Sources/
-App/                       the Xcode shell
-  <App>.xcodeproj/         <App> and <App>UITests targets, shared <App> scheme
-  Application/             @main (composition root), app delegate, assets, AppIcon.icon,
-                           privacy manifest
-  UITests/                 XCUITest: a few critical flows
-  Configs/                 Identity.xcconfig (app identity), build settings, Info.plist,
-                           entitlements
-  Package.swift            empty: keeps App/ out of the root package in Xcode
+Package.swift, Sources/,   all the code, in one Swift package
+Tests/
+App/                       the Xcode shell: the project, @main, assets, configs
 scripts/                   build, sign, notarize, package, publish, lint rules
 .agents/skills/            agent skills, linked from .claude/skills
 .github/                   CI, PR title, release-please, Dependabot, templates
 version.txt                current version, owned by release-please
 ```
 
-Where code goes and the rules it follows: [AGENTS.md](../AGENTS.md); why, with a menu bar
-monitor as the example: [ARCHITECTURE.md](ARCHITECTURE.md).
+The code and the shell in detail, and the rules they follow:
+[AGENTS.md](../AGENTS.md#where-things-go); why, with a menu bar monitor as the example:
+[ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Editors
 
@@ -121,4 +108,5 @@ Skills live in `.agents/skills` (Codex and other agents), linked from `.claude/s
 PR titles are Conventional Commits ([CONTRIBUTING](../.github/CONTRIBUTING.md)); PRs are
 squash-merged, and release-please turns `feat` and `fix` into releases. The flow and the
 one-time setup: [RELEASING.md](RELEASING.md). Recipes for launch at login, networking,
-menu bar apps, global keyboard shortcuts and crash reporting: [RECIPES.md](RECIPES.md).
+menu bar apps, global keyboard shortcuts, AppKit bridges, crash reporting, the Keychain
+and the privacy manifest: [RECIPES.md](RECIPES.md).
