@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # CI only.
-#   setup    imports the Developer ID certificate into a temporary keychain and writes
-#            the notary API key to $RUNNER_TEMP, exporting NOTARY_KEY_PATH
+#   setup    checks that SPARKLE_ED_PRIVATE_KEY is set, imports the Developer ID
+#            certificate into a temporary keychain and writes the notary API key to
+#            $RUNNER_TEMP, exporting NOTARY_KEY_PATH
 #   cleanup  deletes both
 # With TEAM_ID empty the release is ad-hoc signed and there is nothing to import.
 
@@ -13,6 +14,9 @@ key_path="$RUNNER_TEMP/notary-key.p8"
 
 case ${1:-} in
     setup)
+        # appcast.sh signs with it only after the build and notarization.
+        [[ -n ${SPARKLE_ED_PRIVATE_KEY:-} ]] ||
+            die "secret SPARKLE_ED_PRIVATE_KEY is empty; see docs/RELEASING.md, One-time setup, step 3"
         if [[ -z ${TEAM_ID:-} ]]; then
             log "TEAM_ID empty: ad-hoc release, no signing credentials to import"
             exit 0
