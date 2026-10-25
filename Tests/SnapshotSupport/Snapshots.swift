@@ -14,11 +14,12 @@ public nonisolated let recording =
 /// Renders at 2x on every Mac, whatever the main display's scale: a CI runner's virtual
 /// display would otherwise give 1x images.
 public func render(_ view: some View, appearance: NSAppearance.Name = .aqua) throws -> NSImage {
-    // Controls draw in the Mac's accent color, so a Mac set to purple would record purple
-    // checkboxes. Pin blue (4), what an unset accent draws on a CI runner, for this
-    // process only.
+    // Controls follow the Mac's settings, so a Mac set to a purple accent or to always
+    // show scroll bars would record them. Pin what a CI runner draws, for this process
+    // only: the blue accent (4) and scroll bars only while scrolling.
     var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
     arguments["AppleAccentColor"] = 4
+    arguments["AppleShowScrollBars"] = "WhenScrolling"
     UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain)
     // Outside a window nothing draws the window background, and dark text would sit on
     // transparent pixels.
