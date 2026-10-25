@@ -23,9 +23,10 @@ for asset in Assets.car AppIcon.icns; do
 done
 
 output=$(mktemp)
-trap 'rm -f "$output"' EXIT
 "$app/Contents/MacOS/$APP_NAME" >"$output" 2>&1 &
 pid=$!
+# A background job ignores Ctrl-C: quit the app however this script ends.
+trap 'kill "$pid" 2>/dev/null || true; rm -f "$output"' EXIT
 sleep 5
 if ! kill -0 "$pid" 2>/dev/null; then
     cat "$output" >&2
