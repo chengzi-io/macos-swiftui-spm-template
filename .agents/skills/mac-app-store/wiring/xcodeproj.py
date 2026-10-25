@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Edits App/<App>.xcodeproj for the mac-app-store skill, so no one edits project.pbxproj by hand.
+"""Adds the AppStore target to App/<App>.xcodeproj for the mac-app-store skill, so no one
+edits project.pbxproj by hand.
 
-  xcodeproj.py link <target> <product>...
-      Makes <target> link exactly these products of the package at the repository root.
   xcodeproj.py add-app-store-target <product>...
       Adds the AppStore target (the <App> target's buildable folders and
-      App/Configs/AppStore.xcconfig) linking these products, and its shared scheme.
+      App/Configs/AppStore.xcconfig) linking these products of the package at the
+      repository root, and its shared scheme.
 
 Runs from anywhere inside the project. Fails, changing nothing, when the project is not
 shaped the way the template writes it. Python 3.9 (the one macOS ships) is enough.
@@ -191,7 +191,7 @@ def add_app_store_target(project, base, products, available):
         die(f"no {APP_TARGET} target in {PROJECT}")
     for name in ("AppStore.xcconfig", "AppStore-Info.plist", "AppStore.entitlements"):
         if not (base / "Configs" / name).is_file():
-            die(f"no App/Configs/{name}; copy it from the skill's wiring/ first")
+            die(f"no App/Configs/{name}; create it first (SKILL.md, step 3a.3)")
 
     configs = next((g for g in project.objects("PBXGroup") if project.field(g, "path") == "Configs"), None)
     if not configs:
@@ -292,8 +292,11 @@ def add_app_store_target(project, base, products, available):
 
 
 def main():
-    if len(sys.argv) < 3 or sys.argv[1] not in ("link", "add-app-store-target"):
+    if len(sys.argv) < 3 or sys.argv[1] != "add-app-store-target":
         die(__doc__.split("\n\n")[1].strip())
+    products = sys.argv[2:]
+    if len(set(products)) != len(products):
+        die("a product is named twice")
     global PROJECT, APP_TARGET
     repo = root()
     base = repo / "App"
@@ -304,11 +307,7 @@ def main():
     APP_TARGET = PROJECT[: -len(".xcodeproj")]
     pbxproj = base / PROJECT / "project.pbxproj"
     project = Project(pbxproj)
-    available = package_products(repo)
-    if sys.argv[1] == "link":
-        link(project, sys.argv[2], sys.argv[3:], available)
-    else:
-        add_app_store_target(project, base, sys.argv[2:], available)
+    add_app_store_target(project, base, products, package_products(repo))
     project.save()
 
 

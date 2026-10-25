@@ -11,8 +11,11 @@ installer certificate. Uploading runs on your Mac; the release workflow does not
    login keychain. `TEAM_ID` set in `App/Configs/Identity.xcconfig`.
 2. App ID for the bundle identifier and a **Mac App Store** provisioning profile;
    download it.
-3. Create the app record in App Store Connect.
-4. Build and upload:
+3. Create the app record in App Store Connect, with its export compliance answer.
+4. For uploads, an App Store Connect API key: App Store Connect → Users and Access →
+   Integrations → App Store Connect API, a team key with the Developer role; download
+   the `.p8` once and note the key ID and the issuer ID.
+5. Build and upload:
 
    ```bash
    MAS_PROVISIONING_PROFILE=~/Downloads/MyApp.provisionprofile make release-mas
@@ -20,5 +23,5 @@ installer certificate. Uploading runs on your Mac; the release workflow does not
      NOTARY_ISSUER_ID=<uuid> make upload-mas
    ```
 
-5. Keep `App/Application/PrivacyInfo.xcprivacy` accurate (see [RECIPES.md](RECIPES.md)), then
+6. Keep `App/Application/PrivacyInfo.xcprivacy` accurate (see [RECIPES.md](RECIPES.md)), then
    submit for review in App Store Connect.
