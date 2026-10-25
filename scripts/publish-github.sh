@@ -21,7 +21,9 @@ if [[ -z ${TEAM_ID:-} ]]; then
     notes=$(mktemp)
     trap 'rm -f "$notes"' EXIT
     gh release view "$tag" --json body --jq .body >"$notes"
-    cat >>"$notes" <<'EOF'
+    # A rerun of the job finds the note already there.
+    if ! grep -q 'not signed with a Developer ID' "$notes"; then
+        cat >>"$notes" <<'EOF'
 
 ---
 
@@ -30,7 +32,8 @@ if [[ -z ${TEAM_ID:-} ]]; then
 > open it the first time: open System Settings → Privacy & Security and click
 > **Open Anyway**. Later updates install through the app's own updater.
 EOF
-    gh release edit "$tag" --notes-file "$notes"
+        gh release edit "$tag" --notes-file "$notes"
+    fi
 fi
 gh release edit "$tag" --draft=false
 log "published $tag"
