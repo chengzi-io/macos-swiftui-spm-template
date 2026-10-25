@@ -84,7 +84,10 @@ Create these the first time something needs them, not before:
   component that shows a domain's data stays in its feature. System styles (`Form`,
   `.font(.headline)`, `.secondary`) get no token. Colors go in code
   (`NSColor(name:dynamicProvider:)`), not an asset catalog, which `swift test` does not
-  compile, so snapshots would miss them.
+  compile, so snapshots would miss them. The accent color is the exception: the system
+  reads it from `AccentColor` in `App/Application/Assets.xcassets` (empty: the user's
+  accent), and `.tint` cannot stand in for it, as checkboxes and default buttons ignore
+  it.
 - `Sources/Kits/<Name>/` for code that knows nothing of this app: a wrapper of a C or
   private interface, or `AppKitBridge` for `NSViewRepresentable` wrappers and NSWindow
   or NSEvent helpers ([RECIPES](docs/RECIPES.md#appkit-bridges)).

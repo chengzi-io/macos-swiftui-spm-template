@@ -35,8 +35,8 @@ flowchart TB
 - App Sandbox; Developer ID signing, hardened runtime and notarization — or ad-hoc
   signing until you have a Developer ID.
 - Sparkle 2 updates from GitHub Releases, EdDSA-signed.
-- English and Simplified Chinese string catalog, privacy manifest, accent color, and an
-  Icon Composer app icon: Liquid Glass on macOS 26, flattened images on macOS 14–15.
+- English and Simplified Chinese string catalog, privacy manifest, an empty accent color
+  that follows the user's, and an Icon Composer app icon: Liquid Glass on macOS 26, flattened images on macOS 14–15.
 - Agent skills: `app-icon` makes the Liquid Glass icon from your logo, drawn layers or
   an image-model prompt, and checks it in every appearance beside apps in your Dock.
   Skills you start yourself add what not every app needs: `dmg` designs the DMG window,

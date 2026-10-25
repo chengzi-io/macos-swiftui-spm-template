@@ -51,7 +51,7 @@
 | 3 | 全链路 | `make ci` | lint 无输出；2 个测试通过；`==> smoke ok: .build/app/Debug/Pomelo.app` | ✅ |
 | 4 | A8 | 在终端里 `make run` | 窗口出现在**前台**；终端打印 `[app] launched version=0.0.0 … sandboxed=true`；按 Ctrl-C 后应用退出 | ✅ 无终端模式（日志写到 `.build/app/run.log`）和模拟 Ctrl-C；👀 真实终端输出 |
 | 5 | A4 | `make run ARGS="-AppleLanguages '(zh-Hans)'"` | 输入框占位符显示「名字」，按钮显示「打招呼」 | ✅（截图） |
-| 6 | A5 | `make run` 后看 Dock 和 Finder 里的应用图标；看按钮颜色 | 橙色渐变圆角方形，上面是白色果皮环和 8 瓣浅色果肉，果肉有玻璃边缘高光；默认按钮是橙色 | ✅ 强调色；✅ 图标（用渲染脚本，同第 30 项）/ 👀 Dock |
+| 6 | A5 | `make run` 后看 Dock 和 Finder 里的应用图标；`plutil -p` 看 Info.plist；看按钮颜色 | 橙色渐变圆角方形，上面是白色果皮环和 8 瓣浅色果肉，果肉有玻璃边缘高光；强调色留空（2026-10-24 起）：Info.plist 没有 `NSAccentColorName`，默认按钮跟随系统强调色 | ✅ Info.plist（2026-10-24）；✅ 图标（用渲染脚本，同第 30 项）/ 👀 Dock、按钮颜色 |
 | 7 | C2 | 名字留空，点「Greet」 | 弹出 alert，提示 `Please enter a name.`（中文环境下为「请输入名字。」）；`make logs` 里出现 `greet failed: emptyName` | 👀 |
 | 8 | C3 | 输入 `Ada`，按回车 | 显示 `Hello, Ada!` | 👀 |
 | 9 | C4 | ⌘, → 在 Default name 中填 `Ada` → 退出 → `make run` | 输入框已预填 `Ada` | 👀 |
