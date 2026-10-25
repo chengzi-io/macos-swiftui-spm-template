@@ -1,4 +1,4 @@
-# Git hooks. `make setup` installs them; run `LEFTHOOK=0 git commit` to skip.
+# Git hooks. `make setup` installs them.
 # Commit messages are checked in CI on the PR title (squash merge uses it).
 #
 # lefthook's `**/` only matches nested paths, so every glob needs both the

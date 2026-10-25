@@ -1,8 +1,7 @@
 import Platform
 import SwiftUI
 
-/// The app menu's item and the Updates pane's button. A view of its own, as in Sparkle's
-/// SwiftUI setup guide, which needs one for the disabled state to refresh before macOS 12.
+/// The app menu's item and the Updates pane's button: one view for both.
 public struct CheckForUpdatesButton: View {
     private let updater: any UpdaterService
 
