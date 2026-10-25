@@ -13,6 +13,10 @@ System Settings can switch it back on. The protocol, its status and its mock go 
 `Platform/Core/LaunchAtLogin/`:
 
 ```swift
+public enum LaunchAtLoginError: Error {
+    case failed(any Error)
+}
+
 public enum LaunchAtLoginStatus: Sendable {
     case enabled
     case disabled
@@ -24,7 +28,7 @@ public enum LaunchAtLoginStatus: Sendable {
 @MainActor
 public protocol LaunchAtLoginService: AnyObject {
     var status: LaunchAtLoginStatus { get }
-    func setEnabled(_ enabled: Bool) throws
+    func setEnabled(_ enabled: Bool) throws(LaunchAtLoginError)
     func openLoginItemsSettings()
 }
 
@@ -34,7 +38,9 @@ public final class MockLaunchAtLoginService: LaunchAtLoginService {
 
     public init(status: LaunchAtLoginStatus = .disabled) { self.status = status }
 
-    public func setEnabled(_ enabled: Bool) throws { status = enabled ? .enabled : .disabled }
+    public func setEnabled(_ enabled: Bool) throws(LaunchAtLoginError) {
+        status = enabled ? .enabled : .disabled
+    }
 
     public func openLoginItemsSettings() {}
 }
@@ -60,11 +66,15 @@ public final class LiveLaunchAtLoginService: LaunchAtLoginService {
         }
     }
 
-    public func setEnabled(_ enabled: Bool) throws {
-        if enabled {
-            try SMAppService.mainApp.register()
-        } else {
-            try SMAppService.mainApp.unregister()
+    public func setEnabled(_ enabled: Bool) throws(LaunchAtLoginError) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            throw .failed(error)
         }
     }
 
@@ -75,9 +85,23 @@ public final class LiveLaunchAtLoginService: LaunchAtLoginService {
 ```
 
 The toggle goes in a General pane in `Features/Settings`: a `GeneralSettingsView` tab
-before Updates in `SettingsView`, with a `Log.swift` like the Notes demo's that
-declares a `settings` category. When System Settings turned the item off, it says so
-and offers the way there:
+before Updates in `SettingsView`, and a `Log.swift` beside it, as every module that
+logs has:
+
+```swift
+import Foundation
+import OSLog
+
+nonisolated enum Log {
+    // Unbundled runs (`swift test`) have no bundle identifier.
+    private static let subsystem = Bundle.main.bundleIdentifier ?? "unbundled"
+
+    static let settings = Logger(subsystem: subsystem, category: "settings")
+}
+```
+
+When System Settings turned the item off, the toggle says so and offers the way there;
+when the change fails, it says that too:
 
 ```swift
 import AppKit
@@ -88,6 +112,7 @@ import SwiftUI
 struct LaunchAtLoginToggle: View {
     let service: any LaunchAtLoginService
     @State private var status = LaunchAtLoginStatus.disabled
+    @State private var failed = false
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -104,6 +129,10 @@ struct LaunchAtLoginToggle: View {
                     Text("Open Login Items…", bundle: .module)
                 }
             }
+            if failed {
+                Text("The login item could not be changed.", bundle: .module)
+                    .foregroundStyle(.secondary)
+            }
         }
         .onAppear { status = service.status }
         // Back from System Settings, the Settings window is still open.
@@ -115,8 +144,10 @@ struct LaunchAtLoginToggle: View {
     private func setEnabled(_ enabled: Bool) {
         do {
             try service.setEnabled(enabled)
+            failed = false
         } catch {
-            Log.settings.error("launch at login: \(error.localizedDescription, privacy: .public)")
+            Log.settings.error("launch at login: \(String(describing: error))")
+            failed = true
         }
         status = service.status
     }
@@ -129,11 +160,13 @@ struct LaunchAtLoginToggle: View {
 ```
 
 Keep the binding's `set:` a closure: passing the method `setEnabled` itself crashes the
-Swift 6.2.3 compiler. Add `Launch at login`, `Turned off in System Settings.` and
-`Open Login Items…` to `Features/Settings/Resources/Localizable.xcstrings` in `en` and
-`zh-Hans`. `App/Application/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under
-`UI_TESTING=1`) and `AppModel` hands it to `SettingsView`. Check it with the installed
-app in `/Applications` rather than a debug build.
+Swift 6.2.3 compiler. Add `Launch at login`, `Turned off in System Settings.`,
+`Open Login Items…` and `The login item could not be changed.` to
+`Features/Settings/Resources/Localizable.xcstrings` in `en` and `zh-Hans`.
+`App/Application/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under
+`UI_TESTING=1`) and passes it through `AppModel`; `AppScenes` hands it to
+`SettingsView`. Check it with the installed app in `/Applications` rather than a debug
+build.
 
 ## Networking
 
@@ -150,11 +183,13 @@ public struct ReleaseNotes: Decodable, Sendable {
 }
 
 public enum ReleaseNotesError: Error {
+    case requestFailed(any Error)
     case badStatus(Int)
+    case decodingFailed(any Error)
 }
 
 public protocol ReleaseNotesService: Sendable {
-    func latest() async throws -> ReleaseNotes
+    func latest() async throws(ReleaseNotesError) -> ReleaseNotes
 }
 
 public struct MockReleaseNotesService: ReleaseNotesService {
@@ -162,7 +197,7 @@ public struct MockReleaseNotesService: ReleaseNotesService {
 
     public init(notes: ReleaseNotes = ReleaseNotes(title: "Preview")) { self.notes = notes }
 
-    public func latest() async throws -> ReleaseNotes { notes }
+    public func latest() async throws(ReleaseNotesError) -> ReleaseNotes { notes }
 }
 ```
 
@@ -178,11 +213,21 @@ public struct LiveReleaseNotesService: ReleaseNotesService {
     public init(url: URL) { self.url = url }
 
     @concurrent
-    public func latest() async throws -> ReleaseNotes {
-        let (data, response) = try await URLSession.shared.data(from: url)
+    public func latest() async throws(ReleaseNotesError) -> ReleaseNotes {
+        let result: (Data, URLResponse)
+        do {
+            result = try await URLSession.shared.data(from: url)
+        } catch {
+            throw .requestFailed(error)
+        }
+        let (data, response) = result
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-        guard (200..<300).contains(status) else { throw ReleaseNotesError.badStatus(status) }
-        return try JSONDecoder().decode(ReleaseNotes.self, from: data)
+        guard (200..<300).contains(status) else { throw .badStatus(status) }
+        do {
+            return try JSONDecoder().decode(ReleaseNotes.self, from: data)
+        } catch {
+            throw .decodingFailed(error)
+        }
     }
 }
 ```
@@ -294,7 +339,7 @@ app's view:
 
 ```swift
 MenuBarExtra {
-    NotesView(model: model.notes)
+    <Name>View(model: model.<name>)
 } label: {
     Image(systemName: "circle.hexagongrid")
 }
@@ -351,7 +396,8 @@ extension KeyboardShortcuts.Name {
 }
 ```
 
-and shows its recorder in `SettingsView`'s `Form`:
+and shows its recorder in the General pane's `Form` (`GeneralSettingsView`, as in
+[Launch at login](#launch-at-login)):
 
 ```swift
 KeyboardShortcuts.Recorder(for: .showApp) {
@@ -443,7 +489,7 @@ public struct WindowReader: NSViewRepresentable {
     }
 }
 
-// NotesView(model: model).background(WindowReader { $0.level = .floating })
+// <Name>View(model: model).background(WindowReader { $0.level = .floating })
 ```
 
 Step 3 is an `NSWindowController` in `AppRoot`, which owns the windows, with each column
@@ -512,7 +558,8 @@ Developer ID apps get no crash reports from Apple; they stay in
 
 - **Sentry**: add `https://github.com/getsentry/sentry-cocoa` to
   `Package.swift` with an `exact:` version as a dependency of
-  `PlatformLive`, start it from a function there that
+  `PlatformLive` (create it beside `Platform/Core` if the app has none), start it from a
+  function there that
   `AppDelegate.applicationDidFinishLaunching` calls, and upload
   `dist/*.dSYM.zip` with `sentry-cli debug-files upload` in the publish job. Declare
   the collected data in the privacy manifest.
@@ -526,7 +573,8 @@ Either way, ask for consent where your privacy policy requires it.
 
 - Tokens and passwords: Keychain through `SecItemAdd` / `SecItemCopyMatching` in a
   small service. Ad-hoc builds change signature on every update, so the keychain may
-  ask the user to allow access again (see docs/RELEASING.md, 4a).
+  ask the user to allow access again
+  ([RELEASING.md, 4a](RELEASING.md#4a-without-a-developer-id-default)).
 - Structured data: SwiftData. `App/Application/MainApp.swift` builds the `ModelContainer` (an
   in-memory one under `UI_TESTING=1`) and hands it to `AppScenes`, which sets
   `.modelContainer(...)` on the scene. The store lives in the sandbox container under Application Support.
