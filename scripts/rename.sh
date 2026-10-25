@@ -42,7 +42,7 @@ old=$APP_TARGET
 if [[ $new != "$old" ]]; then
     # The project's own vocabulary: renaming the targets rewrites these words in project.pbxproj.
     case $new in
-        Application | AppRoot | AppStore | Configs | Debug | Frameworks | Notes | NotesLive | Platform | PlatformLive | Products | Release | Resources | Sources | UITests)
+        Application | AppModules | AppStore | AppStoreModules | Configs | Debug | Frameworks | Products | Release | Resources | Sources | UITests)
             die "$new is a name the Xcode project already uses; pick another"
             ;;
     esac

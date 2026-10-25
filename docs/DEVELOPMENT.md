@@ -80,8 +80,7 @@ App/                       the Xcode shell
   Configs/                 Identity.xcconfig (app identity), build settings, Info.plist,
                            entitlements
   Package.swift            empty: keeps App/ out of the root package in Xcode
-scripts/                   build, sign, notarize, package, publish, lint rules, link
-                           package products to the Xcode target (xcodeproj.py)
+scripts/                   build, sign, notarize, package, publish, lint rules
 .agents/skills/            agent skills, linked from .claude/skills
 .github/                   CI, PR title, release-please, Dependabot, templates
 version.txt                current version, owned by release-please

@@ -194,7 +194,8 @@ same way.
 
 - edit `project.pbxproj` by hand: `App/Application/` and `App/UITests/` are buildable
   folders that pick up new files; put build settings in `App/Configs/*.xcconfig`, not
-  the project; link package products with `scripts/xcodeproj.py link`
+  the project; the app target links one package product, `AppModules`, which lists
+  every module `MainApp` imports
 - add the package with Xcode's "Add Local…": Xcode builds that reference with
   `-suppress-warnings`, which breaks the build; `App/<App>.xcodeproj` references the
   repository root as a folder
@@ -227,11 +228,11 @@ same way.
    domain's `Core/`, live implementation in the matching `Live/`
    ([RECIPES](docs/RECIPES.md#networking) has one).
    `App/Application/MainApp.swift` builds the live one and the mock under
-   `UI_TESTING=1`, and passes it through `AppModel`. A new domain's two targets are
-   also products in `Package.swift`; `scripts/xcodeproj.py link <App> <product>…`, with
-   every product `MainApp.swift` imports, links them to the app. The composition stays
-   in `MainApp`: which updater an app gets depends on its Xcode target (an App Store
-   build carries no Sparkle), and package targets cannot see a target's build settings.
+   `UI_TESTING=1`, and passes it through `AppModel`. A new domain's two targets join
+   the `AppModules` product in `Package.swift`, which the app links; the Xcode project
+   does not change. The composition stays in `MainApp`: which updater an app gets
+   depends on its Xcode target (an App Store build carries no Sparkle), and package
+   targets cannot see a target's build settings.
 5. `AppModel` owns the feature's model; `AppScenes` shows its view.
 6. Test the model in `Tests/Features/<Name>Tests/` with mocks, and snapshot its
    screens. A flow worth guarding end to end gets an XCUITest in `App/UITests/`.

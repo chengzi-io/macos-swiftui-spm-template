@@ -19,12 +19,9 @@ let package = Package(
     defaultLocalization: "en",
     platforms: [.macOS(.v14)],
     products: [
-        // Linked by the Xcode app target, the composition root.
-        .library(name: "AppRoot", targets: ["AppRoot"]),
-        .library(name: "Notes", targets: ["Notes"]),
-        .library(name: "NotesLive", targets: ["NotesLive"]),
-        .library(name: "Platform", targets: ["Platform"]),
-        .library(name: "PlatformLive", targets: ["PlatformLive"]),
+        // The one product the Xcode app target links: every module MainApp imports. A new
+        // domain's targets join it here, so the Xcode project never changes.
+        .library(name: "AppModules", targets: ["AppRoot", "Notes", "NotesLive", "Platform", "PlatformLive"])
     ],
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0"),
