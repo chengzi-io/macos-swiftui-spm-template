@@ -261,14 +261,18 @@ import Platform
 
 public struct LiveReleaseNotesService: ReleaseNotesService {
     let url: URL
+    let session: URLSession
 
-    public init(url: URL) { self.url = url }
+    public init(url: URL, session: URLSession = .shared) {
+        self.url = url
+        self.session = session
+    }
 
     @concurrent
     public func latest() async throws(ReleaseNotesError) -> ReleaseNotes {
         let result: (Data, URLResponse)
         do {
-            result = try await URLSession.shared.data(from: url)
+            result = try await session.data(from: url)
         } catch {
             throw .requestFailed(error)
         }
@@ -288,7 +292,9 @@ public struct LiveReleaseNotesService: ReleaseNotesService {
 off the main actor as it is. A `nonisolated async` function still runs on its caller's
 actor; `@concurrent` moves the request and the decoding off the main actor a model
 calls from. Tests and previews pass `MockReleaseNotesService`; they never hit the
-network.
+network. What the live service decides itself, a bad status or a body that does not
+decode, is tested in `PlatformTests` with a session whose configuration's
+`protocolClasses` holds a `URLProtocol` that answers with canned responses.
 
 ## Menu bar app
 
