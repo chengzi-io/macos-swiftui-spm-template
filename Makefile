@@ -81,8 +81,8 @@ run: ## Build and run the debug .app, logs in this terminal; pass ARGS="..."
 	scripts/run.sh $(ARGS)
 
 .PHONY: logs
-logs: ## Stream this app's unified logs
-	log stream --level debug --predicate 'subsystem == "$(BUNDLE_ID)"'
+logs: ## Stream this app's unified logs, Sparkle's included
+	log stream --level debug --predicate 'subsystem == "$(BUNDLE_ID)" || subsystem == "org.sparkle-project.Sparkle"'
 
 .PHONY: smoke
 smoke: ## Smoke-test the debug .app (or APP=path)
