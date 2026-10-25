@@ -6,7 +6,8 @@
 
 source "$(dirname "$0")/common.sh"
 
-swift_paths=(App/Application App/UITests Sources Tests)
+# All of App/: an extension's target gets its own folder there.
+swift_paths=(App Sources Tests)
 # Platform and each domain: Core/ holds protocols, types, logic and mocks, Live/ the live
 # implementations.
 core_paths=(Sources/*/Core)
@@ -38,6 +39,8 @@ check "Core and Live hold no views; UI belongs in a feature" \
     '^import SwiftUI\b' "${core_paths[@]}" "${live_paths[@]}"
 check "Core holds protocols, types, logic and mocks; system frameworks belong in Live" \
     '^import (AppKit|IOKit|Network|Sparkle)\b' "${core_paths[@]}"
+check "a Live target uses Cores, never another Live: a test could not swap one alone" \
+    '^import [[:alnum:]_]+Live\b' "${live_paths[@]}"
 check "wrap AppKit views in an AppKitBridge target, not in a feature" \
     '\bNS(View|ViewController)Representable\b' Sources/Features Sources/AppRoot
 

@@ -10,7 +10,7 @@ APP_TARGET := $(patsubst App/%.xcodeproj/project.pbxproj,%,$(wildcard App/*.xcod
 ifneq ($(words $(APP_TARGET)),1)
 $(error expected one Xcode project in App/, found: $(APP_TARGET))
 endif
-SWIFT_PATHS := Package.swift Sources Tests App/Package.swift App/Application App/UITests
+SWIFT_PATHS := Package.swift Sources Tests App
 BUNDLE_ID := $(shell sed -nE 's/^BUNDLE_ID[[:space:]]*=[[:space:]]*//p' App/Configs/Identity.xcconfig)
 
 .PHONY: help
