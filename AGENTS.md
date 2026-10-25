@@ -226,7 +226,9 @@ same way.
    (SwiftPM warns about the reference PNGs otherwise), as `NotesFeatureTests` does; and
    `<Name>Feature` in `AppRoot`'s dependencies. Add the test target to the `<App>`
    scheme's Test action (Xcode: Product → Scheme → Edit Scheme… → Test → +) so ⌘U runs
-   it; `make test` runs it either way.
+   it; `make test` runs it either way. Without Xcode, copy the `NotesFeatureTests`
+   `<TestableReference>` in `App/<App>.xcodeproj/xcshareddata/xcschemes/<App>.xcscheme`
+   and change its three names.
 3. Add every user-facing string to the feature's `Resources/Localizable.xcstrings` in
    `en` and `zh-Hans`.
 4. Work outside the process gets a service: protocol and mock in `Platform/Core/` or a
