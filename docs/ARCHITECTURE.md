@@ -12,7 +12,7 @@ demo, which is small, and a menu bar system monitor, the size the structure is f
 | Domain Core | what the app is about: protocols for what is outside the process, value types, pure logic, shared models, mocks | `Notes`: `NoteService` | `Monitor`: `CPUReader`, `Sampler`; `Alerts` |
 | Domain Live | the real implementations of those protocols | `NotesLive`: writes a file | `MonitorLive`: asks the kernel |
 | Platform | what any Mac app needs: updates, launch at login, notifications | `UpdaterService` | and `NotificationService` |
-| DesignSystem | components two features share, knowing no domain | none | none yet |
+| DesignSystem | the app's look: the spacing, radii, fonts and colors it repeats, and shared components; knows no domain | none: system styles only | `Spacing`, `StatusLevel` colors, `Sparkline` |
 | Kit | code that knows nothing of the app | none | `SMCKit` |
 | AppRoot | the root model and the scenes | `AppModel`, `AppScenes` | and the status items |
 | MainApp | builds the live services and hands them to AppRoot | | |
@@ -49,6 +49,8 @@ Sources/
       Panel/               a panel per metric: value, five-minute chart, details
       Overview/            every metric on one screen
     Settings/              SettingsFeature: General, Alerts and Updates tabs
+  DesignSystem/            Spacing, Radius, Font.metricValue, StatusLevel and its colors,
+                           StatusBadge, Sparkline
   Monitor/
     Core/                  Monitor: what the Mac reports
       Sampling/            Sampler (one timer, the latest readings, an hour of history)
@@ -70,9 +72,8 @@ Tests/
 App/Application/           MainApp: the live readers, or mocks under UI_TESTING=1
 ```
 
-Nine library targets. CPU, memory and network are folders, not targets. There is no
-DesignSystem: the sparkline is used only inside `MonitorFeature`. `Alerts` has no Live:
-the one thing it needs from outside, notifications, is `Platform`'s.
+Ten library targets. CPU, memory and network are folders, not targets. `Alerts` has no
+Live: the one thing it needs from outside, notifications, is `Platform`'s.
 
 ```mermaid
 flowchart TB
@@ -86,6 +87,8 @@ flowchart TB
     SettingsFeature --> Monitor
     SettingsFeature --> Alerts
     SettingsFeature --> Platform
+    MonitorFeature --> DesignSystem
+    SettingsFeature --> DesignSystem
     Alerts --> Monitor
     Alerts --> Platform
     MonitorLive --> Monitor
@@ -98,8 +101,8 @@ flowchart TB
 ```mermaid
 flowchart TD
     start["New code"] --> see{"Does the user see it?"}
-    see -->|"yes, in two features alike,<br/>knowing no domain"| ds["DesignSystem"]
-    see -->|yes| feature["the feature of that area"]
+    see -->|"yes: part of the app's look,<br/>knowing no domain"| ds["DesignSystem"]
+    see -->|"yes: a screen or its parts"| feature["the feature of that area"]
     see -->|no| outside{"Does it reach outside the process?<br/>system, files, network, clock"}
     outside -->|yes| anyApp{"Would any Mac app need it?"}
     anyApp -->|"yes: updates, notifications"| platform["Platform"]
@@ -188,12 +191,25 @@ A feature may depend on several domains: the panel shows readings and the alerts
 fired, so `MonitorFeature` depends on `Monitor` and `Alerts`. That is about showing; the
 flow itself stays in `Alerts`.
 
-### Two features look alike
+### The app's look
 
-`DesignSystem` holds components two features share that know no domain:
-`StatusBadge(title:isWarning:)`. A gauge that shows the current CPU reading belongs to
-`MonitorFeature`; in `DesignSystem` it would make every screen depend on `Monitor` and
-rebuild when a reading type changes.
+The spacing, corner radii, fonts and colors the app picks for itself live in
+`DesignSystem`, so every screen reads the same values: `Spacing.panel`,
+`Font.metricValue` (monospaced digits, so a changing number does not jitter),
+`StatusLevel.warning.color`. Components that several screens share live there too:
+`StatusBadge(level:)`, which shows a level by shape and word as well as color, and
+`Sparkline(values:)`. What the system already defines needs no token: `Form`,
+`.font(.headline)`, `.secondary` and the controls' own spacing follow macOS, and a copy
+of them would drift from it.
+
+`DesignSystem` knows no domain. `MonitorFeature` maps `MemoryPressure.warning` to
+`StatusLevel.warning`; a gauge that shows the current CPU reading stays in
+`MonitorFeature`, because in `DesignSystem` it would make every screen depend on
+`Monitor` and rebuild when a reading type changes.
+
+Colors are written in code, a light and a dark value in one
+`NSColor(name:dynamicProvider:)`, not in an asset catalog: `swift test` copies asset
+catalogs without compiling them, so the snapshot tests would draw those colors wrong.
 
 ### A Live needs another domain
 
@@ -226,3 +242,4 @@ services, which is why the composition stays in the Xcode target.
 | several Swift packages | versions and resources must line up across them; worth it when one package builds too slowly |
 | a widget target before a widget | an empty target to build and sign |
 | a protocol for unit conversion | a pure function is tested directly |
+| a token for every system value | macOS controls already have their fonts and spacing; tokens for them drift from the system |

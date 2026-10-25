@@ -78,8 +78,13 @@ Create these the first time something needs them, not before:
   `<Domain>Live`. A domain with nothing outside the process has no `Live/`. A domain is
   a group of capabilities that change together, not one per service. Its tests:
   `<Domain>Tests` in `Tests/<Domain>Tests/`.
-- `Sources/DesignSystem/` for SwiftUI components that two features share and that know
-  no domain: a component showing a domain's data belongs to its feature.
+- `Sources/DesignSystem/` for the app's look, once it picks its own: the spacing, corner
+  radii, fonts and colors it repeats, and components several screens share
+  (`StatusBadge(level:)`). It knows no domain: a feature maps its data onto it, and a
+  component that shows a domain's data stays in its feature. System styles (`Form`,
+  `.font(.headline)`, `.secondary`) get no token. Colors go in code
+  (`NSColor(name:dynamicProvider:)`), not an asset catalog, which `swift test` does not
+  compile, so snapshots would miss them.
 - `Sources/Kits/<Name>/` for code that knows nothing of this app: a wrapper of a C or
   private interface, or `AppKitBridge` for `NSViewRepresentable` wrappers and NSWindow
   or NSEvent helpers ([RECIPES](docs/RECIPES.md#appkit-bridges)).
