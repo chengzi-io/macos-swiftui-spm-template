@@ -84,26 +84,42 @@ sed -i '' "s|^Copyright (c) .*|Copyright (c) $year $holder|" LICENSE
 sed -i '' "s|@[A-Za-z0-9_/-]*|$codeowner|g" .github/CODEOWNERS
 sed -i '' "s|github.com/[^/]*/[^/]*/security|github.com/$repo/security|" .github/ISSUE_TEMPLATE/config.yml
 
-# README.md is the app's page for its users; developer docs stay in docs/.
+# README.md is the app's page for its users; developer docs stay in docs/. The DMG
+# paragraph opens Install: the homebrew-cask skill adds its command after it.
 log "replace README with a page for $display_name's users"
+min_macos=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' App/Configs/Project.xcconfig)
+[[ -n $min_macos ]] || die "no MACOSX_DEPLOYMENT_TARGET in App/Configs/Project.xcconfig"
 cat >README.md <<EOF
 # $display_name
 
-<!-- What $display_name does and for whom, in a sentence or two; a screenshot helps.
-     This page is for people who use the app. Developer docs live in docs/. -->
+[![Latest release](https://img.shields.io/github/v/release/$repo)](https://github.com/$repo/releases/latest)
+![macOS $min_macos+](https://img.shields.io/badge/macOS-$min_macos%2B-000000?logo=apple)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+_What $display_name does and for whom, in one sentence._
+
+<!-- Replace the line above and add a screenshot. This page is for people who use the
+     app; developer docs live in docs/. -->
 
 ## Install
 
 Download the DMG from the [latest release](https://github.com/$repo/releases/latest),
-open it and drag $name to Applications. $display_name runs on macOS 14 or later.
+open it and drag $name to Applications. $display_name runs on macOS $min_macos or later.
 
-<!-- Delete this paragraph once TEAM_ID is set in App/Configs/Identity.xcconfig: apps signed with a
-     Developer ID open without it. -->
+<!-- Delete this paragraph once TEAM_ID is set in App/Configs/Identity.xcconfig: apps
+     signed with a Developer ID open without it. -->
 macOS blocks the first launch because the app is not notarized yet: open System
 Settings → Privacy & Security and click **Open Anyway**, once.
 
-To update, choose **Check for Updates…** in the app menu, or turn on **Automatically
-check for updates** in Settings.
+## Update
+
+$display_name updates itself: choose **Check for Updates…** in the app menu, or turn on
+**Automatically check for updates** in Settings.
+
+## Feedback
+
+[Report a bug](https://github.com/$repo/issues/new/choose). Report security issues
+privately, as [SECURITY.md](.github/SECURITY.md) describes.
 
 ## Development
 
