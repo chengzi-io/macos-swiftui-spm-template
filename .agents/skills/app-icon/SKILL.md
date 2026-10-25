@@ -207,7 +207,8 @@ not tried, or a designer. Never put a draft the user has not approved into `App/
 
 ## 8. Finish
 
-1. Replace `App/Application/AppIcon.icon` with the approved draft, old layer files included.
+1. Replace `App/Application/AppIcon.icon` with the approved draft, the whole folder, so
+   no old layer file lingers.
 2. `make ci`.
 3. Tell the user that Icon Composer (Xcode › Open Developer Tool) edits the same file, if
    they want to tune it by hand; run `check-icon.sh` again after they save.

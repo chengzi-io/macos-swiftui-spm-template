@@ -190,11 +190,11 @@ Both need the user's GitHub account: ask before creating either for them.
        # Runs once the release is public, so a failure here leaves the publish job green
        # (red there means "still a draft") and can be re-run on its own.
        needs: [release-please, publish]
-       runs-on: macos-26
+       runs-on: <the publish job's runner>
        timeout-minutes: 15
        environment: release
        env:
-         DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+         DEVELOPER_DIR: <the publish job's DEVELOPER_DIR>
          TAG: ${{ needs.release-please.outputs.tag_name }}
        steps:
          - uses: actions/checkout@v7
