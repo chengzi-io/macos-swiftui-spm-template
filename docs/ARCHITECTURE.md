@@ -83,6 +83,7 @@ flowchart TB
     AppRoot --> SettingsFeature
     MonitorFeature --> Monitor
     MonitorFeature --> Alerts
+    SettingsFeature --> Monitor
     SettingsFeature --> Alerts
     SettingsFeature --> Platform
     Alerts --> Monitor
