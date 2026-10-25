@@ -12,6 +12,8 @@ swift_paths=(App Sources Tests)
 # implementations.
 core_paths=(Sources/*/Core)
 live_paths=(Sources/*/Live)
+# An import, with any attributes or access level before it (@preconcurrency, public).
+import='^([@[:alnum:]_]+[[:space:]]+)*import '
 status=0
 
 # check <message> <extended regex> <paths...>: reports every matching line.
@@ -36,11 +38,11 @@ check "use NavigationStack or NavigationSplitView, not NavigationView" \
 check "use foregroundStyle(_:), not foregroundColor(_:)" \
     '\.foregroundColor\(' "${swift_paths[@]}"
 check "Core and Live hold no views; UI belongs in a feature" \
-    '^import SwiftUI\b' "${core_paths[@]}" "${live_paths[@]}"
+    "${import}SwiftUI\\b" "${core_paths[@]}" "${live_paths[@]}"
 check "Core holds protocols, types, logic and mocks; system frameworks belong in Live" \
-    '^import (AppKit|IOKit|Network|Sparkle)\b' "${core_paths[@]}"
+    "${import}(AppKit|IOKit|Network|Sparkle)\\b" "${core_paths[@]}"
 check "a Live target uses Cores, never another Live: a test could not swap one alone" \
-    '^import [[:alnum:]_]+Live\b' "${live_paths[@]}"
+    "${import}[[:alnum:]_]+Live\\b" "${live_paths[@]}"
 check "wrap AppKit views in an AppKitBridge target, not in a feature" \
     '\bNS(View|ViewController)Representable\b' Sources/Features Sources/AppRoot
 
