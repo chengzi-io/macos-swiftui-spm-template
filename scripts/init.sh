@@ -6,7 +6,7 @@
 #     [--repo owner/repo] [--codeowner @user-or-@org/team]
 #
 # --repo defaults to the origin remote, --copyright to the repository owner,
-# --codeowner to @owner. Needs a clean working tree; review `git diff`, then commit.
+# --codeowner to @owner. Needs a clean working tree; review `git diff HEAD`, then commit.
 
 source "$(dirname "$0")/common.sh"
 

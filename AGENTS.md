@@ -14,7 +14,8 @@ in `make help`; this file is the rules of engagement.
 describes the template. When the user asks for app work (a feature, an icon, a
 release), first ask for the app name and bundle identifier, run
 `scripts/init.sh --name <Name> --bundle-id <id>` on a clean tree, show the user the
-`git diff` and commit it as `chore: initialize <Name> from template`. Then `make setup`;
+`git diff HEAD` (renames are staged) and commit it as
+`chore: initialize <Name> from template`. Then `make setup`;
 `make snapshots`, which records the demo's view snapshots on this Mac (init removed the
 template's): show the user the images and commit them after their yes; then `make ci`.
 The one-time release setup in [docs/RELEASING.md](docs/RELEASING.md) needs the user's
