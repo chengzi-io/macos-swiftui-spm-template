@@ -43,6 +43,7 @@ APP_TARGET=$(basename "$XCODE_PROJECT" .xcodeproj)
 
 # set_identity KEY value: rewrites the KEY line of App/Configs/Identity.xcconfig.
 set_identity() {
+    grep -q "^$1[[:space:]]*=" App/Configs/Identity.xcconfig || die "no $1 line in App/Configs/Identity.xcconfig"
     sed -i '' -E -e "s|^$1[[:space:]]*=.*|$1 = $2|" -e 's/[[:space:]]+$//' App/Configs/Identity.xcconfig
 }
 
