@@ -101,7 +101,12 @@ for framework in "$app"/Contents/Frameworks/*.framework; do
     codesign "${sign_args[@]}" "$framework"
 done
 shopt -u nullglob
-codesign "${sign_args[@]}" --entitlements "$entitlements" "$app"
+# An app without entitlements gets an empty file, and codesign crashes on one.
+if [[ -s $entitlements ]]; then
+    codesign "${sign_args[@]}" --entitlements "$entitlements" "$app"
+else
+    codesign "${sign_args[@]}" "$app"
+fi
 codesign --verify --deep --strict "$app"
 
 echo "$app"
