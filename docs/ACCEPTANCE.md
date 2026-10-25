@@ -62,7 +62,7 @@
 | 14 | B5 | `make app && rm -rf .build/app/Debug/*.app/Contents/Resources/App_AppCore.bundle && make smoke` | 冒烟测试失败。如果先重新签名绕过静态检查，会看到 `Fatal error: unable to find bundle named App_AppCore` 和 `exited during startup` | ✅ |
 | 15 | B4 | `make test` | `Test run with 2 tests … passed` | ✅ |
 | 16 | E4 | `xed .`，打开 `Sources/AppCore/ContentView.swift`，看 Canvas | Preview 能渲染 | 👀 未验证 |
-| 17 | H1 | `make sparkle-keys`（会在登录 keychain 创建密钥，这本来就是发版的一次性步骤） | `Bundle/app.env` 中写入 `SPARKLE_PUBLIC_KEY=…`；终端打印导出私钥、设置 secret 的命令 | 🔑 没跑，会写 keychain |
+| 17 | H1 | `make sparkle-keys`（会在登录 keychain 创建密钥，这本来就是发版的一次性步骤） | `App/Configs/Info.plist` 的 `SUPublicEDKey` 写入公钥；终端打印导出私钥、设置 secret 的命令 | 🔑 没跑，会写 keychain。因为一直没跑，脚本缺执行位到 2026-10-25 才发现 |
 | 18 | G1–G8 | 完成 17 后执行 `make release` | `dist/` 下有 `Pomelo-0.0.0.dmg`、`.dSYM.zip`、`appcast.xml`、`SHA256SUMS`；日志里有 `smoke ok: dist/…`、`dmg ok: dist/…` 和两行 `skipping notarization (ad-hoc build)` | ✅（我用临时生成的密钥对） |
 | 19 | Q3 | `lipo -archs dist/Pomelo.app/Contents/MacOS/Pomelo` | `x86_64 arm64` | ✅ |
 | 20 | G1 | `codesign -dv dist/Pomelo.app 2>&1 \| grep flags` | ad-hoc 构建显示 `flags=0x2(adhoc)`，**不带** runtime（原因见 TEMPLATE-PLAN V12） | ✅ |
