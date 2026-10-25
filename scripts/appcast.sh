@@ -10,6 +10,7 @@ source "$(dirname "$0")/common.sh"
 
 dmg="dist/$APP_NAME-$VERSION.dmg"
 [[ -f $dmg ]] || die "no DMG at $dmg; run make release-dmg first"
+public_key=$(sparkle_public_key)
 
 swift package resolve >&2
 sparkle_bin=$SPARKLE_BIN
@@ -33,5 +34,5 @@ else
     "$sparkle_bin/generate_appcast" --account "$BUNDLE_ID" "${args[@]}" "$tmp/updates"
 fi
 xcrun swift scripts/verify-appcast.swift dist/appcast.xml "$dmg" \
-    "$RELEASES_URL/download/v$VERSION/$(basename "$dmg")" "$SPARKLE_PUBLIC_KEY"
+    "$RELEASES_URL/download/v$VERSION/$(basename "$dmg")" "$public_key"
 echo "dist/appcast.xml"

@@ -29,7 +29,8 @@ case ${1:-} in
     *) die "usage: build-app.sh debug|release" ;;
 esac
 
-[[ -n ${GITHUB_REPOSITORY:-} && -n ${SPARKLE_PUBLIC_KEY:-} ]] ||
+public_key=$(sparkle_public_key)
+[[ -n ${GITHUB_REPOSITORY:-} && -n $public_key ]] ||
     die "release builds need GITHUB_REPOSITORY in App/Configs/Identity.xcconfig and SUPublicEDKey in App/Configs/Info.plist (see make sparkle-keys)"
 
 log "xcodebuild archive Release ($VERSION build $BUILD_NUMBER)"

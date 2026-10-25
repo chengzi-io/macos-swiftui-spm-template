@@ -261,9 +261,8 @@ left, and every script still runs. Remove:
   files (at the root and in
   `App/<App>.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/`) drop the Sparkle pin
   on the next build; commit them.
-- `scripts/common.sh`: `SPARKLE_PUBLIC_KEY` first, which reads `SUPublicEDKey` and
-  would now fail every script; then what only the Developer ID release used (in the
-  template `RELEASES_URL`, `ARCHIVE`, `RELEASE_APP`, `SPARKLE_BIN`,
+- `scripts/common.sh`: what only the Developer ID release used (in the template
+  `RELEASES_URL`, `ARCHIVE`, `RELEASE_APP`, `SPARKLE_BIN`, `sparkle_public_key`,
   `set_sparkle_public_key` and `signing_identity`).
 - `scripts/lint-rules.sh`: `Sparkle` in its import checks, and any check on a folder
   that no longer exists.

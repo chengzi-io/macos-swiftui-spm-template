@@ -14,8 +14,6 @@ while IFS= read -r line; do
     fi
 done <App/Configs/Identity.xcconfig
 export RELEASES_URL="https://github.com/$GITHUB_REPOSITORY/releases"
-SPARKLE_PUBLIC_KEY=$(plutil -extract SUPublicEDKey raw App/Configs/Info.plist)
-export SPARKLE_PUBLIC_KEY
 
 DERIVED_DATA=.build/xcode
 VERSION=$(tr -d '[:space:]' < version.txt)
@@ -46,6 +44,15 @@ APP_TARGET=$(basename "$XCODE_PROJECT" .xcodeproj)
 # set_identity KEY value: rewrites the KEY line of App/Configs/Identity.xcconfig.
 set_identity() {
     sed -i '' -E -e "s|^$1[[:space:]]*=.*|$1 = $2|" -e 's/[[:space:]]+$//' App/Configs/Identity.xcconfig
+}
+
+# Prints SUPublicEDKey from App/Configs/Info.plist, the key installed copies check
+# updates against; empty until make sparkle-keys.
+sparkle_public_key() {
+    local key
+    key=$(plutil -extract SUPublicEDKey raw App/Configs/Info.plist) ||
+        die "no SUPublicEDKey in App/Configs/Info.plist"
+    echo "$key"
 }
 
 # Sets SUPublicEDKey in App/Configs/Info.plist in place, keeping the file's formatting
