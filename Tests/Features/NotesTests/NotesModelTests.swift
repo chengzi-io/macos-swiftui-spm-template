@@ -32,16 +32,21 @@ struct NotesModelTests {
         #expect(model.text == "Pomelo, peeled")
     }
 
-    @Test func failedLoadShowsAMessage() async {
+    @Test func failedLoadShowsAMessageAndSavesNothing() async {
         let failure = NoteError.loadFailed(CocoaError(.fileReadCorruptFile))
-        let model = NotesModel(service: MockNoteService(failure: failure))
+        let service = MockNoteService(text: "Pomelo", failure: failure)
+        let model = NotesModel(service: service)
         await model.load()
         #expect(model.errorMessage != nil)
+        model.text = "Peel"
+        await model.save()
+        #expect(await service.text == "Pomelo")
     }
 
     @Test func failedSaveKeepsTheEdit() async {
         let failure = NoteError.saveFailed(CocoaError(.fileWriteOutOfSpace))
         let model = NotesModel(service: MockNoteService(failure: failure))
+        await model.load()
         model.text = "Pomelo"
         await model.save()
         #expect(model.errorMessage != nil)

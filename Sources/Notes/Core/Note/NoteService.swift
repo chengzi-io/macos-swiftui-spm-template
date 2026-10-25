@@ -10,7 +10,8 @@ public protocol NoteService: Sendable {
 }
 
 /// Keeps the note in memory, for previews, tests and UI test launches (`UI_TESTING=1`).
-/// With a `failure`, every call throws it.
+/// With a `failure`, the call it names throws it: `.loadFailed` from `load()`,
+/// `.saveFailed` from `save(_:)`.
 public actor MockNoteService: NoteService {
     public private(set) var text: String
     private let failure: NoteError?
@@ -21,12 +22,12 @@ public actor MockNoteService: NoteService {
     }
 
     public func load() throws(NoteError) -> String {
-        if let failure { throw failure }
+        if let failure, case .loadFailed = failure { throw failure }
         return text
     }
 
     public func save(_ text: String) throws(NoteError) {
-        if let failure { throw failure }
+        if let failure, case .saveFailed = failure { throw failure }
         self.text = text
     }
 }

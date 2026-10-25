@@ -6,11 +6,14 @@ import Observation
 @Observable
 public final class NotesModel {
     public var text = ""
+    /// Editing and saving wait for it: saving a note that could not be read would replace
+    /// it.
+    public private(set) var isLoaded = false
     public private(set) var isSaving = false
     public var errorMessage: String?
 
     private var savedText = ""
-    private var hasLoaded = false
+    private var isLoading = false
     private let service: any NoteService
 
     public init(service: any NoteService) {
@@ -20,23 +23,26 @@ public final class NotesModel {
     public var isSaved: Bool { text == savedText }
     public var wordCount: Int { WordCount.of(text) }
 
-    /// Every window calls this as it appears; only the first call reads the note, so a
-    /// new window keeps unsaved text.
+    /// Every window calls this as it appears; once the note is read, later calls do
+    /// nothing, so a new window keeps unsaved text. After a failure the next window tries
+    /// again.
     public func load() async {
-        guard !hasLoaded else { return }
-        hasLoaded = true
+        guard !isLoaded, !isLoading else { return }
+        isLoading = true
+        defer { isLoading = false }
         do {
             text = try await service.load()
             savedText = text
+            isLoaded = true
         } catch {
-            Log.notes.error("load failed: \(String(describing: error), privacy: .public)")
+            Log.notes.error("load failed: \(String(describing: error))")
             errorMessage = error.message
         }
     }
 
     /// One save at a time, so an older text never lands after a newer one.
     public func save() async {
-        guard !isSaving else { return }
+        guard isLoaded, !isSaving else { return }
         isSaving = true
         defer { isSaving = false }
         let text = text
@@ -44,7 +50,7 @@ public final class NotesModel {
             try await service.save(text)
             savedText = text
         } catch {
-            Log.notes.error("save failed: \(String(describing: error), privacy: .public)")
+            Log.notes.error("save failed: \(String(describing: error))")
             errorMessage = error.message
         }
     }

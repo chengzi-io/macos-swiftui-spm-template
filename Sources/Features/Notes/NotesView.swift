@@ -12,6 +12,7 @@ public struct NotesView: View {
         VStack(spacing: 0) {
             TextEditor(text: $model.text)
                 .font(.body)
+                .disabled(!model.isLoaded)
                 .accessibilityIdentifier("notes.text")
             Divider()
             HStack {
