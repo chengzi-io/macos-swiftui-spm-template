@@ -1,6 +1,6 @@
 # macOS SwiftUI SPM 模板：开箱即用清单与实施记录
 
-> 状态：已实施，在本地分支 `feat/template-infrastructure` 上，未 push · 2026-10-18
+> 状态：已实施，在本地分支 `feat/thin-xcode-project` 上，未 push · 2026-10-24
 > 基线：Xcode 26.2（Swift 6.2.3），开发机 macOS 15.7
 > 验收清单见 [ACCEPTANCE.md](ACCEPTANCE.md)。这两份是模板专用文档，`scripts/init.sh` 会删除它们。
 
@@ -107,7 +107,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | ID | 项 | 落地位置 | 状态 |
 |----|----|----------|------|
 | A1 | 工程与目录 | `App/Pomelo.xcodeproj`（Pomelo、PomeloUITests 两个 target，buildable folders）、`Package.swift`、`Sources/`、`Tests/` 在仓库根（AppRoot、`Features/<Name>`、`Platform/Core`、`Platform/Live`，测试目录镜像 Sources） | ✅ |
-| A2 | 应用身份单一来源 | `Configs/Identity.xcconfig`（Xcode 和脚本读同一份） | ✅ |
+| A2 | 应用身份单一来源 | `App/Configs/Identity.xcconfig`（Xcode 和脚本读同一份） | ✅ |
 | A3 | App 入口骨架 | `App/Application/MainApp.swift`（组装根，环境变量 `UI_TESTING=1` 时换 mock）、`AppDelegate.swift`；场景在 `AppRoot/AppScenes.swift` | ✅ |
 | A4 | 资源与本地化（en、zh-Hans） | 每个带文案的 target 一份 `Resources/Localizable.xcstrings` | ✅ |
 | A5 | App 图标与强调色 | `App/Application/AppIcon.icon`（Icon Composer 格式：两层 SVG 加渐变填充，自绘橙子切面）、`App/Application/Assets.xcassets`（强调色，2026-10-24 起留空） | ✅ macOS 15 / 🟡 macOS 14、26 |
@@ -153,7 +153,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 | G9 | 产物校验 | `scripts/verify-dmg.sh`：挂载最终 DMG，检查 Applications 链接，对里面的 app 跑冒烟测试，有 Developer ID 时加 Gatekeeper 评估；`scripts/verify-appcast.swift`：appcast 的下载地址、长度和 EdDSA 签名必须与 `SUPublicEDKey` 对得上 | ✅ 本地（含反例） |
 | H1 | Sparkle 自动更新 | `Platform/Core/Updater/UpdaterService.swift`（协议和 mock）、`Platform/Live/Updater/LiveUpdaterService.swift`、`scripts/appcast.sh`、`make sparkle-keys` | ✅ 本地端到端 / 🟡 GitHub |
 | H2 | Homebrew Cask | `.agents/skills/homebrew-cask`，只能由用户启动，先按 `TEAM_ID` 和仓库知名度选渠道。官方 `homebrew/cask`：有 Developer ID 且仓库够知名时，skill 写好带 `desc` 和 `livecheck`（`:github_latest`）的 cask，在 `homebrew/cask` 的检出里检查，经用户同意后提 PR（说明用了 AI，提交不带 AI trailer）；收录后 BrewTestBot 自动更新，项目里不加 job、不建 tap。自建 tap：每次发版由单独的 `homebrew` job 下载已公开的 DMG，生成 cask 推到 tap；有 Developer ID 时是普通 cask（C），ad-hoc 时二选一：caveats 提示「仍要打开」（A）或安装后清掉 quarantine（B），两种都在 README 加 `[!IMPORTANT]` 提醒。还写了从自建 tap 转到官方库的步骤 | 🟡（自建 tap 的三种 cask 都过了 `brew style` 和 `brew audit`，A、B 用本地 tap 真装过；官方 cask 模板过了 `brew style`，`brew audit --new` 只因本仓库未公开、不够知名和下载 404 而失败；真实的 tap 推送和官方 PR 都没做过） |
-| H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（Sparkle 拆到 `SparkleUpdater` target，新增共用 `App/Application/` 的 `AppStore` target，不链接 Sparkle，用 `APP_STORE` 编译条件区分）或只上 App Store（删掉 Sparkle 和 DMG 发布，`Pomelo` target 就是 App Store 版）；带 `wiring/xcodeproj.py`（改 pbxproj 的唯一入口）、带 mas 配置的 `build-app.sh`、`release-mas.sh` 和 RELEASING 的一节 | 🟡（2026-10-23 按新结构重写，两种方案都在仓库副本里按 skill 走过一遍，签名用的是替代身份） |
+| H3 | Mac App Store | `.agents/skills/mac-app-store`，只能由用户启动：双渠道（Sparkle 拆到 `SparkleUpdater` target，新增共用 `App/Application/` 的 `AppStore` target，不链接 Sparkle，用 `APP_STORE` 编译条件区分）或只上 App Store（删掉 Sparkle 和 DMG 发布，`Pomelo` target 就是 App Store 版）；带 `wiring/xcodeproj.py`（只建 AppStore target，链接不含 Sparkle 的 `AppStoreModules`）、带 mas 配置的 `build-app.sh`、`release-mas.sh` 和 RELEASING 的一节 | 🟡（2026-10-24 按 Platform 和 `AppModules` 的结构改写，两种方案都在 init 后的副本里按 skill 走过一遍、构建通过；签名只在 2026-10-23 的旧结构上用替代身份测过） |
 | H4 | 测试版通道 | `docs/RELEASING.md` | 📄 |
 
 ---
@@ -193,6 +193,7 @@ V1–V8 是规划阶段的实测结论，V9 起是实施过程中新发现的。
 - **设置窗口用顶部 tab、链接工具进 `scripts/`（2026-10-24）**：`SettingsView` 改成 `TabView`，macOS 把 tab 放在窗口的工具栏里，和 Safari、TextEdit 一样。起始只有「更新」一个 tab（版本号、自动检查、检查更新），app 自己的设置以后加在它前面的「通用」tab 里，不放占位内容。`CheckForUpdatesButton` 从 AppRoot 搬进 SettingsFeature，app 菜单和「更新」tab 共用；AppRoot 没有字符串了，去掉了它的字符串表。快照的渲染函数抽到 `Tests/SnapshotSupport`，两个测试 target 共用。新增领域时 app target 要多链接产品，考虑过把组装挪进包里的 `AppLive` target：包里的 target 看不到 Xcode target 的构建设置，App Store 版不能带 Sparkle（审核指南 2.4.5），用哪个 updater 只能由 app target 决定，所以组装留在 `MainApp`，改为把 mac-app-store skill 里 `xcodeproj.py` 的 `link` 命令搬进 `scripts/xcodeproj.py`。
 - **结构规则补充：按功能区建 target，跨领域流程放进消费方领域（2026-10-24）**：按中大型 app（以菜单栏系统监控为例）检查规则，有三处会先出问题。一是一屏一个 feature target：显示同一份读数的菜单栏、面板、总览要分三处登记，共享的选中项只能上移到 `AppModel`。二是 `AppModel` 持有每个叶子 model，功能一多就什么都管。三是「读数超过阈值就发通知」这类跨领域、不由界面触发的流程没有位置。现在 feature 指一块功能区，相关画面放在同一个 target，每屏一个文件夹；功能的 `<Name>Model` 持有各屏共享的状态，`AppModel` 只持有各功能的 model、领域共享的 model 和全局的东西；跨领域流程放进消费结果的那个领域，例如 `Alerts` 使用 `Monitor` 的读数和 `Platform` 的通知。考虑过单独建一个 `AppCore` target，没有采用：名字说不出里面放什么，会重演 `Services` 的问题；功能依赖它就能碰到所有领域，任何领域一改都要重编。同时写明 Live 只依赖 Core（`lint-rules.sh` 拒绝 Live 里 `import …Live`），DesignSystem 只依赖 Kits，扩展是 `App/` 里另一个薄 target（lint 改为扫描整个 `App/`），快照按画面的关键状态录。新增 `docs/ARCHITECTURE.md`，用监控 app 讲这些规则。DesignSystem 一开始写成「两个 feature 共用、不认识领域的组件」，太窄：间距、圆角、字体、颜色是整个 app 的外观，feature 之间又不能互相依赖，只能放这里。现在它放 app 自己定的外观值和多个画面共用的组件；系统已有的样式（`Form`、`.font(.headline)`）不做 token；颜色写在代码里（`NSColor(name:dynamicProvider:)`），因为 `swift test` 不编译 asset catalog（V1），快照会画错。
 - **强调色留空，快照固定强调色（2026-10-24）**：模板原来把强调色设成品牌橙，每个用模板的 app 都默认带上橙色控件。快照在 app 外渲染，读不到 `NSAccentColorName`，画出来的是系统蓝，和 app 里看到的不一样。考虑过去掉 colorset、改用代码 `.tint`：实测（macOS 15.6）`.tint` 能改开关、`.borderedProminent` 按钮、Slider、ProgressView，改不了复选框、回车默认按钮和 Link；而且会无视用户在系统设置里选的强调色（app 强调色只在用户选「多色」时生效），`NSAccentColorName` 也只能指向 asset catalog 里的颜色。所以保留 colorset，像 Xcode 新建工程一样留空，app 跟随用户的强调色（actool 用 lint-assets 的参数编译，无警告，Info.plist 里不再有 `NSAccentColorName`）。另外实测快照会随录制机器的系统强调色变化：只给测试进程设成紫色，Settings 的两张快照就失败了。现在 `SnapshotSupport` 在测试进程内把强调色固定为蓝色（argument domain，不写盘），默认和紫色两种情况下现有参考图都通过。
+- **推送前评审（2026-10-24）**：两个 Opus subagent 分别评审代码架构和文档，按结果修了这些。app target 改为只链接一个产品 `AppModules`，加领域只改 `Package.swift`，`scripts/xcodeproj.py` 删掉（项目的脚本都是 shell，链接这一步又不再需要）；mac-app-store skill 的 py 只剩 `add-app-store-target`。`make test` 加 `--explicit-target-dependency-import-check error`：实测不加时 feature 里 `import NotesLive` 照样编译通过，加了才失败。快照再固定滚动条（实测本机设成「始终显示」时便签快照会失败）。`LiveUpdaterService` 用 KVO 跟上 Sparkle 第二次启动时询问后设的值；便签示例读取成功前不能编辑和保存，错误日志不再公开（会带出用户主目录路径）；RECIPES 的服务改用有类型的 throws；lint 认出带修饰的 import；doctor 接受更新的 Xcode；rename.sh 拒绝和包里模块重名的名字。mac-app-store skill 采用 `chore/generic-mac-app-store-skill` 分支「按目标写」的版本，再按 Platform 和 `AppModules` 改写；两种方案各让一个 subagent 在 init 后的副本里照 skill 走一遍，都构建通过，它们发现的含糊处（macOS 14 的 SceneBuilder 不能写 `if`，Settings 场景要拆出来在 `MainApp` 里用 `#if !APP_STORE`；模板里 Platform 只装着更新，只上 App Store 时整体删除）写回了 skill。README 按「是什么 / 快速上手 / 配置和用法 / 贡献」重写；init 生成的 app 页面加了徽章和更新、反馈两节；ARCHITECTURE 只留监控 app 一个例子；代码目录树只在 AGENTS 写一份。
 
 ---
 
