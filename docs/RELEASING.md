@@ -85,10 +85,11 @@ GitHub App token.
 
    ```bash
    gh variable set RELEASE_APP_CLIENT_ID --body "<client id>"
-   gh secret set RELEASE_APP_PRIVATE_KEY < release-app.private-key.pem
+   gh secret set RELEASE_APP_PRIVATE_KEY --env release < release-app.private-key.pem
    ```
 
-One App can serve every repository created from this template.
+The key writes to every repository the App is installed on, so give each repository
+its own App, or install one App only on repositories with the same maintainers.
 
 ### 3. Sparkle signing key
 

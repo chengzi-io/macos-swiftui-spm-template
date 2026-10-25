@@ -278,8 +278,10 @@ left, and every script still runs. Remove:
   outputs that only fed it. release-please stays for versions and `CHANGELOG.md`; in
   `.github/release-please-config.json` drop `draft` and `force-tag-creation`, which
   only existed so the publish job could fill a draft.
-- `scripts/github-setup.sh`: the `release` environment wherever the script mentions
-  it, and the environment in the `github-setup` help line of the Makefile.
+- `scripts/github-setup.sh`: the `release` environment stays, since it holds
+  release-please's App key; drop the publish job from what the script says the
+  environment is for, and the secrets only the publish job used
+  (`SPARKLE_ED_PRIVATE_KEY`, `DEVELOPER_ID_P12_*`, `NOTARY_API_*`) from its notes.
 - `App/Configs/Identity.xcconfig`: `GITHUB_REPOSITORY` once nothing reads it, and the
   repository in `AGENTS.md`'s list of what the file holds; the `TEAM_ID` comment now
   says App Store builds need it.
@@ -293,7 +295,7 @@ release is rewritten, not only cut: crash reports (Apple sends an App Store app'
 Xcode's Organizer), a dSYM upload that ran in the publish job, a runner chosen for a
 release workflow that no longer builds. In `docs/RELEASING.md` keep the version rules
 (without what Sparkle compares), one-time setup 1 and 2 (`make github-setup` and the
-GitHub App, which release-please still needs; without the `release` environment) and
+GitHub App, which release-please still needs, its key in the `release` environment) and
 the Mac App Store section from step 2, trimmed to the App Store target alone
 (`make release-mas` archives `<App>`); drop the release diagrams, draft releases, the
 Sparkle key, Developer ID, recovery, crash symbolication, Homebrew and beta sections.
@@ -308,7 +310,7 @@ finds what is left; read each hit, and keep only those about building with Xcode
 (`dwarf-with-dsym`) or about the App Store:
 
 ```bash
-grep -rni 'sparkle\|appcast\|notariz\|SUPublicEDKey\|RELEASES_URL\|updater\|CheckForUpdates\|Autoupdate\|DMG\|dSYM\|Developer ID\|homebrew\|release environment\|publish job\|RELEASING.md, 4\|GITHUB_REPOSITORY\|`make release`' \
+grep -rni 'sparkle\|appcast\|notariz\|SUPublicEDKey\|RELEASES_URL\|updater\|CheckForUpdates\|Autoupdate\|DMG\|dSYM\|Developer ID\|homebrew\|publish job\|RELEASING.md, 4\|GITHUB_REPOSITORY\|`make release`' \
     --exclude-dir=.build --exclude-dir=.git --exclude-dir=.agents .
 ```
 

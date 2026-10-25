@@ -6,7 +6,8 @@
 #     two or more pushers
 #   - the snapshots-reviewed label, which the Snapshot review check waits for
 #   - default workflow token read-only
-#   - `release` environment limited to protected branches (the publish job)
+#   - `release` environment limited to protected branches (release-please and the publish
+#     job)
 #   - private vulnerability reporting on
 # Prints the settings read back from the API.
 
@@ -67,7 +68,7 @@ echo "environment:  $(gh api "repos/$repo/environments/release" --jq .deployment
 cat >&2 <<EOF
 
 Still manual (see docs/RELEASING.md):
-  - GitHub App for release-please: variable RELEASE_APP_CLIENT_ID, secret RELEASE_APP_PRIVATE_KEY
-  - release environment secrets: SPARKLE_ED_PRIVATE_KEY, and with a Developer ID the
-    DEVELOPER_ID_P12_* and NOTARY_API_* secrets
+  - GitHub App for release-please: variable RELEASE_APP_CLIENT_ID
+  - release environment secrets: RELEASE_APP_PRIVATE_KEY, SPARKLE_ED_PRIVATE_KEY, and
+    with a Developer ID the DEVELOPER_ID_P12_* and NOTARY_API_* secrets
 EOF

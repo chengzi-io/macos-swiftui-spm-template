@@ -15,6 +15,9 @@ jobs:
   release-please:
     name: Release please
     runs-on: ubuntu-latest
+    # The App's key is a secret of this environment, which only protected branches reach:
+    # a workflow pushed on any other branch cannot read it.
+    environment: release
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
