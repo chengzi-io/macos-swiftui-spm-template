@@ -133,7 +133,12 @@ test target and a line in `AppRoot`'s dependencies, `AppModel` would hold three 
 and they could share the selected metric only through `AppModel`.
 
 A target splits when part of it changes for other reasons: Settings changes with what
-can be configured, so it is a feature of its own.
+can be configured, so it is a feature of its own. Its panes set what the app (launch at
+login, updates) and the domains (alert rules, the sample interval) keep. A pane that
+needs one feature's own views, such as a preview of the menu bar label, is that
+feature's `MonitorSettingsView`: Settings cannot import another feature, so `AppScenes`,
+which sees them all, hands it to `SettingsView` beside the other panes. Change
+`SettingsView` for that when the first such pane comes, not before.
 
 ### Two screens share state
 
