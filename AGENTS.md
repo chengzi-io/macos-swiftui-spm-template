@@ -173,7 +173,12 @@ same way.
 - Feature modules end in `Feature` (`SettingsFeature`), and no module is named after a
   SwiftUI type: a module called `Settings` or `App` breaks `Settings.SomeType` lookups.
 - Tests: Swift Testing (`@Test`, `#expect`) on models and services, with mocks for
-  every service. `swift test` does not compile asset or string catalogs, so unit tests
+  every service. A live service with logic of its own (a missing file read as empty, a
+  status code turned into an error) is also tested against the real thing, in a
+  temporary directory or against a local stub, in its domain's test target
+  (`LiveNoteServiceTests`); what it reaches comes in through its initializer, defaulting
+  to the real one. One that only hands calls to a framework, as the updater does, needs
+  no such test. `swift test` does not compile asset or string catalogs, so unit tests
   never assert localized text or images; `make smoke` covers resources in the real
   `.app`. XCTest only for UI tests.
 - Screens get snapshot tests (swift-snapshot-testing; `NotesViewSnapshotTests` is the
@@ -253,12 +258,12 @@ same way.
 8. `make ci`.
 
 The Notes demo is a placeholder: the `Notes` domain (`Sources/Notes`), `Features/Notes`,
-`NotesFeatureTests` and its `__Snapshots__`, `NotesUITests`, and their lines in
-`Package.swift` (its targets and their place in `AppModules`), the `<App>` scheme's Test
-action, `AppModel`, `AppScenes` and `MainApp.swift`. Replace it with the first real
-feature, and point this file's examples (`WordCount`, `NoteError.message`, `Log.notes`,
-`NotesViewSnapshotTests`, `NotesFeatureTests`, `Features/Notes/`) at their counterparts
-in it. Recipes for launch at login, networking, menu bar apps, global keyboard
+`NotesTests`, `NotesFeatureTests` and its `__Snapshots__`, `NotesUITests`, and their
+lines in `Package.swift` (its targets and their place in `AppModules`), the `<App>`
+scheme's Test action, `AppModel`, `AppScenes` and `MainApp.swift`. Replace it with the
+first real feature, and point this file's examples (`WordCount`, `NoteError.message`,
+`Log.notes`, `NotesViewSnapshotTests`, `LiveNoteServiceTests`, `NotesFeatureTests`,
+`Features/Notes/`) at their counterparts in it. Recipes for launch at login, networking, menu bar apps, global keyboard
 shortcuts, AppKit bridges, crash reporting, the Keychain and the privacy manifest:
 [docs/RECIPES.md](docs/RECIPES.md).
 

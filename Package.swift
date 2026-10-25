@@ -77,6 +77,12 @@ let package = Package(
             swiftSettings: ui
         ),
         .testTarget(
+            name: "NotesTests",
+            dependencies: ["Notes", "NotesLive"],
+            path: "Tests/NotesTests",
+            swiftSettings: common
+        ),
+        .testTarget(
             name: "NotesFeatureTests",
             dependencies: [
                 "NotesFeature",

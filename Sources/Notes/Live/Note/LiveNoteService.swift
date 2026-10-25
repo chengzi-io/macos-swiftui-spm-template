@@ -4,9 +4,12 @@ import Notes
 /// Keeps the note in a text file in Application Support, which the sandbox puts in the
 /// app's container.
 public struct LiveNoteService: NoteService {
-    private let url = URL.applicationSupportDirectory.appending(path: "note.txt")
+    private let url: URL
 
-    public init() {}
+    /// Tests pass a file in a temporary directory.
+    public init(url: URL = URL.applicationSupportDirectory.appending(path: "note.txt")) {
+        self.url = url
+    }
 
     @concurrent
     public func load() async throws(NoteError) -> String {
