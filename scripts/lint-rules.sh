@@ -18,13 +18,17 @@ status=0
 
 # check <message> <extended regex> <paths...>: reports every matching line.
 check() {
-    local message=$1 pattern=$2 path hits
+    local message=$1 pattern=$2 path hits paths=()
     shift 2
     for path in "$@"; do
+        # A glob left as written matched nothing: no domain has that layer yet.
+        [[ $path != *'*'* ]] || continue
         [[ -d $path ]] || die "lint-rules.sh: no directory $path"
+        paths+=("$path")
     done
+    ((${#paths[@]} > 0)) || return 0
     # /usr/bin/grep: the same BSD grep on every Mac and CI runner.
-    if hits=$(/usr/bin/grep -rnE --include='*.swift' "$pattern" "$@"); then
+    if hits=$(/usr/bin/grep -rnE --include='*.swift' "$pattern" "${paths[@]}"); then
         echo "$hits" >&2
         echo "error: $message" >&2
         status=1
