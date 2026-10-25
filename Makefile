@@ -11,6 +11,9 @@ ifneq ($(words $(APP_TARGET)),1)
 $(error expected one Xcode project in App/, found: $(APP_TARGET))
 endif
 SWIFT_PATHS := Package.swift Sources Tests App
+# Fails on an import of a module the target does not declare, as Package.swift's
+# dependencies would otherwise be enforced only by build order.
+SWIFT_TEST := swift test --explicit-target-dependency-import-check error
 BUNDLE_ID := $(shell sed -nE 's/^BUNDLE_ID[[:space:]]*=[[:space:]]*//p' App/Configs/Identity.xcconfig)
 
 .PHONY: help
@@ -41,15 +44,15 @@ github-setup: ## One-time GitHub settings: squash only, branch protection, relea
 
 .PHONY: test
 test: ## Run the package unit tests with swift test (fast: no app, no UI)
-	swift test
+	$(SWIFT_TEST)
 
 # Records the view snapshots that are missing or differ. A recording run reports each
 # image it writes as an issue, so the second run is the one that has to pass. Agents run
 # it only after the user has seen the old and new images (.claude/settings.json asks).
 .PHONY: snapshots
 snapshots: ## Record new and changed view snapshots in __Snapshots__/ (review them before committing)
-	-SNAPSHOT_TESTING_RECORD=failed swift test
-	swift test
+	-SNAPSHOT_TESTING_RECORD=failed $(SWIFT_TEST)
+	$(SWIFT_TEST)
 
 # UI tests drive the real mouse and keyboard on this Mac, so they stay out of
 # `make test` and `make ci`; GitHub CI runs them.
