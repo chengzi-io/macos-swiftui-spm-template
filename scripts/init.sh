@@ -6,7 +6,8 @@
 #     [--repo owner/repo] [--codeowner @user-or-@org/team]
 #
 # --repo defaults to the origin remote, --copyright to the repository owner,
-# --codeowner to @owner. Needs a clean working tree; review `git diff HEAD`, then commit.
+# --codeowner to you, as gh is signed in. Needs a clean working tree; review
+# `git diff HEAD`, then commit.
 
 source "$(dirname "$0")/common.sh"
 
@@ -43,7 +44,12 @@ fi
 owner=${repo%%/*}
 display_name=${display_name:-$name}
 holder=${holder:-$owner}
-codeowner=${codeowner:-@$owner}
+# CODEOWNERS ignores a bare organization, which the repository owner may be.
+if [[ -z $codeowner ]]; then
+    login=$(gh api user --jq .login 2>/dev/null) ||
+        die "pass --codeowner @user or @org/team; gh is not signed in to look you up"
+    codeowner=@$login
+fi
 for value in "$display_name" "$holder" "$codeowner"; do
     [[ $value != *[\"\$\\\`\|\&]* ]] || die "values cannot contain \" \$ \\ \` | or &: $value"
     # Identity.xcconfig would read the rest of the line as a comment.
