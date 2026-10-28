@@ -106,7 +106,8 @@ Split a target when part of it changes for other reasons. A grown app has some 8
 library targets; more usually means folders were made into modules.
 
 Dependencies, enforced by `Package.swift` (`make test` fails on an import a target does
-not declare):
+not declare) and `make lint` (fails on a target that depends on a Live, or on a feature
+outside `AppRoot`):
 
 ```text
 <App>          ──► AppModules: AppRoot, <Domain>, <Domain>Live, Platform, PlatformLive
