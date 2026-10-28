@@ -237,9 +237,11 @@ same way.
    `Tests/Features/<Name>Tests` that depends on the feature, the Cores it uses,
    `SnapshotSupport` and the `SnapshotTesting` product, with `exclude: ["__Snapshots__"]`
    (SwiftPM warns about the reference PNGs otherwise), as `NotesFeatureTests` does; and
-   `<Name>Feature` in `AppRoot`'s dependencies. Add the test target to the `<App>`
+   `<Name>Feature` in `AppRoot`'s dependencies. `make feature NAME=<Name>` creates the
+   feature's files and prints these blocks. Add the test target to the `<App>`
    scheme's Test action (Xcode: Product → Scheme → Edit Scheme… → Test → +) so ⌘U runs
-   it; `make test` runs it either way. Without Xcode, copy the `NotesFeatureTests`
+   it; `make test` runs it either way, and `make lint` fails until the scheme lists it.
+   Without Xcode, copy the `NotesFeatureTests`
    `<TestableReference>` in `App/<App>.xcodeproj/xcshareddata/xcschemes/<App>.xcscheme`
    and change its three names.
 3. Add every user-facing string to the feature's `Resources/Localizable.xcstrings` in

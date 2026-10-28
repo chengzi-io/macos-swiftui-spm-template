@@ -49,6 +49,12 @@ github-setup: ## One-time GitHub settings: squash only, branch protection, relea
 test: ## Run the package unit tests with swift test (fast: no app, no UI)
 	$(SWIFT_TEST)
 
+# Creates a feature's files and prints the blocks to paste into Package.swift, AppRoot and
+# the scheme; it changes no existing file, so the wiring stays a reviewed edit.
+.PHONY: feature
+feature: ## Scaffold a feature's files: NAME=Library (prints the blocks to paste)
+	scripts/feature.sh
+
 # Records the view snapshots that are missing or differ. A recording run reports each
 # image it writes as an issue, so the second run is the one that has to pass. Agents run
 # it only after the user has seen the old and new images (.claude/settings.json asks).
