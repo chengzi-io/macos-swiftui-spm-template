@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Creates a feature's files, its log and its snapshot test, and prints the blocks to paste
-# into Package.swift, AppRoot and the app scheme. It changes no existing file: the targets,
-# the wiring and the Test action stay a reviewed edit, and scripts/lint-rules.sh fails while
-# a test target is missing from the scheme.
+# Creates a feature's files, its log and its snapshot test, adds its test target to the app
+# scheme, and prints the blocks to paste into Package.swift and AppRoot. Those stay a
+# reviewed edit: they are Swift, shared by every branch, and scripts/lint-rules.sh fails
+# while the scheme and Package.swift disagree.
 
 source "$(dirname "$0")/common.sh"
 
@@ -27,6 +27,12 @@ esac
 if grep -q "name: \"${name}Feature\"" Package.swift; then
     die "Package.swift already declares ${name}Feature"
 fi
+scheme="$XCODE_PROJECT/xcshareddata/xcschemes/$APP_TARGET.xcscheme"
+[[ -f $scheme ]] || die "no $scheme"
+if grep -q "BlueprintIdentifier = \"${name}FeatureTests\"" "$scheme"; then
+    die "$scheme already lists ${name}FeatureTests"
+fi
+command -v xmllint >/dev/null || die "xmllint missing; it ships with macOS"
 
 log "create Sources/Features/$name and Tests/Features/${name}Tests"
 mkdir -p "Sources/Features/$name/Resources" "Tests/Features/${name}Tests"
@@ -119,6 +125,34 @@ struct ${name}ViewSnapshotTests {
 }
 EOF
 
+# The scheme is the one shared file where the edit is mechanical: no ordering, no review
+# value. Insert before </Testables>, then keep the file only if it is still valid XML.
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+cat >"$tmp/block" <<EOF
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "${name}FeatureTests"
+               BuildableName = "${name}FeatureTests"
+               BlueprintName = "${name}FeatureTests"
+               ReferencedContainer = "container:..">
+            </BuildableReference>
+         </TestableReference>
+EOF
+line=$(grep -n '^      </Testables>$' "$scheme" | cut -d: -f1)
+[[ -n $line ]] || die "$scheme has no </Testables> line; add the TestableReference by hand"
+{
+    head -n $((line - 1)) "$scheme"
+    cat "$tmp/block"
+    tail -n +"$line" "$scheme"
+} >"$tmp/scheme"
+xmllint --noout "$tmp/scheme" || die "$scheme would stop being well-formed XML; left it alone"
+mv "$tmp/scheme" "$scheme"
+log "add ${name}FeatureTests to $scheme"
+
 cat <<EOF
 
 Sources/Features/$name/
@@ -153,19 +187,7 @@ Package.swift, AppRoot's dependencies:
 
 Then AppModel owns ${name}Model and AppScenes shows ${name}View.
 
-App/${APP_TARGET}.xcodeproj/xcshareddata/xcschemes/${APP_TARGET}.xcscheme, in <Testables>:
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "${name}FeatureTests"
-               BuildableName = "${name}FeatureTests"
-               BlueprintName = "${name}FeatureTests"
-               ReferencedContainer = "container:..">
-            </BuildableReference>
-         </TestableReference>
-
-make lint fails until the scheme lists the test target. make test then fails with "No
-reference was found": show the two images it drew, and after a yes run make snapshots.
+The scheme already lists ${name}FeatureTests; the entry does nothing until Package.swift
+declares the test target. make test then fails with "No reference was found": show the two
+images it drew, and after a yes run make snapshots.
 EOF

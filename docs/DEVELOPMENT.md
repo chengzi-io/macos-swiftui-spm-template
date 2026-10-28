@@ -37,8 +37,9 @@ keeps the unit-test loop fast.
 - `make test` runs the unit tests: seconds, no app, no UI. Run it after every change.
   It includes the snapshot tests, which compare views with the PNGs in `__Snapshots__/`
   and never record: a missing or changed reference fails.
-- `make feature NAME=Library` creates a feature's files and prints the blocks to paste
-  into `Package.swift`, `AppRoot` and the scheme; it changes no existing file.
+- `make feature NAME=Library` creates a feature's files and its snapshot test, adds the
+  test target to the app scheme, and prints the `Package.swift` blocks and the wiring to
+  paste.
 - `make snapshots` records the missing and changed references. Look at each new image
   first; an agent shows you the old and the new one and asks before it runs this, and
   Claude Code asks too (`.claude/settings.json`). A PR that changes references fails

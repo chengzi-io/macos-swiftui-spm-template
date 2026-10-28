@@ -49,8 +49,8 @@ github-setup: ## One-time GitHub settings: squash only, branch protection, relea
 test: ## Run the package unit tests with swift test (fast: no app, no UI)
 	$(SWIFT_TEST)
 
-# Creates a feature's files and prints the blocks to paste into Package.swift, AppRoot and
-# the scheme; it changes no existing file, so the wiring stays a reviewed edit.
+# Creates a feature's files and adds its test target to the app scheme; the Package.swift
+# blocks and the wiring are printed, not applied, so they stay a reviewed edit.
 .PHONY: feature
 feature: ## Scaffold a feature's files: NAME=Library (prints the blocks to paste)
 	scripts/feature.sh
