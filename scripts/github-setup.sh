@@ -31,11 +31,18 @@ gh label create snapshots-reviewed --color 0E8A16 --force \
 pushers=$(gh api "repos/$repo/collaborators?per_page=100" --jq '[.[] | select(.permissions.push)] | length')
 reviews=$([[ $pushers -ge 2 ]] && echo 1 || echo 0)
 
+# The checks must come from GitHub Actions (app 15368). By name alone, a check no app has
+# reported yet, as here right after the first push, passes on a commit status that anyone
+# with write access posts through the API.
 gh api --method PUT "repos/$repo/branches/$branch/protection" --input - >/dev/null <<JSON
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": ["Validate PR title", "Lint, test, build", "Snapshot review"]
+    "checks": [
+      { "context": "Validate PR title", "app_id": 15368 },
+      { "context": "Lint, test, build", "app_id": 15368 },
+      { "context": "Snapshot review", "app_id": 15368 }
+    ]
   },
   "enforce_admins": true,
   "required_pull_request_reviews": {
@@ -60,7 +67,7 @@ JSON
 gh api --method PUT "repos/$repo/private-vulnerability-reporting" >/dev/null
 
 echo "merge:        $(gh api "repos/$repo" --jq '{squash: .allow_squash_merge, merge: .allow_merge_commit, rebase: .allow_rebase_merge, title: .squash_merge_commit_title}')"
-echo "checks:       $(gh api "repos/$repo/branches/$branch/protection" --jq '.required_status_checks.contexts')"
+echo "checks:       $(gh api "repos/$repo/branches/$branch/protection" --jq '[.required_status_checks.checks[] | "\(.context) (app \(.app_id))"]')"
 echo "reviews:      $reviews (pushers: $pushers)"
 echo "workflow:     $(gh api "repos/$repo/actions/permissions/workflow" --jq .default_workflow_permissions)"
 echo "environment:  $(gh api "repos/$repo/environments/release" --jq .deployment_branch_policy)"
