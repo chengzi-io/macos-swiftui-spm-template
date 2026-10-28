@@ -4,15 +4,15 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    # fix: Sparkle ships inside the app, and only feat and fix make a release that gets
-    # its update to users.
+    # Only the packages that ship inside the app. fix, because only feat and fix make a
+    # release that gets its update to users; a test-only package's bump, and its
+    # transitive pins, would ship a patch release with nothing in it. Swift names a
+    # package by its repository URL, and a package listed here is the only one updated.
+    allow:
+      - dependency-name: github.com/sparkle-project/sparkle
     commit-message:
       prefix: fix
       include: scope
-    # Test-only packages never reach users, and a fix would release them anyway: bump
-    # them by hand as chore(deps).
-    ignore:
-      - dependency-name: github.com/pointfreeco/swift-snapshot-testing
     open-pull-requests-limit: 5
   - package-ecosystem: github-actions
     directory: /
