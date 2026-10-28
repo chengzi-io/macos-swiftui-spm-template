@@ -19,6 +19,10 @@ flowchart TD
   `version.txt` and `.release-please-manifest.json`. `CFBundleShortVersionString` comes
   from `version.txt`; `CFBundleVersion` is `git rev-list --count HEAD`, which only grows
   on `main` and is what Sparkle compares.
+- **Dependencies.** Dependabot titles Swift package bumps `fix(deps)`, so a new Sparkle
+  reaches users. A package only the tests use goes in the `ignore` list in
+  `.github/dependabot.yml`, as swift-snapshot-testing does; bump it by hand as
+  `chore(deps)`.
 - **Draft release.** Nobody sees it, and `releases/latest` keeps pointing at the
   previous version, until the publish job has uploaded every asset. The release-only
   steps (universal build, notarization, DMG, appcast) first run in that job; when one

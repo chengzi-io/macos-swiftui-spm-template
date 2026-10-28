@@ -9,6 +9,10 @@ updates:
     commit-message:
       prefix: fix
       include: scope
+    # Test-only packages never reach users, and a fix would release them anyway: bump
+    # them by hand as chore(deps).
+    ignore:
+      - dependency-name: github.com/pointfreeco/swift-snapshot-testing
     open-pull-requests-limit: 5
   - package-ecosystem: github-actions
     directory: /
