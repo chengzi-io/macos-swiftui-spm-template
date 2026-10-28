@@ -1,19 +1,17 @@
 version: 2
 updates:
+  # Security updates only: a routine bump would arrive as fix(deps) and release a patch
+  # with nothing in it. A security advisory still opens a pull request, and this prefix
+  # makes it a release. To take routine bumps again, raise the limit and allow the
+  # packages that ship.
   - package-ecosystem: swift
     directory: /
     schedule:
       interval: weekly
-    # Only the packages that ship inside the app. fix, because only feat and fix make a
-    # release that gets its update to users; a test-only package's bump, and its
-    # transitive pins, would ship a patch release with nothing in it. Swift names a
-    # package by its repository URL, and a package listed here is the only one updated.
-    allow:
-      - dependency-name: github.com/sparkle-project/sparkle
     commit-message:
       prefix: fix
       include: scope
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
   - package-ecosystem: github-actions
     directory: /
     schedule:

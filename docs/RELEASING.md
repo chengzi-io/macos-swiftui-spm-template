@@ -19,11 +19,11 @@ flowchart TD
   `version.txt` and `.release-please-manifest.json`. `CFBundleShortVersionString` comes
   from `version.txt`; `CFBundleVersion` is `git rev-list --count HEAD`, which only grows
   on `main` and is what Sparkle compares.
-- **Dependencies.** Dependabot titles Swift package bumps `fix(deps)`, so a new Sparkle
-  reaches users. Only the packages that ship in the app are listed under `allow` in
-  `.github/dependabot.yml`; a test-only package and its transitive pins get no pull
-  request, and you bump them by hand as `chore(deps)`. A security advisory still opens
-  a pull request for a package that is not listed.
+- **Dependencies.** Dependabot takes no routine Swift package bumps
+  (`open-pull-requests-limit: 0` in `.github/dependabot.yml`): a merged `fix(deps)` would
+  release a patch with nothing in it. A security advisory still opens a pull request, and
+  its `fix` prefix makes it a release. Bump a package by hand when you want the new
+  version, as `chore(deps)`, or as `fix(deps)` to release it.
 - **Draft release.** Nobody sees it, and `releases/latest` keeps pointing at the
   previous version, until the publish job has uploaded every asset. The release-only
   steps (universal build, notarization, DMG, appcast) first run in that job; when one
