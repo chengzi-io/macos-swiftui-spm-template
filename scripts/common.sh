@@ -1,6 +1,7 @@
 # Sourced by scripts/*.sh. Runs from the repo root with the app identity
 # (App/Configs/Identity.xcconfig) exported.
 # macOS ships bash 3.2: no associative arrays, no mapfile, guard empty arrays.
+# shellcheck shell=bash disable=SC2034 # the scripts that source this file read its variables
 
 set -euo pipefail
 

@@ -7,7 +7,7 @@
 #   Reads PR, BASE, HEAD, ACTION, LABELS (JSON array) and GH_TOKEN.
 set -euo pipefail
 
-label=snapshots-reviewed
+label='snapshots-reviewed'
 snapshots=':(glob)**/__Snapshots__/**'
 
 changed=$(git diff --name-only "$BASE...$HEAD" -- "$snapshots")
