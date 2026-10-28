@@ -49,3 +49,28 @@ jobs:
       # first time unless automation mode is enabled up front.
       - run: sudo automationmodetool enable-automationmode-without-authentication
       - run: make test:ui
+
+  scripts:
+    name: Lint scripts and workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Pinned releases, checked against their published digests, so a new version's
+      # findings arrive as a reviewed bump rather than a red PR.
+      - name: Install shellcheck and actionlint
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl -fsSLO https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.gz
+          curl -fsSLO https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          sha256sum -c <<'EOF'
+          b7af85e41cc99489dcc21d66c6d5f3685138f06d34651e6d34b42ec6d54fe6f6  shellcheck-v0.11.0.linux.x86_64.tar.gz
+          8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint_1.7.12_linux_amd64.tar.gz
+          EOF
+          tar -xzf shellcheck-v0.11.0.linux.x86_64.tar.gz --strip-components 1 shellcheck-v0.11.0/shellcheck
+          tar -xzf actionlint_1.7.12_linux_amd64.tar.gz actionlint
+          echo "$PWD" >>"$GITHUB_PATH"
+      # Follows each script's `source` of common.sh; info and style findings stay advice.
+      - run: git ls-files -z '*.sh' | xargs -0 shellcheck --external-sources --source-path=SCRIPTDIR --severity=warning
+      # Also runs shellcheck over every workflow's run: steps.
+      - run: actionlint

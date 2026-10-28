@@ -61,7 +61,7 @@ make github-setup
 ```
 
 Squash merge only, with the PR title as the commit title; `main` requires a PR and the
-three checks below; the workflow token is read-only; the `release` environment only runs
+four checks below; the workflow token is read-only; the `release` environment only runs
 from protected branches; private vulnerability reporting is on. The script prints the
 settings it reads back.
 
@@ -69,13 +69,15 @@ settings it reads back.
 | --- | --- | --- |
 | `Validate PR title` | runs | skipped |
 | `Lint, test, build` | runs | skipped |
+| `Lint scripts and workflows` | runs | runs, passes |
 | `Snapshot review` | runs | runs, passes |
 
 A skipped required check counts as passed. release-please's PRs (branch
 `release-please--*` in this repository, opened by its App as a Bot) change only the
-version and the changelog, so they skip the first two and change no snapshot. `Snapshot review` fails while a PR
-changes view snapshot references without the `snapshots-reviewed` label, which the
-script creates; see [DEVELOPMENT.md](DEVELOPMENT.md#commands).
+version and the changelog, so they skip the first two and change no snapshot.
+`Snapshot review` fails while a PR changes view snapshot references without the
+`snapshots-reviewed` label, which the script creates; see
+[DEVELOPMENT.md](DEVELOPMENT.md#commands).
 
 The checks stop mistakes, not someone set on getting past them: a PR can rewrite its own
 workflow, and an admin can lift the protection. A token that can push a branch can merge

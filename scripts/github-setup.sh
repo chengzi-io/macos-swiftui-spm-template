@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # One-time GitHub settings for this repository (needs `gh` with admin rights):
 #   - squash merge only, commit title = PR title (release-please reads it)
-#   - main protected: PR required, "Validate PR title", "Lint, test, build" and
-#     "Snapshot review" required, no force push or deletion; reviews required only with
-#     two or more pushers
+#   - main protected: PR required, "Validate PR title", "Lint, test, build", "Lint
+#     scripts and workflows" and "Snapshot review" required, no force push or deletion;
+#     reviews required only with two or more pushers
 #   - the snapshots-reviewed label, which the Snapshot review check waits for
 #   - default workflow token read-only
 #   - `release` environment limited to protected branches (release-please and the publish
@@ -41,6 +41,7 @@ gh api --method PUT "repos/$repo/branches/$branch/protection" --input - >/dev/nu
     "checks": [
       { "context": "Validate PR title", "app_id": 15368 },
       { "context": "Lint, test, build", "app_id": 15368 },
+      { "context": "Lint scripts and workflows", "app_id": 15368 },
       { "context": "Snapshot review", "app_id": 15368 }
     ]
   },

@@ -38,6 +38,10 @@ Rules).
 `make test:ui` runs the XCUITests. They take over the user's mouse and keyboard, so run
 them only when the user asks; GitHub CI runs them on every PR.
 
+GitHub CI also runs shellcheck and actionlint over the shell scripts and workflows, at
+the versions pinned in `.github/workflows/ci.yml`; `make ci` does not, since a Mac
+seldom has them.
+
 Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks it.
 On macOS 26+ with Xcode 26.3+ and the project open in Xcode, `xcrun mcpbridge` lets an
 agent build, run tests, render previews and search Apple's documentation through Xcode.
