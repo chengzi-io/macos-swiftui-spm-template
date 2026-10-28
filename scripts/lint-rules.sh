@@ -98,4 +98,16 @@ while read -r catalog; do
         | .key' "$catalog")
 done < <(find Sources App -name '*.xcstrings')
 
+# Xcode resolves the app's packages into its own Package.resolved; swift test and
+# dependabot write only the root one, so the app could ship other versions than the tests
+# ran against.
+xcode_resolved="$XCODE_PROJECT/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+pins() {
+    jq -S '.pins | sort_by(.identity)' "$1"
+}
+if ! diff -u <(pins Package.resolved) <(pins "$xcode_resolved") >&2; then
+    echo "error: Package.resolved and $xcode_resolved pin different versions; swift test and dependabot write the first, Xcode the second: copy the one with the versions you want over the other, then make test app" >&2
+    status=1
+fi
+
 exit $status
