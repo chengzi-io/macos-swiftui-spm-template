@@ -47,6 +47,10 @@ check "Core holds protocols, types, logic and mocks; system frameworks belong in
     "${import}(AppKit|IOKit|Network|Sparkle)\\b" "${core_paths[@]}"
 check "wrap AppKit views in an AppKitBridge target, not in a feature" \
     '\bNS(View|ViewController)Representable\b' Sources/Features Sources/AppRoot
+check "fix the isolation instead of silencing the compiler: an actor, a Sendable value, or state behind OSAllocatedUnfairLock" \
+    '@unchecked[[:space:]]+Sendable\b|nonisolated\(unsafe\)' "${swift_paths[@]}"
+check "pass models through initializers, not the environment: a missing argument fails the build, a missing environment object crashes at run time" \
+    '\.environment\([[:space:]]*[A-Za-z_]|@Environment\([A-Z][[:alnum:]_]*\.self\)' "${swift_paths[@]}"
 
 package=$(swift package dump-package)
 
