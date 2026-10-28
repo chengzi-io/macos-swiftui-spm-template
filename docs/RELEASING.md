@@ -77,6 +77,14 @@ version and the changelog, so they skip the first two and change no snapshot. `S
 changes view snapshot references without the `snapshots-reviewed` label, which the
 script creates; see [DEVELOPMENT.md](DEVELOPMENT.md#commands).
 
+The checks stop mistakes, not someone set on getting past them: a PR can rewrite its own
+workflow, and an admin can lift the protection. A token that can push a branch can merge
+it too, so an agent holding yours can merge work you never saw. To keep merging yours,
+give the agent no write access to the repository (it commits; you push and merge), or a
+GitHub account of its own and run `make github-setup` again: with two pushers, `main`
+needs an approving review, and nobody approves their own PR. Your PRs then need the
+agent account's approval as well.
+
 ### 2. GitHub App for release-please
 
 A PR opened with the default `GITHUB_TOKEN` starts no workflows, so its required
