@@ -50,4 +50,20 @@ check "a Live target uses Cores, never another Live: a test could not swap one a
 check "wrap AppKit views in an AppKitBridge target, not in a feature" \
     '\bNS(View|ViewController)Representable\b' Sources/Features Sources/AppRoot
 
+# Xcode's Test action lists test bundles by hand. A package test target the app scheme does
+# not list is skipped without a word by ⌘U and xcodebuild test; SwiftPM runs it either way,
+# so only this check can say so. A stale entry in the scheme needs no check: xcodebuild
+# fails on it by name.
+scheme="$XCODE_PROJECT/xcshareddata/xcschemes/$APP_TARGET.xcscheme"
+[[ -f $scheme ]] || die "lint-rules.sh: no $scheme"
+listed=$(grep -B5 'ReferencedContainer = "container:\.\."' "$scheme" |
+    sed -nE 's/.*BlueprintIdentifier = "([^"]+)".*/\1/p' | sort -u)
+declared=$(swift package dump-package |
+    jq -r '.targets[] | select(.type == "test") | .name' | sort -u)
+while read -r target; do
+    [[ -n $target ]] || continue
+    echo "error: $target is not in the Test action of $scheme, so ⌘U and xcodebuild test skip it silently; copy a TestableReference there and change its three names" >&2
+    status=1
+done < <(comm -23 <(printf '%s\n' "$declared") <(printf '%s\n' "$listed"))
+
 exit $status
