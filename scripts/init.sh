@@ -152,7 +152,7 @@ EOF
 log "remove template-only files and sections"
 drop_template_blocks AGENTS.md '<!-- template-only:start -->' '<!-- template-only:end -->'
 drop_template_blocks Makefile '^# template-only:start' '^# template-only:end'
-rm -f docs/TEMPLATE-PLAN.md docs/ACCEPTANCE.md "$ROOT/scripts/init.sh"
+rm -f "$ROOT/scripts/init.sh"
 
 cat >&2 <<EOF
 

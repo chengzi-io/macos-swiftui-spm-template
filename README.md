@@ -80,14 +80,13 @@ replace the icon (Icon Composer or the `app-icon` skill), and do the
 
 **Docs:**
 
-| File | Covers | After init |
-| --- | --- | --- |
-| [AGENTS.md](AGENTS.md) | rules for agents, where code goes | kept |
-| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | setup, commands, editors, how the app is built | kept |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | why the code is split this way, by example | kept |
-| [docs/RELEASING.md](docs/RELEASING.md) | the release flow, one-time setup, recovery | kept |
-| [docs/RECIPES.md](docs/RECIPES.md) | launch at login, networking, menu bar, shortcuts, AppKit bridges, crash reporting | kept |
-| `docs/TEMPLATE-PLAN.md`, `docs/ACCEPTANCE.md` | the template's own plan and checks (Chinese) | removed |
+| File | Covers |
+| --- | --- |
+| [AGENTS.md](AGENTS.md) | rules for agents, where code goes |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | setup, commands, editors, how the app is built |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | why the code is split this way, by example |
+| [docs/RELEASING.md](docs/RELEASING.md) | the release flow, one-time setup, recovery |
+| [docs/RECIPES.md](docs/RECIPES.md) | launch at login, networking, menu bar, shortcuts, AppKit bridges, crash reporting |
 
 ## 🤝 Contributing
 
