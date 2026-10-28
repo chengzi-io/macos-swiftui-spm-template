@@ -34,6 +34,15 @@ done
 
 [[ $name =~ ^[A-Za-z][A-Za-z0-9]*$ ]] || die "--name must be letters and digits; it names the .app and the executable"
 [[ $bundle_id =~ ^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$ ]] || die "--bundle-id must look like com.example.myapp"
+
+# Tools init and rename.sh need, checked before any file changes.
+command -v jq >/dev/null || die "jq missing (ships with macOS 15+); run: brew install jq"
+xcodebuild -version >/dev/null 2>&1 ||
+    die "xcodebuild does not run; install Xcode 26, then: sudo xcode-select -s /Applications/Xcode.app"
+if [[ -z $codeowner ]]; then
+    command -v gh >/dev/null || die "gh missing; run: brew install gh, or pass --codeowner @user-or-@org/team"
+    gh auth status >/dev/null 2>&1 || die "gh is not signed in; run: gh auth login, or pass --codeowner @user-or-@org/team"
+fi
 [[ -z $(git status --porcelain) ]] || die "commit or stash your changes first, so the init diff stays reviewable"
 
 if [[ -z $repo ]]; then

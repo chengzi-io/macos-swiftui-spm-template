@@ -27,7 +27,8 @@ PR → make ci → squash merge → release PR → draft release: DMG, appcast �
 
 ## 🚀 Quick start
 
-You need Xcode 26 (Swift 6.2) and `brew install lefthook`. The app runs on macOS 14 or
+You need Xcode 26 (Swift 6.2), `jq` (ships with macOS 15+) and `brew install lefthook`.
+init also needs `gh auth login`, or `--codeowner @you`. The app runs on macOS 14 or
 later.
 
 1. Click **Use this template** on GitHub and clone your new repository.
