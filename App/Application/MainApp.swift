@@ -19,9 +19,13 @@ struct MainApp: App {
 /// UI tests launch with UI_TESTING=1: mocks only, no network or system side effects.
 /// An environment variable, not an argument: AppKit reads `-key value` arguments as
 /// defaults and opens a leftover argument as a file, and then no window appears.
+/// Debug builds only: in a shipped app, an environment variable must not swap a live
+/// service (a license check, say) for its mock.
 private func makeModel() -> AppModel {
-    if ProcessInfo.processInfo.environment["UI_TESTING"] == "1" {
-        return AppModel(noteService: MockNoteService(), updater: MockUpdaterService())
-    }
+    #if DEBUG
+        if ProcessInfo.processInfo.environment["UI_TESTING"] == "1" {
+            return AppModel(noteService: MockNoteService(), updater: MockUpdaterService())
+        }
+    #endif
     return AppModel(noteService: LiveNoteService(), updater: LiveUpdaterService())
 }
