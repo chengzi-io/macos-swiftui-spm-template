@@ -15,7 +15,7 @@ jobs:
   title:
     name: Validate PR title
     # Same exemption as CI: release-please writes its own Conventional title.
-    if: ${{ !(startsWith(github.head_ref, 'release-please--') && github.event.pull_request.head.repo.full_name == github.repository) }}
+    if: ${{ !(startsWith(github.head_ref, 'release-please--') && github.event.pull_request.user.type == 'Bot' && github.event.pull_request.head.repo.full_name == github.repository) }}
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read

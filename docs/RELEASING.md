@@ -72,8 +72,8 @@ settings it reads back.
 | `Snapshot review` | runs | runs, passes |
 
 A skipped required check counts as passed. release-please's PRs (branch
-`release-please--*` in this repository) change only the version and the changelog, so
-they skip the first two and change no snapshot. `Snapshot review` fails while a PR
+`release-please--*` in this repository, opened by its App as a Bot) change only the
+version and the changelog, so they skip the first two and change no snapshot. `Snapshot review` fails while a PR
 changes view snapshot references without the `snapshots-reviewed` label, which the
 script creates; see [DEVELOPMENT.md](DEVELOPMENT.md#commands).
 

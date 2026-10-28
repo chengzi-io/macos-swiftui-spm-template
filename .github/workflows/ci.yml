@@ -15,8 +15,10 @@ jobs:
   quality:
     name: Lint, test, build
     # release-please PRs only touch version.txt, CHANGELOG.md and the manifest. A skipped
-    # job still satisfies the required check; the same-repo guard keeps forks from skipping.
-    if: ${{ !(startsWith(github.head_ref, 'release-please--') && github.event.pull_request.head.repo.full_name == github.repository) }}
+    # job still satisfies the required check, so only release-please's own PRs skip: its
+    # App opens them as a Bot, while a person's or an agent's token opens them as a User,
+    # and the same-repo guard keeps forks out.
+    if: ${{ !(startsWith(github.head_ref, 'release-please--') && github.event.pull_request.user.type == 'Bot' && github.event.pull_request.head.repo.full_name == github.repository) }}
     # The macOS major the view snapshots were recorded on; other versions draw controls
     # differently. Move it with the Mac that records them.
     runs-on: macos-15
