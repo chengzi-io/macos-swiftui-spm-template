@@ -85,4 +85,17 @@ while read -r target; do
     status=1
 done < <(comm -23 <(printf '%s\n' "$declared") <(printf '%s\n' "$listed"))
 
+# Every string in en and zh-Hans. The key is the en text, so only zh-Hans is listed; a
+# plural lists one state per form.
+while read -r catalog; do
+    while read -r key; do
+        [[ -n $key ]] || continue
+        echo "error: $catalog: \"$key\" has no zh-Hans translation; add one beside the en text" >&2
+        status=1
+    done < <(jq -r '.strings | to_entries[] | select(.value.shouldTranslate != false)
+        | select([.value.localizations["zh-Hans"] // {} | .. | objects | .stringUnit? // empty | .state]
+            | length == 0 or any(. != "translated"))
+        | .key' "$catalog")
+done < <(find Sources App -name '*.xcstrings')
+
 exit $status
