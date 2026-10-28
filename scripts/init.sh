@@ -66,6 +66,9 @@ for value in "$display_name" "$holder" "$codeowner"; do
 done
 year=$(date +%Y)
 
+# From here on init edits files. The tree was clean, so git undoes a run that stops halfway.
+trap 'status=$?; ((status == 0)) || echo "error: init stopped halfway; undo its changes with: git reset --hard && git clean -fd" >&2' EXIT
+
 # Before rename.sh, which works only on an unreleased version.
 log "reset version to 0.0.0"
 echo 0.0.0 >version.txt
