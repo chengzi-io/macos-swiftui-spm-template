@@ -200,7 +200,11 @@ same way.
   what changed, and wait for their yes; then `make snapshots` (Claude Code asks too).
   Never record any other way (`SNAPSHOT_TESTING_RECORD`, deleting references), and
   never add the `snapshots-reviewed` label: that label is the user saying they compared
-  the images, and the `Snapshot review` check waits for it.
+  the images, and the `Snapshot review` check waits for it. When every snapshot fails at
+  once, run `make doctor`: if it warns that this Mac's macOS major differs from CI's
+  `runs-on`, the views did not change, macOS draws its controls differently. Tell the
+  user; moving CI to this major and recording again is theirs to decide
+  ([DEVELOPMENT](docs/DEVELOPMENT.md#commands)).
 - App identity changes in `App/Configs/Identity.xcconfig` only. The name, display name
   and bundle identifier change only through `scripts/rename.sh`, which renames the
   package, project, targets and scheme with them, and only before the first release:
