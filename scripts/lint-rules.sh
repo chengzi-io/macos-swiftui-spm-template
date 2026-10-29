@@ -192,6 +192,7 @@ while read -r doc budget; do
 done <<'BUDGETS'
 AGENTS.md 100
 .agents/skills/add-feature/SKILL.md 150
+.agents/skills/macos-recipes/SKILL.md 150
 Sources/AGENTS.md 80
 Tests/AGENTS.md 50
 App/AGENTS.md 40

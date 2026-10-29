@@ -42,7 +42,7 @@ this way: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 - In MainActor targets `Bundle.module` is MainActor-isolated: resolve user-facing text in views or models; values decoded off the main actor need `nonisolated struct …: Codable, Sendable`.
 - Anything outside the process (system API, network, files, UserDefaults, Keychain, the clock) is a service: protocol and mock in a Core, live implementation in the matching Live, passed in through an initializer. No DI container.
 - Pure logic (formatting, parsing, state machines) is a plain type the model calls directly, with no protocol.
-- No service for a package that owns the access, storage and control alike (KeyboardShortcuts), or for SwiftData: a view reads with `@Query`, the model writes through a `ModelContext`, tests use an in-memory store.
+- No service for a package that owns the access, storage and control alike (KeyboardShortcuts), or for SwiftData: a view reads with `@Query`, the model writes through a `ModelContext`, tests use an in-memory store. Recipes: [keyboard shortcuts](../.agents/skills/macos-recipes/references/keyboard-shortcuts.md), [SwiftData](../.agents/skills/macos-recipes/references/swiftdata.md).
 - Time: take `any Clock<Duration>` through the initializer; only a Live reads the system clock. Write a `ManualClock` for tests when the first feature needs one.
 - Models are `@Observable` and reach views through initializers. A feature's `<Name>Model` owns its screens' models; `AppModel` owns the features' models and app-wide state.
 

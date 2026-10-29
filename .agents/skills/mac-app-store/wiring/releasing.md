@@ -23,5 +23,6 @@ installer certificate. Uploading runs on your Mac; the release workflow does not
      NOTARY_ISSUER_ID=<uuid> make upload-mas
    ```
 
-6. Keep `App/Application/PrivacyInfo.xcprivacy` accurate (see [RECIPES.md](RECIPES.md)), then
+6. Keep `App/Application/PrivacyInfo.xcprivacy` accurate (see the
+   [privacy manifest recipe](../.agents/skills/macos-recipes/references/privacy-manifest.md)), then
    submit for review in App Store Connect.
