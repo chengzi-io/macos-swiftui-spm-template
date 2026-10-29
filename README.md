@@ -28,28 +28,26 @@ PR → make ci → squash merge → release PR → draft release: DMG, appcast �
 ## 🚀 Quick start
 
 You need Xcode 26 (Swift 6.2), `jq` (ships with macOS 15+) and `brew install lefthook`.
-init also needs `gh auth login`, or `--codeowner @you`. The app runs on macOS 14 or
+init also needs `gh auth login`, or your GitHub handle. The app runs on macOS 14 or
 later.
 
 1. Click **Use this template** on GitHub and clone your new repository.
-2. Make it your app:
+2. Make it your app: open the repository in Claude Code, Codex or another agent that
+   reads `AGENTS.md` and ask it to initialize the app. The
+   [init-project skill](.agents/skills/init-project/SKILL.md) asks for the name, bundle
+   identifier and the rest once, shows what will change, applies it and commits
+   `chore: initialize MyApp from template`. Then:
 
    ```bash
-   scripts/init.sh --name MyApp --bundle-id com.example.myapp   # optional: --display-name "My App"
-   git add -A && git commit -m "chore: initialize MyApp from template"
    make setup       # check the toolchain, install git hooks
    make ci          # lint, unit tests, debug .app, launch smoke test
    make run         # build and launch the app
    ```
 
    init renames the package, project, targets and scheme, writes the identity into
-   `App/Configs/Identity.xcconfig`, points releases at your repository, resets the
-   version to `0.0.0`, and replaces this README with a page for your app's users. The
-   header of [scripts/init.sh](scripts/init.sh) lists the options.
-
-**With an agent:** open the repository in Claude Code, Codex or another agent that reads
-`AGENTS.md`, and describe your app. It asks for the name and bundle identifier, runs
-init, and finishes each change with `make ci`.
+   `App/Configs/Identity.xcconfig`, points releases at your repository, can remove
+   the Notes demo, and replaces this README with a page for your app's users. Its
+   scripts also run by hand: `.agents/skills/init-project/scripts/check.sh --help`.
 
 Then replace the Notes demo with your first feature ([AGENTS.md](AGENTS.md#add-a-feature)),
 replace the icon (Icon Composer or the `app-icon` skill), and do the
@@ -61,7 +59,7 @@ replace the icon (Icon Composer or the `app-icon` skill), and do the
 
 | Key | What it sets |
 | --- | --- |
-| `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID` | Set by init. Before the first release, change them only with `scripts/rename.sh`. |
+| `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID` | Set by init. A rename also renames the package, project, targets and scheme, and only before the first release. |
 | `TEAM_ID` | Empty: ad-hoc signing, no notarization. Set: Developer ID signing and notarization. |
 | `GITHUB_REPOSITORY` | `owner/repo` that serves the releases and Sparkle's appcast. |
 | `APP_CATEGORY`, `COPYRIGHT` | The app's category (`LSApplicationCategoryType`) and its copyright line. |

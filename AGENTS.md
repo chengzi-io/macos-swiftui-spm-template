@@ -10,13 +10,11 @@ in `make help`; this file is the rules of engagement.
 <!-- template-only:start -->
 ## Before init
 
-`scripts/init.sh` has not run, so this repository is still the template and `README.md`
-describes the template. When the user asks for app work (a feature, an icon, a
-release), first ask for the app name and bundle identifier, run
-`scripts/init.sh --name <Name> --bundle-id <id>` on a clean tree, show the user the
-`git diff HEAD` (renames are staged) and commit it as
-`chore: initialize <Name> from template`. Then `make setup` and `make ci`.
-The one-time release setup in [docs/RELEASING.md](docs/RELEASING.md) needs the user's
+This repository is still the template, and `README.md` describes the template. When the
+user asks for app work (a feature, an icon, a release), first initialize it with the
+[init-project skill](.agents/skills/init-project/SKILL.md): it asks for the app name,
+bundle identifier and the rest once, previews, applies, and commits
+`chore: initialize <Name> from template`. The one-time release setup in [docs/RELEASING.md](docs/RELEASING.md) needs the user's
 GitHub and Apple accounts, so it stays with them. When the user is
 changing the template itself, leave init alone. Init removes this section.
 <!-- template-only:end -->
@@ -197,9 +195,9 @@ same way.
   controls; CI uploads its own, macOS 26's, as the run's `renders` artifact
   (`gh run download <run id> -n renders`).
 - App identity changes in `App/Configs/Identity.xcconfig` only. The name, display name
-  and bundle identifier change only through `scripts/rename.sh`, which renames the
-  package, project, targets and scheme with them, and only before the first release:
-  after it, they would make a different app.
+  and bundle identifier are set at init. A later rename changes the package, project,
+  targets and scheme with them, and only before the first release: after it, they would
+  make a different app.
 
 ## Never
 

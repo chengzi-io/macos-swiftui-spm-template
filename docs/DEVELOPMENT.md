@@ -56,9 +56,9 @@ Try the Chinese UI with `make run ARGS="-AppleLanguages '(zh-Hans)'"`.
 
 ## Layout
 
-`<App>` is the app's name (`APP_NAME`). Before the first release,
-`scripts/rename.sh --name <Name> --bundle-id <id>` renames the app (name, display name,
-bundle identifier) and the package, the Xcode project, its targets and the scheme.
+`<App>` is the app's name (`APP_NAME`), set at init. Renaming the app (name, display
+name, bundle identifier) also renames the package, the Xcode project, its targets and the
+scheme, and only happens before the first release.
 
 ```text
 Package.swift, Sources/,   all the code, in one Swift package

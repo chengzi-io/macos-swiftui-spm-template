@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Makes the template the user's app: renames the package, Xcode project, targets and
 # scheme; writes App/Configs/Identity.xcconfig (REQUIRED_LOCALES included); LICENSE,
-# CODEOWNERS and the issue template link; README.md from templates/README.md; removes
+# CODEOWNERS and the issue template link; README.md from wiring/README.md; removes
 # docs/assets/icon.*. Runs check.sh's rules first and stops on any problem.
 #
 #   apply.sh --dry-run --name MyApp [options]   lists every change, changes nothing
@@ -93,7 +93,7 @@ log "4/5 README.md: the page for $display_name's users"
 min_macos=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' App/Configs/Project.xcconfig)
 [[ -n $min_macos ]] || die "no MACOSX_DEPLOYMENT_TARGET in App/Configs/Project.xcconfig"
 sed -e "s|{{NAME}}|$name|g" -e "s|{{DISPLAY_NAME}}|$display_name|g" -e "s|{{REPO}}|$repo|g" \
-    -e "s|{{MIN_MACOS}}|$min_macos|g" "$SKILL_DIR/templates/README.md" | put README.md
+    -e "s|{{MIN_MACOS}}|$min_macos|g" "$SKILL_DIR/wiring/README.md" | put README.md
 
 log "5/5 the template's icon artwork in docs/assets"
 icons=$(find docs/assets -maxdepth 1 -name 'icon.*' 2>/dev/null || true)

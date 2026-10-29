@@ -61,7 +61,7 @@ user its output; do not work around it by editing files.
    wants the demo gone). Show the user the list of renames and files, and wait for
    their go-ahead.
 5. **Apply.** `apply.sh <args>`: renames, Identity, LICENSE, CODEOWNERS, README from
-   `templates/README.md`, `REQUIRED_LOCALES`, `docs/assets/icon.*`. Then
+   `wiring/README.md`, `REQUIRED_LOCALES`, `docs/assets/icon.*`. Then
    `remove-demo.sh` if the user asked for it.
 6. **Finalize.** `finalize.sh`: removes the template-only blocks, this skill and
    `.claude/skills/init-project`, then fails while `init-project`, `template-only` or
@@ -102,4 +102,4 @@ same arguments. To start over, ask the user first, then
 | `scripts/remove-demo.sh` | removes the Notes demo; `--dry-run` previews |
 | `scripts/finalize.sh` | removes template-only blocks and this skill; checks for leftovers |
 | `scripts/lib.sh` | shared inputs, rules and file edits the scripts source |
-| `templates/README.md` | the app's README, for its users |
+| `wiring/README.md` | the app's README, for its users |
