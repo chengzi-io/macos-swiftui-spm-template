@@ -20,7 +20,7 @@ PR → make ci → squash merge → release PR → draft release: DMG, appcast �
 | --- | --- |
 | **Layout** | All code in the package at the root: `AppRoot`, a target per feature area, domains and `Platform` split into `Core` (protocols, mocks) and `Live`. A thin `App/<App>.xcodeproj` links one product of it, with every setting in `App/Configs/*.xcconfig`. [Why](docs/ARCHITECTURE.md) |
 | **Rules for agents** | [AGENTS.md](AGENTS.md) (Claude Code reads it through `CLAUDE.md`). Swift 6 mode, MainActor by default in UI targets, warnings as errors, `make lint` rules against old APIs and layer-breaking imports. |
-| **Tests** | Swift Testing unit tests in seconds, view snapshots in light and dark that a reviewer approves with a label, XCUITests on GitHub CI. |
+| **Tests** | Swift Testing unit tests in seconds, every screen rendered in light and dark for agents and reviewers to look at, XCUITests on GitHub CI. |
 | **Releases** | release-please versions and `CHANGELOG.md`; Developer ID signing and notarization, or ad-hoc until you have one; a draft release until the DMG and the appcast are checked; Sparkle 2 updates, EdDSA-signed. |
 | **App basics** | App Sandbox, English and Simplified Chinese string catalogs, privacy manifest, an Icon Composer icon (Liquid Glass on macOS 26), an accent color that follows the user's. |
 | **Skills** | `app-icon` makes the icon. On request: `dmg` designs the DMG window, `mac-app-store` adds an App Store build, `homebrew-cask` puts the app on Homebrew. |
@@ -38,7 +38,6 @@ later.
    scripts/init.sh --name MyApp --bundle-id com.example.myapp   # optional: --display-name "My App"
    git add -A && git commit -m "chore: initialize MyApp from template"
    make setup       # check the toolchain, install git hooks
-   make snapshots   # record the demo's view snapshots on this Mac; look at them, then commit
    make ci          # lint, unit tests, debug .app, launch smoke test
    make run         # build and launch the app
    ```
@@ -72,9 +71,8 @@ replace the icon (Icon Composer or the `app-icon` skill), and do the
 | Command | Does |
 | --- | --- |
 | `make run` | Build and launch the debug app, logs in the terminal |
-| `make test` | Unit and snapshot tests, in seconds |
+| `make test` | Unit tests and view renders, in seconds |
 | `make ci` | The definition of done: lint, tests, debug `.app`, smoke test |
-| `make snapshots` | Record new and changed view snapshots; review them before committing |
 | `make test:ui` | XCUITests; they take over the mouse and keyboard |
 | `make logs` | Stream the app's unified logs |
 
@@ -91,10 +89,9 @@ replace the icon (Icon Composer or the `app-icon` skill), and do the
 ## 🤝 Contributing
 
 Changes to the template itself are welcome. Open a PR whose title is a Conventional
-Commit (`fix(scripts): …`; CI checks it) and make sure `make ci` passes. A PR that
-changes view snapshots needs the `snapshots-reviewed` label once someone has compared
-the images. Details: [CONTRIBUTING.md](.github/CONTRIBUTING.md). Report security issues
-privately: [SECURITY.md](.github/SECURITY.md).
+Commit (`fix(scripts): …`; CI checks it) and make sure `make ci` passes. Details:
+[CONTRIBUTING.md](.github/CONTRIBUTING.md). Report security issues privately:
+[SECURITY.md](.github/SECURITY.md).
 
 ## License
 

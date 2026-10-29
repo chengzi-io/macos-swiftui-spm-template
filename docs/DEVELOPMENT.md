@@ -35,22 +35,15 @@ keeps the unit-test loop fast.
 `make help` lists every target.
 
 - `make test` runs the unit tests: seconds, no app, no UI. Run it after every change.
-  It includes the snapshot tests, which compare views with the PNGs in `__Snapshots__/`
-  and never record: a missing or changed reference fails.
-- `make feature NAME=Library` creates a feature's files and its snapshot test, adds the
+  Its render tests draw each screen, light and dark, to
+  `.build/renders/<test file>/<test>.png`: how an agent sees a view without Xcode.
+  Nothing compares them, so they catch no change by themselves; look at the images of
+  a view you changed. They draw this Mac's controls. CI uploads the ones it draws on
+  macOS 26 as the run's `renders` artifact: download it from the run's page or with
+  `gh run download <run id> -n renders`.
+- `make feature NAME=Library` creates a feature's files and its render test, adds the
   test target to the app scheme, and prints the `Package.swift` blocks and the wiring to
   paste.
-- `make snapshots` records the missing and changed references. Look at each new image
-  first; an agent shows you the old and the new one and asks before it runs this, and
-  Claude Code asks too (`.claude/settings.json`). A PR that changes references fails
-  the `Snapshot review` check until you compare the images in Files changed (2-up,
-  swipe, onion skin) and add the `snapshots-reviewed` label; any later push removes
-  it, so add it again after looking at the new commits. References hold one macOS
-  major's controls, so CI runs on the macOS major of the Mac that records them: init
-  sets `runs-on` to this Mac's, and `make doctor` warns when the two drift apart, after
-  a macOS upgrade for one. Then set `runs-on` in `ci.yml` and `release.yml` to the new
-  major and re-record. When a snapshot test fails on CI, the images it drew are in the
-  run's `snapshot-failures` artifact.
 - `make ci` runs lint, the unit tests, the debug `.app` and its launch smoke test. It is
   the definition of done.
 - `make test:ui` runs the UI tests. On a Mac they drive the real mouse and keyboard,

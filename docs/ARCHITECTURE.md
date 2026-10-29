@@ -219,7 +219,7 @@ of them would drift from it.
 
 Colors are written in code, a light and a dark value in one
 `NSColor(name:dynamicProvider:)`, not in an asset catalog: `swift test` copies asset
-catalogs without compiling them, so the snapshot tests would draw those colors wrong.
+catalogs without compiling them, so the render tests would draw those colors wrong.
 
 The accent color is the exception. The system reads it from the app's asset catalog,
 `AccentColor` in `App/Application/Assets.xcassets`, through `NSAccentColorName`, and
@@ -228,7 +228,7 @@ The template leaves it empty, so the app follows the user's accent. `.tint` cann
 stand in for it: on macOS 15 it colors switches, prominent buttons, sliders and progress
 bars but not checkboxes, the default button or links, and it would override the user's
 choice. A brand color that the app's own views draw goes in `DesignSystem` as well, even
-when it repeats the accent. Snapshots render outside the app and pin the accent to
+when it repeats the accent. The render tests draw outside the app and pin the accent to
 blue, so they show the system's default, not the app's accent.
 
 ### A Live needs another domain

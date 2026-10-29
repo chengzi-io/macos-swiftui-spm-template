@@ -732,7 +732,7 @@ public final class BookmarksModel {
 ```
 
 The view reads with `@Query` and hands every change to the model. Its preview, like its
-snapshot tests, sets an in-memory container; without one it fails when it runs, not when
+render tests, sets an in-memory container; without one it fails when it runs, not when
 it builds:
 
 ```swift

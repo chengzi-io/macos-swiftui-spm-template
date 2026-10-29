@@ -243,17 +243,14 @@ left, and every script still runs. Remove:
   Its header comment and usage follow.
 - Sparkle from the code. The package in `Package.swift`, the file that imports it,
   `UpdaterService` and its mock; every property, parameter and argument that carried
-  the updater; every control that used it; the tests, snapshot references and string
-  catalog entries of what you removed. Settings panes follow step 3a.2: a pane left
-  with nothing to set goes, and so do the tabs around a single pane. A target left
-  without sources goes with its place in `AppModules` and every dependency on it, and
-  a string catalog left empty with its target's `resources:`. In the template this
-  removes `Platform` and `PlatformLive`, which hold only the updater, and the whole
-  Settings feature (its target, tests, snapshot references and `Settings` scene),
-  whose one pane was Updates.
+  the updater; every control that used it; the tests and string catalog entries of what
+  you removed. Settings panes follow step 3a.2: a pane left with nothing to set goes,
+  and so do the tabs around a single pane. A target left without sources goes with its
+  place in `AppModules` and every dependency on it, and a string catalog left empty
+  with its target's `resources:`. In the template this removes `Platform` and
+  `PlatformLive`, which hold only the updater, and the whole Settings feature (its
+  target, tests and `Settings` scene), whose one pane was Updates.
   `grep -rni 'sparkle\|updater' Sources Tests App` finds what is left.
-  A snapshot reference whose view changed is recorded again only after the user has
-  seen the images, as `AGENTS.md` says.
 - `App/Configs/Info.plist` and `App/Configs/App.entitlements`: what only Sparkle uses,
   as step 3a.3 lists it.
 - In `Package.swift`, `AppModules` lists only the modules `App/Application/` still

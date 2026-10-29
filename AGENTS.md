@@ -15,9 +15,7 @@ describes the template. When the user asks for app work (a feature, an icon, a
 release), first ask for the app name and bundle identifier, run
 `scripts/init.sh --name <Name> --bundle-id <id>` on a clean tree, show the user the
 `git diff HEAD` (renames are staged) and commit it as
-`chore: initialize <Name> from template`. Then `make setup`;
-`make snapshots`, which records the demo's view snapshots on this Mac (init removed the
-template's): show the user the images and commit them after their yes; then `make ci`.
+`chore: initialize <Name> from template`. Then `make setup` and `make ci`.
 The one-time release setup in [docs/RELEASING.md](docs/RELEASING.md) needs the user's
 GitHub and Apple accounts, so it stays with them. When the user is
 changing the template itself, leave init alone. Init removes this section.
@@ -31,9 +29,6 @@ make ci      # definition of done: lint (format, scripts/lint-rules.sh, asset ca
 make run     # build and launch the debug app; logs go to the terminal (or .build/run.log)
 make fmt     # format Swift sources (the pre-commit hook formats staged files too)
 ```
-
-`make snapshots` records view snapshots; only after the user has seen the images (see
-Rules).
 
 `make test:ui` runs the XCUITests. They take over the user's mouse and keyboard, so run
 them only when the user asks; GitHub CI runs them on every PR.
@@ -64,7 +59,7 @@ Sources/
     Live/<Name>/              target PlatformLive: Live<Name>Service (system APIs,
                               network, files, Sparkle)
 Tests/                        Swift Testing, mirroring Sources/ (<Name>FeatureTests);
-                              SnapshotSupport renders views for the snapshot tests
+                              RenderSupport draws views for the render tests
 App/                          the Xcode shell: <App>.xcodeproj, targets <App> and
                               <App>UITests
   Application/                @main, the composition root: builds the live services
@@ -147,7 +142,7 @@ same way.
   to swap. SwiftData is the other exception, since `@Query` keeps a view's list current:
   the scene sets `.modelContainer(...)`, a view reads with `@Query` and never writes, its
   feature's model inserts, deletes and saves through a `ModelContext`, and tests,
-  previews and snapshots use an in-memory store instead of a mock
+  previews and render tests use an in-memory store instead of a mock
   ([RECIPES](docs/RECIPES.md#swiftdata)).
 - Models are `@Observable` and reach views through initializers, never
   `.environment(...)`: a missing initializer argument fails the build, a missing
@@ -190,25 +185,17 @@ same way.
   no such test. `swift test` does not compile asset or string catalogs, so unit tests
   never assert localized text or images; `make smoke` covers resources in the real
   `.app`. XCTest only for UI tests.
-- Screens get snapshot tests (swift-snapshot-testing; `NotesViewSnapshotTests` is the
-  pattern): each screen in the states that tell it apart (empty, filled, an error shown
-  in the view), light and dark, in English; a subview shows in its screen's snapshot. An
-  `.alert` or a sheet has no window to draw in, so it never shows in one.
-  `SnapshotSupport`'s `render` draws them at 2x through `NSHostingView`, with controls
-  in the default blue accent and scroll bars hidden, whatever the Mac's settings and the
-  app's accent. The PNGs in `__Snapshots__/` beside the test are how an agent sees a view
-  without Xcode: read them. Tests never record: a missing or changed reference fails, and
-  the failure names the reference and the new image.
-- Recording a snapshot is the user's call. When one fails after a change you meant to
-  make, or a new test has no reference, read the old and the new image, show the user
-  what changed, and wait for their yes; then `make snapshots` (Claude Code asks too).
-  Never record any other way (`SNAPSHOT_TESTING_RECORD`, deleting references), and
-  never add the `snapshots-reviewed` label: that label is the user saying they compared
-  the images, and the `Snapshot review` check waits for it. When every snapshot fails at
-  once, run `make doctor`: if it warns that this Mac's macOS major differs from CI's
-  `runs-on`, the views did not change, macOS draws its controls differently. Tell the
-  user; moving CI to this major and recording again is theirs to decide
-  ([DEVELOPMENT](docs/DEVELOPMENT.md#commands)).
+- Screens get render tests (`NotesViewRenderTests` is the pattern): each screen in the
+  states that tell it apart (empty, filled, an error shown in the view), light and dark,
+  in English; a subview shows in its screen's render. An `.alert` or a sheet has no
+  window to draw in, so it never shows in one. `RenderSupport`'s `render` draws them at
+  2x through `NSHostingView`, with controls in the default blue accent and scroll bars
+  hidden, whatever the Mac's settings and the app's accent, and writes
+  `.build/renders/<test file>/<test>.png`. They are how an agent sees a view without
+  Xcode: after changing a view, `make test` and read its images. Nothing compares them,
+  so a view changed by accident shows only to whoever looks. They draw this Mac's
+  controls; CI uploads its own, macOS 26's, as the run's `renders` artifact
+  (`gh run download <run id> -n renders`).
 - App identity changes in `App/Configs/Identity.xcconfig` only. The name, display name
   and bundle identifier change only through `scripts/rename.sh`, which renames the
   package, project, targets and scheme with them, and only before the first release:
@@ -243,16 +230,15 @@ same way.
 2. Declare it in `Package.swift`: a `<Name>Feature` target with
    `path: "Sources/Features/<Name>"`, `resources: [.process("Resources")]` if it has
    strings and `swiftSettings: ui`; a `<Name>FeatureTests` test target at
-   `Tests/Features/<Name>Tests` that depends on the feature, the Cores it uses,
-   `SnapshotSupport` and the `SnapshotTesting` product, with `exclude: ["__Snapshots__"]`
-   (SwiftPM warns about the reference PNGs otherwise), as `NotesFeatureTests` does; and
-   `<Name>Feature` in `AppRoot`'s dependencies. `make feature NAME=<Name>` creates the
-   feature's files, adds its test target to the `<App>` scheme's Test action and prints
-   these blocks; `make test` runs the tests either way, and `make lint` fails while the
-   scheme lacks a test target. Without the script, add the test target in Xcode
-   (Product → Scheme → Edit Scheme… → Test → +) or copy the `NotesFeatureTests`
-   `<TestableReference>` in `App/<App>.xcodeproj/xcshareddata/xcschemes/<App>.xcscheme`
-   and change its three names.
+   `Tests/Features/<Name>Tests` that depends on the feature, the Cores it uses and
+   `RenderSupport`, as `NotesFeatureTests` does; and `<Name>Feature` in `AppRoot`'s
+   dependencies. `make feature NAME=<Name>` creates the feature's files, adds its test
+   target to the `<App>` scheme's Test action and prints these blocks; `make test` runs
+   the tests either way, and `make lint` fails while the scheme lacks a test target.
+   Without the script, add the test target in Xcode (Product → Scheme → Edit Scheme… →
+   Test → +) or copy the `NotesFeatureTests` `<TestableReference>` in
+   `App/<App>.xcodeproj/xcshareddata/xcschemes/<App>.xcscheme` and change its three
+   names.
 3. Add every user-facing string to the feature's `Resources/Localizable.xcstrings` in
    `en` and `zh-Hans`.
 4. Work outside the process gets a service: protocol and mock in `Platform/Core/` or a
@@ -265,7 +251,7 @@ same way.
    depends on its Xcode target (an App Store build carries no Sparkle), and package
    targets cannot see a target's build settings.
 5. `AppModel` owns the feature's model; `AppScenes` shows its view.
-6. Test the model in `Tests/Features/<Name>Tests/` with mocks, and snapshot its
+6. Test the model in `Tests/Features/<Name>Tests/` with mocks, and render its
    screens. A flow worth guarding end to end gets an XCUITest in `App/UITests/`.
 7. New capability (network, files, camera…)? Add the entitlement to
    `App/Configs/App.entitlements` and its usage description as
@@ -273,14 +259,14 @@ same way.
 8. `make ci`.
 
 The Notes demo is a placeholder: the `Notes` domain (`Sources/Notes`), `Features/Notes`,
-`NotesTests`, `NotesFeatureTests` and its `__Snapshots__`, `NotesUITests`, and their
-lines in `Package.swift` (its targets and their place in `AppModules`), the `<App>`
-scheme's Test action, `AppModel`, `AppScenes` and `MainApp.swift`. Replace it with the
-first real feature, and point this file's examples (`WordCount`, `NoteError.message`,
-`Log.notes`, `NotesViewSnapshotTests`, `LiveNoteServiceTests`, `NotesFeatureTests`,
-`Features/Notes/`) at their counterparts in it. Recipes for launch at login,
-networking, menu bar apps, global keyboard shortcuts, AppKit bridges, crash reporting,
-the Keychain, SwiftData and the privacy manifest: [docs/RECIPES.md](docs/RECIPES.md).
+`NotesTests`, `NotesFeatureTests`, `NotesUITests`, and their lines in `Package.swift`
+(its targets and their place in `AppModules`), the `<App>` scheme's Test action,
+`AppModel`, `AppScenes` and `MainApp.swift`. Replace it with the first real feature, and
+point this file's examples (`WordCount`, `NoteError.message`, `Log.notes`,
+`NotesViewRenderTests`, `LiveNoteServiceTests`, `NotesFeatureTests`, `Features/Notes/`)
+at their counterparts in it. Recipes for launch at login, networking, menu bar apps,
+global keyboard shortcuts, AppKit bridges, crash reporting, the Keychain, SwiftData and
+the privacy manifest: [docs/RECIPES.md](docs/RECIPES.md).
 
 Skills in `.agents/skills/`: `app-icon` makes the app icon. Skills that change the build
 or the release start only when the user asks for them by name: `dmg` designs the DMG
