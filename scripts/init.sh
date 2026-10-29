@@ -82,13 +82,6 @@ set_identity GITHUB_REPOSITORY "$repo"
 set_identity TEAM_ID ""
 set_sparkle_public_key ""
 
-# View snapshot references hold one macOS major's controls, and CI compares them: both
-# follow this Mac. The demo's references come from the template's Mac.
-macos_major=$(sw_vers -productVersion | cut -d. -f1)
-log "CI and releases on macos-$macos_major like this Mac; drop the demo's snapshot references"
-sed -i '' -E "s/runs-on: macos-[0-9]+/runs-on: macos-$macos_major/" .github/workflows/ci.yml .github/workflows/release.yml
-find Tests -type d -name __Snapshots__ -prune -exec rm -rf {} +
-
 # Deletes the marked template-only blocks, then squeezes the blank lines they leave.
 drop_template_blocks() {
     local file=$1 start=$2 end=$3 content
@@ -160,9 +153,7 @@ Done. Review with \`git diff HEAD\` (renames are staged), then commit, for examp
   git add -A && git commit -m "chore: initialize $name from template"
 
 Next:
-  1. make setup, then make snapshots to record the demo's view snapshots on this Mac
-     (look at the images in Tests/**/__Snapshots__ and commit them), then make ci
-     and make run
+  1. make setup, then make ci and make run
   2. Replace the Notes demo (Sources/Notes, Sources/Features/Notes; AGENTS.md
      lists the rest) and the icon (App/Application/AppIcon.icon in Icon Composer,
      or the app-icon skill in .agents/skills/app-icon), and say what the app does

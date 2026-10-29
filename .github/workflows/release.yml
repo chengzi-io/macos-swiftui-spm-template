@@ -50,8 +50,8 @@ jobs:
     name: Publish macOS app
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
-    # Same runner as CI: `make lint test` compares the view snapshots.
-    runs-on: macos-15
+    # Same runner and Xcode as CI.
+    runs-on: macos-26
     timeout-minutes: 60
     environment: release
     permissions:
