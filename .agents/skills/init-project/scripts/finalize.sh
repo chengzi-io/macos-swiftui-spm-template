@@ -49,6 +49,9 @@ if ((dry_run == 1)); then
     exit 0
 fi
 
+# Stage the deletions, as apply.sh stages its renames, so git ls-files stops listing them.
+git rm -r -q --cached --ignore-unmatch -- "$link" "$skill"
+
 log "3/3 leftovers: git grep -n -E '$LEFTOVERS' (tracked and untracked files)"
 if git grep -n -I --untracked -E "$LEFTOVERS"; then
     die "the lines above still carry the template"
