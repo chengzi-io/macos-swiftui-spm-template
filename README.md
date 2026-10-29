@@ -41,6 +41,7 @@ The Notes demo, drawn by its render test. Init can remove it.
 2. Open it in your agent and say **initialize the app**. The agent asks for the name and
    the rest, shows what will change, and commits it.
 3. Run `make ci`: green means your app builds, passes its tests and launches.
+4. Ask the agent to add your first feature, then to replace the Notes demo.
 
 Day-to-day commands and editors: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
