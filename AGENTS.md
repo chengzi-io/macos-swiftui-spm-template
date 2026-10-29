@@ -59,6 +59,7 @@ when the user names them.
 
 | Skill | Use it to |
 | --- | --- |
+| [add-feature](.agents/skills/add-feature/SKILL.md) | add a screen, window or area as a `<Name>Feature` target, or a service it needs |
 | [app-icon](.agents/skills/app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
 | [dmg](.agents/skills/dmg/SKILL.md) | design the DMG window |
 | [mac-app-store](.agents/skills/mac-app-store/SKILL.md) | add a Mac App Store build |

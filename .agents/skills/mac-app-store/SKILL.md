@@ -212,12 +212,12 @@ Then do step 2, and 3a or 3b.
    bundle identifier, so they share a sandbox container and defaults, and in Xcode's
    own DerivedData the last one built replaces the other.
 
-5. In `AGENTS.md` and `docs/DEVELOPMENT.md`, where they describe the layout, the
+5. In `Sources/AGENTS.md` and `App/AGENTS.md`, where they describe the layout, the
    products and the dependencies, add the `AppStore` target, `SparkleUpdater` and
    `AppStoreModules`: a module added to `AppModules` goes in `AppStoreModules` too,
    unless it uses Sparkle. Where they say which target holds Sparkle, it is now
    `SparkleUpdater`; a target that went is gone from them too
-   (`grep -rn PlatformLive AGENTS.md docs` in the template; `docs/ARCHITECTURE.md`
+   (`grep -rn PlatformLive Sources/AGENTS.md App/AGENTS.md docs` in the template; `docs/ARCHITECTURE.md`
    describes an example app, so it stays). Say that
    `AppStore-Info.plist` and `AppStore.entitlements` are `Info.plist` and
    `App.entitlements` without Sparkle: a key added to one goes in the other too. In
@@ -280,7 +280,7 @@ left, and every script still runs. Remove:
   environment is for, and the secrets only the publish job used
   (`SPARKLE_ED_PRIVATE_KEY`, `DEVELOPER_ID_P12_*`, `NOTARY_API_*`) from its notes.
 - `App/Configs/Identity.xcconfig`: `GITHUB_REPOSITORY` once nothing reads it, and the
-  repository in `AGENTS.md`'s list of what the file holds; the `TEAM_ID` comment now
+  repository in `App/AGENTS.md`'s list of what the file holds; the `TEAM_ID` comment now
   says App Store builds need it.
 - `scripts/doctor.sh`: check for the Apple Distribution identity instead of Developer
   ID Application, and let its messages say what App Store builds need.
@@ -297,14 +297,14 @@ the Mac App Store section from step 2, trimmed to the App Store target alone
 (`make release-mas` archives `<App>`); drop the release diagrams, draft releases, the
 Sparkle key, Developer ID, recovery, crash symbolication, Homebrew and beta sections.
 In `README.md` the install section points to the App Store, and an update section, if
-there is one, goes: the App Store updates the app. In `AGENTS.md`,
-`docs/DEVELOPMENT.md`, `docs/RECIPES.md` and `docs/ARCHITECTURE.md`, drop Sparkle, the
-updater service, the DMG, notarization, the appcast, the publish job, the `dmg` and
-`homebrew-cask` skills and any settings pane that went. A target or folder that went
-(`Platform`, a Settings feature) is described as one to create when first needed, and
-a recipe that puts a control in Settings starts by adding the Settings feature. This
-finds what is left; read each hit, and keep only those about building with Xcode
-(`dwarf-with-dsym`) or about the App Store:
+there is one, goes: the App Store updates the app. In `AGENTS.md`, `Sources/AGENTS.md`,
+`App/AGENTS.md`, `docs/DEVELOPMENT.md`, `docs/RECIPES.md` and `docs/ARCHITECTURE.md`,
+drop Sparkle, the updater service, the DMG, notarization, the appcast, the publish job,
+the `dmg` and `homebrew-cask` skills and any settings pane that went. A target or
+folder that went (`Platform`, a Settings feature) is described as one to create when
+first needed, and a recipe that puts a control in Settings starts by adding the
+Settings feature. This finds what is left; read each hit, and keep only those about
+building with Xcode (`dwarf-with-dsym`) or about the App Store:
 
 ```bash
 grep -rni 'sparkle\|appcast\|notariz\|SUPublicEDKey\|RELEASES_URL\|updater\|CheckForUpdates\|Autoupdate\|DMG\|dSYM\|Developer ID\|homebrew\|publish job\|RELEASING.md, 4\|GITHUB_REPOSITORY\|`make release`' \

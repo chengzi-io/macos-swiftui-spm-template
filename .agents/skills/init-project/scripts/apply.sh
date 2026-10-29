@@ -2,7 +2,7 @@
 # Makes the template the user's app: renames the package, Xcode project, targets and
 # scheme; writes App/Configs/Identity.xcconfig (REQUIRED_LOCALES included); LICENSE,
 # CODEOWNERS and the issue template link; README.md from wiring/README.md; removes
-# docs/assets/icon.*. Runs check.sh's rules first and stops on any problem.
+# docs/assets/icon.* and docs/assets/notes-*.png. Runs check.sh's rules first and stops on any problem.
 #
 #   apply.sh --dry-run --name MyApp [options]   lists every change, changes nothing
 #   apply.sh --name MyApp [options]             makes them
@@ -95,10 +95,10 @@ min_macos=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*([0-9]+
 sed -e "s|{{NAME}}|$name|g" -e "s|{{DISPLAY_NAME}}|$display_name|g" -e "s|{{REPO}}|$repo|g" \
     -e "s|{{MIN_MACOS}}|$min_macos|g" "$SKILL_DIR/wiring/README.md" | put README.md
 
-log "5/5 the template's icon artwork in docs/assets"
-icons=$(find docs/assets -maxdepth 1 -name 'icon.*' 2>/dev/null || true)
+log "5/5 the template's icon artwork and screenshots in docs/assets"
+icons=$(find docs/assets -maxdepth 1 \( -name 'icon.*' -o -name 'notes-*.png' \) 2>/dev/null || true)
 if [[ -z $icons ]]; then
-    echo "   done already: no docs/assets/icon.*" >&2
+    echo "   done already: no docs/assets/icon.* or notes-*.png" >&2
 else
     for icon in $icons; do
         run "remove $icon" rm -f "$icon"
