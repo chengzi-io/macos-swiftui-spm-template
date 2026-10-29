@@ -190,6 +190,7 @@ while read -r doc budget; do
         status=1
     fi
 done <<'BUDGETS'
+.agents/skills/add-feature/SKILL.md 150
 Sources/AGENTS.md 80
 Tests/AGENTS.md 50
 App/AGENTS.md 40
