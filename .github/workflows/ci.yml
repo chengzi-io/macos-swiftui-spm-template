@@ -19,21 +19,32 @@ jobs:
     # App opens them as a Bot, while a person's or an agent's token opens them as a User,
     # and the same-repo guard keeps forks out.
     if: ${{ !(startsWith(github.head_ref, 'release-please--') && github.event.pull_request.user.type == 'Bot' && github.event.pull_request.head.repo.full_name == github.repository) }}
-    # Not macos-15: its Xcode 26 crashes compiling the Icon Composer icon (AppIcon.icon).
+    # Not macos-15: GitHub's macos-15 image (15.7.9) crashes in Xcode 26 compiling the Icon
+    # Composer icon (AppIcon.icon). macOS 15.7.2 with Xcode 26.2 compiles it fine locally.
     runs-on: macos-26
     timeout-minutes: 30
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      # .xcode-version is the one place the Xcode version is written; release.yml does the same.
+      - name: Select Xcode from .xcode-version
+        run: |
+          xcode_version=$(tr -d '[:space:]' <.xcode-version)
+          developer_dir="/Applications/Xcode_$xcode_version.app/Contents/Developer"
+          [[ -d $developer_dir ]] || { echo "::error::Xcode $xcode_version (.xcode-version) is not installed on this runner"; exit 1; }
+          echo "XCODE_VERSION=$xcode_version" >>"$GITHUB_ENV"
+          echo "DEVELOPER_DIR=$developer_dir" >>"$GITHUB_ENV"
+          sudo DEVELOPER_DIR="$developer_dir" xcodebuild -runFirstLaunch
+          sw_vers
+          DEVELOPER_DIR="$developer_dir" xcodebuild -version
+      - run: make doctor
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .build
-          key: build-macos-26-xcode-26.2-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: build-macos-26-xcode-26.2-
+          key: build-macos-26-xcode-${{ env.XCODE_VERSION }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: build-macos-26-xcode-${{ env.XCODE_VERSION }}-
       - run: make ci
       # The views as this runner draws them, for the reviewer of a PR that changes one.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -45,6 +56,13 @@ jobs:
       # first time unless automation mode is enabled up front.
       - run: sudo automationmodetool enable-automationmode-without-authentication
       - run: make test:ui
+      # make test:ui writes its result bundle here: screenshots and logs of a failing test.
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ui-tests-xcresult
+          path: .build/UITests.xcresult
+          if-no-files-found: warn
 
   scripts:
     name: Lint scripts and workflows
