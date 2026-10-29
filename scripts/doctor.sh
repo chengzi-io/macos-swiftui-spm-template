@@ -46,7 +46,7 @@ ok "swift format $(swift format --version)"
 command -v jq >/dev/null || die "jq missing (ships with macOS 15+); run: brew install jq"
 ok "jq"
 
-# The rest is for this Mac only: git hooks, gh for pull requests and `make github-setup`,
+# The rest is for this Mac only: git hooks, gh for pull requests and the release-setup skill,
 # and local releases. CI needs none of it.
 if [[ -n ${CI:-} ]]; then
     exit 0
@@ -56,9 +56,9 @@ command -v lefthook >/dev/null || die "lefthook missing; run: brew install lefth
 ok "lefthook $(lefthook version)"
 
 if ! command -v gh >/dev/null; then
-    warn "gh missing (pull requests, make github-setup); run: brew install gh"
+    warn "gh missing (pull requests, release setup); run: brew install gh"
 elif ! gh auth status >/dev/null 2>&1; then
-    warn "gh not logged in (pull requests, make github-setup); run: gh auth login"
+    warn "gh not logged in (pull requests, release setup); run: gh auth login"
 else
     ok "gh logged in"
 fi

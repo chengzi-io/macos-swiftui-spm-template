@@ -33,10 +33,6 @@ setup: doctor ## Check the toolchain and install git hooks
 doctor: ## Check Xcode, tools and signing identity
 	scripts/doctor.sh
 
-.PHONY: github-setup
-github-setup: ## One-time GitHub settings: squash only, branch protection, release environment
-	scripts/github-setup.sh
-
 ##@ Develop
 
 # The view render tests write .build/renders/; clear the last run's, so a removed test
@@ -121,10 +117,6 @@ appcast:
 .PHONY: release
 release: ## Full release into dist/: app, notarization, DMG, dSYM, appcast, checksums
 	scripts/release.sh
-
-.PHONY: sparkle-keys
-sparkle-keys: ## Create the Sparkle EdDSA key and write its public half to App/Configs/Info.plist
-	scripts/sparkle-keys.sh
 
 .PHONY: clean
 clean: ## Remove build output

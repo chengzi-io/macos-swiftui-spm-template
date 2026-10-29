@@ -264,7 +264,7 @@ left, and every script still runs. Remove:
 - `scripts/lint-rules.sh`: `Sparkle` in its import checks, and any check on a folder
   that no longer exists.
 - Scripts that only the Developer ID release used (in the template `appcast.sh`,
-  `verify-appcast.swift`, `sparkle-keys.sh`, `release.sh`, `package-dmg.sh`,
+  `verify-appcast.swift`, `release.sh`, `package-dmg.sh`,
   `make-dmg.sh`, `verify-dmg.sh`, `notarize.sh`, `publish-github.sh`, `ci-keychain.sh`),
   their Makefile targets, and the note on the Release section's header about CI running
   `make release`.
@@ -275,8 +275,11 @@ left, and every script still runs. Remove:
   outputs that only fed it. release-please stays for versions and `CHANGELOG.md`; in
   `.github/release-please-config.json` drop `draft` and `force-tag-creation`, which
   only existed so the publish job could fill a draft.
-- `scripts/github-setup.sh`: the `release` environment stays, since it holds
-  release-please's App key; drop the publish job from what the script says the
+- The `release-setup` skill: its step 3 and `scripts/sparkle-keys.sh`, its Sparkle and
+  Developer ID lines in `scripts/check.sh`, and `references/developer-id.md`; step 4
+  and step 5 now point to the App Store section of `docs/RELEASING.md`.
+- `.agents/skills/release-setup/scripts/github-setup.sh`: the `release` environment
+  stays, since it holds release-please's App key; drop the publish job from what the script says the
   environment is for, and the secrets only the publish job used
   (`SPARKLE_ED_PRIVATE_KEY`, `DEVELOPER_ID_P12_*`, `NOTARY_API_*`) from its notes.
 - `App/Configs/Identity.xcconfig`: `GITHUB_REPOSITORY` once nothing reads it, and the
@@ -291,9 +294,9 @@ Then rewrite the docs around the App Store. A passage that assumes the Developer
 release is rewritten, not only cut: crash reports (Apple sends an App Store app's to
 Xcode's Organizer), a dSYM upload that ran in the publish job, a runner chosen for a
 release workflow that no longer builds. In `docs/RELEASING.md` keep the version rules
-(without what Sparkle compares), one-time setup 1 and 2 (`make github-setup` and the
-GitHub App, which release-please still needs, its key in the `release` environment) and
-the Mac App Store section from step 2, trimmed to the App Store target alone
+(without what Sparkle compares), the `## Setup` pointer to the `release-setup` skill
+(its steps 1 and 2 still set up the repository and the GitHub App release-please needs)
+and the Mac App Store section from step 2, trimmed to the App Store target alone
 (`make release-mas` archives `<App>`); drop the release diagrams, draft releases, the
 Sparkle key, Developer ID, recovery, crash symbolication, Homebrew and beta sections.
 In `README.md` the install section points to the App Store, and an update section, if

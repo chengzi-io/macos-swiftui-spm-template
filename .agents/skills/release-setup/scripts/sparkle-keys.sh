@@ -2,7 +2,8 @@
 # Creates this app's Sparkle EdDSA key in the login keychain (or reuses it), writes
 # the public key into App/Configs/Info.plist and prints how to hand the private key to CI.
 
-source "$(dirname "$0")/common.sh"
+# shellcheck source=../../../../scripts/common.sh
+source "$(dirname "$0")/../../../../scripts/common.sh"
 
 swift package resolve >&2
 sparkle_bin=$SPARKLE_BIN

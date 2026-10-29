@@ -180,8 +180,7 @@ fi
 docs=$(git ls-files --cached --others --exclude-standard -- '*.md' | sort -u)
 
 # <path> <max lines>; a file that does not exist yet is skipped. A file joins this list in
-# the change that cuts it to its budget: docs/RELEASING.md 100, .agents/skills/*/SKILL.md
-# 150.
+# the change that cuts it to its budget: .agents/skills/*/SKILL.md 150.
 while read -r doc budget; do
     [[ -f $doc ]] || continue
     lines=$(wc -l <"$doc" | tr -d ' ')
@@ -193,6 +192,7 @@ done <<'BUDGETS'
 AGENTS.md 100
 .agents/skills/add-feature/SKILL.md 150
 .agents/skills/macos-recipes/SKILL.md 150
+.agents/skills/release-setup/SKILL.md 150
 Sources/AGENTS.md 80
 Tests/AGENTS.md 50
 App/AGENTS.md 40
@@ -203,6 +203,7 @@ docs/TOOLCHAIN.md 60
 README.md 60
 docs/ARCHITECTURE.md 150
 docs/DEVELOPMENT.md 80
+docs/RELEASING.md 100
 BUDGETS
 
 # Every AGENTS.md has a CLAUDE.md beside it that only loads it.

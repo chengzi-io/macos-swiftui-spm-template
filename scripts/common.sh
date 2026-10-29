@@ -43,7 +43,7 @@ XCODE_PROJECT=${projects[0]%/project.pbxproj}
 APP_TARGET=$(basename "$XCODE_PROJECT" .xcodeproj)
 
 # Prints SUPublicEDKey from App/Configs/Info.plist, the key installed copies check
-# updates against; empty until make sparkle-keys.
+# updates against; empty until the release-setup skill's sparkle-keys.sh writes it.
 sparkle_public_key() {
     local key
     key=$(plutil -extract SUPublicEDKey raw App/Configs/Info.plist) ||

@@ -10,7 +10,8 @@
 #   - private vulnerability reporting on
 # Prints the settings read back from the API.
 
-source "$(dirname "$0")/common.sh"
+# shellcheck source=../../../../scripts/common.sh
+source "$(dirname "$0")/../../../../scripts/common.sh"
 
 repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 branch=main
@@ -70,7 +71,7 @@ echo "environment:  $(gh api "repos/$repo/environments/release" --jq .deployment
 
 cat >&2 <<EOF
 
-Still manual (see docs/RELEASING.md):
+Still manual (release-setup skill, steps 2 to 4):
   - GitHub App for release-please: variable RELEASE_APP_CLIENT_ID
   - release environment secrets: RELEASE_APP_PRIVATE_KEY, SPARKLE_ED_PRIVATE_KEY, and
     with a Developer ID the DEVELOPER_ID_P12_* and NOTARY_API_* secrets
