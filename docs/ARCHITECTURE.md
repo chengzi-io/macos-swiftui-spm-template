@@ -1,112 +1,66 @@
 # Architecture
 
-How the code is split, why, and where a new piece goes. The rules are in
-[AGENTS.md](../AGENTS.md); this page explains them with one example, a menu bar system
-monitor, the size of app the structure is for.
+Why the code is split the way it is, for people reading the template. The rules agents
+follow live in `Sources/AGENTS.md` and `App/AGENTS.md`; this page gives the reasons.
 
-## The pieces
-
-| Piece | What it holds | In the monitor |
-| --- | --- | --- |
-| Feature | an area the user works in: its screens and their model | `MonitorFeature`: menu bar labels, panels |
-| Domain Core | what the app is about: protocols for what is outside the process, value types, pure logic, shared models, mocks | `Monitor`: `CPUReader`, `Sampler`; `Alerts` |
-| Domain Live | the real implementations of those protocols | `MonitorLive`: asks the kernel |
-| Platform | what any Mac app needs: updates, launch at login, notifications | `UpdaterService`, `NotificationService` |
-| DesignSystem | the app's look: the spacing, radii, fonts and colors it repeats, and shared components; knows no domain | `Spacing`, `StatusLevel` colors, `Sparkline` |
-| Kit | code that knows nothing of the app | `SMCKit` |
-| AppRoot | the root model and the scenes | `AppModel`, `AppScenes`, the status items |
-| MainApp | in the Xcode target: builds the live services and hands them to AppRoot | the live readers, or mocks |
-
-## One rule holds it together
-
-Features see protocols; only `MainApp`, in the Xcode target, builds the live
-implementations.
+## How the app is built
 
 ```mermaid
 flowchart LR
-    MainApp{"MainApp"}
-    MainApp -->|normally| Live["LiveCPUReader<br/>asks the kernel"]
-    MainApp -->|UI_TESTING=1| Mock["MockCPUReader"]
-    Live --> Protocol["CPUReader"]
-    Mock --> Protocol
-    Sampler["Sampler"] --> Protocol
+    pkg["Package.swift, Sources/<br/>all code, string catalogs"] --> xb
+    shell["App/: Xcode project,<br/>@main, assets, AppIcon.icon"] --> xb
+    cfg["App/Configs/<br/>xcconfig, Info.plist, entitlements"] --> xb
+    xb["xcodebuild<br/>compile, embed Sparkle, sign"] --> app[".app"] --> smoke["scripts/smoke.sh"]
+    pkg --> st["swift test<br/>unit and render tests, seconds"]
 ```
 
-- Tests and previews run the same code against a mock; nothing asks the kernel.
-- A feature cannot create a `LiveCPUReader`: it does not depend on `MonitorLive`, so
-  `make test` fails on the import.
-- An App Store build and a direct build choose their updater in their own `MainApp`. A
-  package target cannot see which Xcode target builds it, so the choice stays there.
+| Why | Because |
+| --- | --- |
+| All code in one Swift package | `swift test` builds it without the app, so the test loop takes seconds; editors other than Xcode understand it |
+| A thin Xcode project | only Xcode signs, embeds frameworks and compiles the icon; settings live in `App/Configs/*.xcconfig`, not the project |
+| `scripts/build-app.sh` | adds the version from `version.txt` and, for releases, a universal archive signed with the Developer ID |
 
-## The monitor, laid out
+## Layers
 
-```text
-Sources/
-  AppRoot/                 AppModel, AppScenes, StatusItems (an NSStatusItem per metric)
-  Features/
-    Monitor/               MonitorFeature: MonitorModel (the selected metric)
-      MenuBar/             the label in each status item: value, sparkline
-      Panel/               a panel per metric: value, five-minute chart, details
-      Overview/            every metric on one screen
-    Settings/              SettingsFeature: General, Alerts and Updates tabs
-  DesignSystem/            Spacing, Radius, Font.metricValue, StatusLevel and its colors,
-                           StatusBadge, Sparkline
-  Monitor/
-    Core/                  Monitor: what the Mac reports
-      Sampling/            Sampler (one timer, the latest readings, an hour of history)
-      CPU/                 CPUReader, CPUTicks, CPUUsage.compute, MockCPUReader
-      Memory/  Network/  Disk/  Battery/  Sensors/
-    Live/                  MonitorLive
-      CPU/                 LiveCPUReader (host_processor_info)
-      Memory/  Network/  Disk/  Battery/
-      Sensors/             LiveFanReader, through SMCKit
-  Alerts/
-    Core/                  Alerts: AlertRule, AlertRules (when a rule fires), AlertEvaluator
-  Platform/
-    Core/                  UpdaterService, LaunchAtLoginService, NotificationService
-    Live/                  PlatformLive
-  Kits/
-    SMCKit/                AppleSMC's C interface in Swift; knows nothing of the monitor
-Tests/
-  Features/MonitorTests/  Features/SettingsTests/  MonitorTests/  AlertsTests/
-App/Application/           MainApp: the live readers, or mocks under UI_TESTING=1
-```
-
-Ten library targets. CPU, memory and network are folders, not targets. `Alerts` has no
-Live: the one thing it needs from outside, notifications, is `Platform`'s. The app
-target links one product, `AppModules`, which lists every module `MainApp` imports:
-`AppRoot`, `Monitor`, `MonitorLive`, `Alerts`, `Platform`, `PlatformLive`.
+| Layer | Holds | Depends on |
+| --- | --- | --- |
+| Feature | an area the user works in: screens and their model | domain Cores, Platform, DesignSystem |
+| Domain Core | protocols for what is outside the process, value types, pure logic, mocks | other Cores, kits |
+| Domain Live | the real implementations of a Core's protocols | its own Core, other Cores, kits; never another Live |
+| Platform | what any Mac app needs: updates, launch at login, notifications | split into Core and Live like a domain |
+| DesignSystem | spacing, radii, fonts, colors, shared components; knows no domain | nothing of the app |
+| Kit | a wrapper of a C or private interface that knows nothing of the app | nothing of the app |
+| AppRoot | the root model and the scenes | features, Cores |
+| MainApp | in the Xcode target: builds the Lives and hands them to AppRoot | AppRoot, Lives |
 
 ```mermaid
 flowchart TB
-    App["App target: MainApp"] --> AppRoot
-    App --> MonitorLive
-    App --> PlatformLive
-    AppRoot --> MonitorFeature
-    AppRoot --> SettingsFeature
-    AppRoot --> Monitor
-    AppRoot --> Alerts
-    AppRoot --> Platform
-    MonitorFeature --> Monitor
-    MonitorFeature --> Alerts
-    SettingsFeature --> Monitor
-    SettingsFeature --> Alerts
-    SettingsFeature --> Platform
-    MonitorFeature --> DesignSystem
-    SettingsFeature --> DesignSystem
-    Alerts --> Monitor
-    Alerts --> Platform
-    MonitorLive --> Monitor
-    MonitorLive --> SMCKit
-    PlatformLive --> Platform
+    MainApp["MainApp (Xcode target)"] --> AppRoot
+    MainApp --> Live["Domain Live, PlatformLive"]
+    AppRoot --> Feature
+    AppRoot --> Core["Domain Core, Platform"]
+    Feature --> Core
+    Feature --> DS["DesignSystem"]
+    Live --> Core
+    Live --> Kit
 ```
+
+## One rule holds it together
+
+Features see protocols; only `MainApp` builds the live implementations.
+
+| Effect | Why it matters |
+| --- | --- |
+| Tests and previews run against mocks | nothing touches the system, so tests are fast and repeatable |
+| A feature cannot import a Live | it does not depend on one, so `make test` fails on the import |
+| Each app target composes its own services | an App Store build picks no Sparkle updater in its own `MainApp`; a package target cannot see which target builds it |
 
 ## Where does this code go?
 
 ```mermaid
 flowchart TD
     start["New code"] --> see{"Does the user see it?"}
-    see -->|"yes: part of the app's look,<br/>knowing no domain"| ds["DesignSystem"]
+    see -->|"yes: the app's look,<br/>knowing no domain"| ds["DesignSystem"]
     see -->|"yes: a screen or its parts"| feature["the feature of that area"]
     see -->|no| outside{"Does it reach outside the process?<br/>system, files, network, clock"}
     outside -->|yes| anyApp{"Would any Mac app need it?"}
@@ -115,152 +69,66 @@ flowchart TD
     platform --> split["protocol and mock in Core,<br/>implementation in Live"]
     domain --> split
     outside -->|no| users{"Who uses it?"}
-    users -->|one feature| beside["a plain type in that feature,<br/>like WordCount"]
-    users -->|"several features,<br/>or no screen at all"| core["a plain type or a model<br/>in a domain's Core"]
+    users -->|one feature| beside["a plain type in that feature"]
+    users -->|"several features,<br/>or no screen"| core["a plain type or model<br/>in a domain's Core"]
 ```
 
-A wrapper of a C or private interface that knows nothing of the app, such as SMC, is a
-kit; a Live uses it.
+## A hypothetical example: a menu bar monitor
 
-## Cases
-
-### Several screens show the same data
-
-The menu bar label, the panel and the overview show the same readings and change
-together: a new refresh interval or unit touches all three. They are one target,
-`MonitorFeature`, with a folder per screen. As three targets, each would need its own
-test target and a line in `AppRoot`'s dependencies, `AppModel` would hold three models,
-and they could share the selected metric only through `AppModel`.
-
-A target splits when part of it changes for other reasons: Settings changes with what
-can be configured, so it is a feature of its own. Its panes set what the app (launch at
-login, updates) and the domains (alert rules, the sample interval) keep. A pane that
-needs one feature's own views, such as a preview of the menu bar label, is that
-feature's `MonitorSettingsView`: Settings cannot import another feature, so `AppScenes`,
-which sees them all, hands it to `SettingsView` beside the other panes. Change
-`SettingsView` for that when the first such pane comes, not before.
-
-### Two screens share state
-
-Click the memory label and the panel shows memory. The selection belongs to
-`MonitorModel`, the feature's model, which owns what its screens share.
+Not in the template: an imagined app of the size the structure is for, a monitor that
+shows CPU, memory and network in the menu bar and alerts when CPU stays high.
 
 ```mermaid
 flowchart TB
-    AppModel --> MonitorModel
-    AppModel --> Sampler
-    AppModel --> AlertEvaluator
-    AppModel --> Updater["any UpdaterService"]
-    MonitorModel --> Selection["selected metric: memory"]
-    Bar["menu bar labels"] --> MonitorModel
-    Panel["panel"] --> MonitorModel
+    App["MainApp"] --> AppRoot
+    App --> MonitorLive
+    App --> PlatformLive
+    AppRoot --> MonitorFeature
+    AppRoot --> SettingsFeature
+    MonitorFeature --> Monitor
+    MonitorFeature --> Alerts
+    MonitorFeature --> DesignSystem
+    SettingsFeature --> Alerts
+    SettingsFeature --> Platform
+    SettingsFeature --> DesignSystem
+    Alerts --> Monitor
+    Alerts --> Platform
+    MonitorLive --> Monitor
+    MonitorLive --> SMCKit
+    PlatformLive --> Platform
 ```
 
-`AppModel` holds the features' models, what a domain shares among features (the
-`Sampler`, the `AlertEvaluator`) and what is app-wide (the updater). A new sensor
-changes `Sampler` and `MonitorModel`, not `AppModel`.
+| Question | Answer in the monitor | Why |
+| --- | --- | --- |
+| Menu bar label, panel and overview show the same readings | one `MonitorFeature`, a folder per screen | they change together; three targets would triple test targets and wiring |
+| Settings | its own `SettingsFeature` | it changes with what can be configured, not with the readings |
+| Clicking the memory label selects memory in the panel | the selection lives in `MonitorModel` | a feature's model owns what its screens share; `AppModel` only holds feature models and app-wide services |
+| Reading the CPU | `CPUReader` protocol and mock in `Monitor`, `LiveCPUReader` in `MonitorLive` | tests feed recorded ticks; `CPUUsage.compute` is a plain function, no protocol |
+| "CPU above 90% for two minutes" notifies | `AlertRules` in `Alerts`, which depends on `Monitor` and `Platform` | not in the reader (every sensor would repeat it), a screen (runs only while shown) or `MainApp` (no test reaches it) |
+| Reading fans through SMC | `SMCKit`, used by `MonitorLive` | a kit knows nothing of the app |
+| A widget | another thin target in `App/` linking `Monitor` and the Live it needs | it cannot use features or `AppRoot` |
 
-### Something outside the process
+Adding memory touches `Monitor/Core/Memory/`, `Monitor/Live/Memory/` and a panel, plus
+`Sampler` and `MonitorModel`. `Package.swift`, the Xcode project and `AppModel` stay
+unchanged.
 
-`CPUReader` is a protocol in `Monitor` whose one call returns the kernel's CPU ticks;
-`LiveCPUReader` in `MonitorLive` calls `host_processor_info`, and `MockCPUReader` beside
-the protocol returns recorded ticks. Turning two readings into percentages,
-`CPUUsage.compute`, is a plain function: tests call it with recorded ticks, and it gets
-no protocol. `Sampler` calls the readers in the background (`@concurrent`) and stores
-the results on the main actor, so every screen shows the same sample.
+## The app's look
 
-### One thing leads to another across domains
-
-CPU above 90% for two minutes posts a notification. That is not the CPU reader's job,
-nor a screen's. It belongs to `Alerts`, the domain that consumes the readings:
-
-```mermaid
-sequenceDiagram
-    participant S as Sampler (Monitor)
-    participant E as AlertEvaluator (Alerts)
-    participant R as AlertRules (Alerts)
-    participant N as NotificationService (Platform)
-    S->>E: new readings
-    E->>R: readings and the time
-    R-->>E: "CPU > 90% for 120 s" fires
-    E->>N: post "CPU is high"
-```
-
-`Alerts` depends on the Cores of `Monitor` and `Platform`; `Monitor` does not know
-`Alerts` exists, the evaluator subscribes to the sampler's readings. The decision,
-`AlertRules`, is a plain type tested with made-up readings and times.
-
-| Placed in | What goes wrong |
-| --- | --- |
-| `LiveCPUReader` | a test that fakes notifications must fake the CPU reader too, and each sensor repeats the rule |
-| a screen's model | the rule runs only while that screen exists |
-| `MainApp` | the shell holds business logic that a widget cannot share and no unit test reaches |
-| an `AppCore` target for every flow | its name says nothing, so every flow lands there, and a feature that uses it reaches every domain and rebuilds when any of them changes |
-
-A feature may depend on several domains: the panel shows readings and the alerts that
-fired, so `MonitorFeature` depends on `Monitor` and `Alerts`. That is about showing; the
-flow itself stays in `Alerts`.
-
-### The app's look
-
-The spacing, corner radii, fonts and colors the app picks for itself live in
-`DesignSystem`, so every screen reads the same values: `Spacing.panel`,
-`Font.metricValue` (monospaced digits, so a changing number does not jitter),
-`StatusLevel.warning.color`. Components that several screens share live there too:
-`StatusBadge(level:)`, which shows a level by shape and word as well as color, and
-`Sparkline(values:)`. What the system already defines needs no token: `Form`,
-`.font(.headline)`, `.secondary` and the controls' own spacing follow macOS, and a copy
-of them would drift from it.
-
-`DesignSystem` knows no domain. `MonitorFeature` maps `MemoryPressure.warning` to
-`StatusLevel.warning`; a gauge that shows the current CPU reading stays in
-`MonitorFeature`, because in `DesignSystem` it would make every screen depend on
-`Monitor` and rebuild when a reading type changes.
-
-Colors are written in code, a light and a dark value in one
-`NSColor(name:dynamicProvider:)`, not in an asset catalog: `swift test` copies asset
-catalogs without compiling them, so the render tests would draw those colors wrong.
-
-The accent color is the exception. The system reads it from the app's asset catalog,
-`AccentColor` in `App/Application/Assets.xcassets`, through `NSAccentColorName`, and
-uses it only while the user's accent is multicolor; another choice of the user's wins.
-The template leaves it empty, so the app follows the user's accent. `.tint` cannot
-stand in for it: on macOS 15 it colors switches, prominent buttons, sliders and progress
-bars but not checkboxes, the default button or links, and it would override the user's
-choice. A brand color that the app's own views draw goes in `DesignSystem` as well, even
-when it repeats the accent. The render tests draw outside the app and pin the accent to
-blue, so they show the system's default, not the app's accent.
-
-### A Live needs another domain
-
-A Live uses its own Core, other domains' Cores and kits, never another Live, so a test
-swaps one Live at a time. An `ExportLive` that writes readings to a CSV file uses
-`Monitor`'s types, not `MonitorLive`. `scripts/lint-rules.sh` rejects `import …Live` in
-a Live.
-
-### A widget, or an App Store build
-
-A widget is another thin target in `App/<Name>/` that links `Monitor` and the Live it
-needs, never a feature or `AppRoot`, whose UI it cannot use; its views go in a package
-target of their own. An App Store build is another app target whose `MainApp` builds no
-Sparkle updater (the `mac-app-store` skill sets it up). Each target composes its own
-services, which is why the composition stays in the Xcode target.
-
-## Adding memory to the monitor
-
-| | Files |
-| --- | --- |
-| New | `Monitor/Core/Memory/` (`MemoryReader`, `MemoryStats`, `MockMemoryReader`), `Monitor/Live/Memory/LiveMemoryReader.swift`, `Features/Monitor/Panel/MemoryPanel.swift` |
-| Changed | `Sampler` reads memory too; `MonitorModel` can select it; `MainApp` passes the live or the mock reader to the `Sampler` |
-| Unchanged | `Package.swift`, the Xcode project, `AppModel`, `AppScenes` |
+| Thing | Where | Why |
+| --- | --- | --- |
+| Spacing, radii, fonts, colors the app picks | `DesignSystem` | every screen reads the same values |
+| Shared components (`StatusBadge`, `Sparkline`) | `DesignSystem`, knowing no domain | a feature maps its types to them, so they do not rebuild on domain changes |
+| Colors | code: one `NSColor(name:dynamicProvider:)` per color | `swift test` copies asset catalogs without compiling them, so renders would be wrong |
+| Accent color | `AccentColor` in the app's asset catalog, empty by default | the system applies it only while the user's accent is multicolor; `.tint` would override the user |
+| System fonts, spacing, `Form` | no token | a copy would drift from macOS |
 
 ## Not yet
 
 | Idea | Why wait |
 | --- | --- |
-| a target per sensor | seven sensors become fourteen targets, and a new default interval touches half of them |
-| a dependency injection container | the composition is one function in `MainApp` |
-| several Swift packages | versions and resources must line up across them; worth it when one package builds too slowly |
-| a widget target before a widget | an empty target to build and sign |
-| a protocol for unit conversion | a pure function is tested directly |
-| a token for every system value | macOS controls already have their fonts and spacing; tokens for them drift from the system |
+| A target per sensor or screen | seven sensors become fourteen targets, and one new interval touches half of them |
+| A dependency injection container | the composition is one function in `MainApp` |
+| Several Swift packages | versions and resources must line up; worth it only when one package builds too slowly |
+| A widget target before a widget | an empty target to build and sign |
+| A protocol for pure logic | a pure function is tested directly |
+| A token for every system value | macOS controls already have their fonts and spacing |

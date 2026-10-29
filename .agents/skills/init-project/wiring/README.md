@@ -31,8 +31,11 @@ privately, as [SECURITY.md](.github/SECURITY.md) describes.
 
 ## Development
 
-Setup, commands and layout: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). How releases
-ship: [docs/RELEASING.md](docs/RELEASING.md).
+| Doc | Covers |
+| --- | --- |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | the daily loop, commands, editors |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | why the code is split this way |
+| [docs/RELEASING.md](docs/RELEASING.md) | how releases ship |
 
 ## License
 
