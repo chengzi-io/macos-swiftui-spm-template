@@ -24,7 +24,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 30
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -33,8 +33,8 @@ jobs:
         with:
           path: |
             .build
-          key: build-${{ runner.os }}-xcode-26.3-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: build-${{ runner.os }}-xcode-26.3-
+          key: build-${{ runner.os }}-xcode-26.2-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: build-${{ runner.os }}-xcode-26.2-
       - run: make ci
         env:
           # A snapshot test that fails writes the image it drew here.
