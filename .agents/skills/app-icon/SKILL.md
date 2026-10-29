@@ -14,7 +14,7 @@ it.
 
 It is written for apps made from macos-swiftui-spm-template:
 
-- The icon is `App/Application/AppIcon.icon`; `make lint` (`scripts/lint-assets.sh`)
+- The icon is `App/Application/AppIcon.icon`; `make assets` (`scripts/lint-assets.sh`)
   compiles it with actool and fails on its warnings, and `make ci` lints, builds and
   smoke-tests the app.
 - `README.md` and `App/Configs/Identity.xcconfig` say what the app does and what it is
