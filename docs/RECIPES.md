@@ -767,7 +767,7 @@ struct BookmarksView: View {
 
 #Preview {
     let container = ModelContainer.libraryInMemory()
-    container.mainContext.insert(Bookmark(title: "Pomelo"))
+    container.mainContext.insert(Bookmark(title: "Grapefruit"))
     return BookmarksView(model: BookmarksModel(context: container.mainContext))
         .modelContainer(container)
 }
@@ -788,9 +788,9 @@ struct BookmarksModelTests {
 
     @Test func addedBookmarkIsSaved() throws {
         let model = BookmarksModel(context: container.mainContext)
-        model.add(title: "Pomelo")
+        model.add(title: "Grapefruit")
         let saved = try ModelContext(container).fetch(FetchDescriptor<Bookmark>())
-        #expect(saved.map(\.title) == ["Pomelo"])
+        #expect(saved.map(\.title) == ["Grapefruit"])
         #expect(!model.saveFailed)
     }
 }

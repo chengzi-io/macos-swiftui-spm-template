@@ -33,20 +33,14 @@ log() {
     echo "==> $*" >&2
 }
 
-# App/<App>.xcodeproj names the app target and its scheme <App> (scripts/rename.sh renames
-# them together). Only a folder with a project.pbxproj counts: Xcode can leave its window
-# state behind in an old project path.
+# App/<App>.xcodeproj names the app target and its scheme <App>, which carry APP_NAME.
+# Only a folder with a project.pbxproj counts: Xcode can leave its window state behind
+# in an old project path.
 projects=(App/*.xcodeproj/project.pbxproj)
 [[ ${#projects[@]} -eq 1 && -f ${projects[0]} ]] ||
     die "expected one Xcode project in App/, found: ${projects[*]}"
 XCODE_PROJECT=${projects[0]%/project.pbxproj}
 APP_TARGET=$(basename "$XCODE_PROJECT" .xcodeproj)
-
-# set_identity KEY value: rewrites the KEY line of App/Configs/Identity.xcconfig.
-set_identity() {
-    grep -q "^$1[[:space:]]*=" App/Configs/Identity.xcconfig || die "no $1 line in App/Configs/Identity.xcconfig"
-    sed -i '' -E -e "s|^$1[[:space:]]*=.*|$1 = $2|" -e 's/[[:space:]]+$//' App/Configs/Identity.xcconfig
-}
 
 # Prints SUPublicEDKey from App/Configs/Info.plist, the key installed copies check
 # updates against; empty until make sparkle-keys.

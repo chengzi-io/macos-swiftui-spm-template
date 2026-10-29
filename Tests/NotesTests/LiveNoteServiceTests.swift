@@ -14,8 +14,8 @@ struct LiveNoteServiceTests {
 
     @Test func savedTextLoadsBack() async throws {
         let service = LiveNoteService(url: url)
-        try await service.save("Pomelo")
-        #expect(try await service.load() == "Pomelo")
+        try await service.save("Grapefruit")
+        #expect(try await service.load() == "Grapefruit")
     }
 
     @Test func unreadableFileFailsToLoad() async throws {
