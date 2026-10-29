@@ -55,5 +55,5 @@ public struct NotesView: View {
 }
 
 #Preview {
-    NotesView(model: NotesModel(service: MockNoteService(text: "Pomelos are the largest citrus fruit.")))
+    NotesView(model: NotesModel(service: MockNoteService(text: "Grapefruits are a large citrus fruit.")))
 }

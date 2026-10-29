@@ -12,7 +12,7 @@ final class NotesUITests: XCTestCase {
         let text = app.textViews["notes.text"]
         XCTAssertTrue(text.waitForExistence(timeout: 10))
         text.click()
-        text.typeText("Pomelo")
+        text.typeText("Grapefruit")
 
         // On macOS a text's string is its accessibility value; its label is empty.
         let status = app.staticTexts["notes.status"]

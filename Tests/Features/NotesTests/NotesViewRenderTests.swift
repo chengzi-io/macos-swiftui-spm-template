@@ -23,7 +23,7 @@ struct NotesViewRenderTests {
     }
 
     private func loadedModel() async -> NotesModel {
-        let model = NotesModel(service: MockNoteService(text: "Pomelos are the largest citrus fruit."))
+        let model = NotesModel(service: MockNoteService(text: "Grapefruits are a large citrus fruit."))
         await model.load()
         return model
     }
