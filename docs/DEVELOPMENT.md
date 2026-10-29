@@ -1,110 +1,67 @@
 # Development
 
-## Requirements
+The daily loop, editors and commands, for people working on the app. Toolchain:
+Xcode 26.2, the version CI uses ([TOOLCHAIN.md](TOOLCHAIN.md)); `make doctor` checks it.
 
-- Xcode 26 (Swift 6.2), selected with `xcode-select`. On macOS 26 or later, Xcode 26.3
-  or later adds `xcrun mcpbridge`, through which coding agents build, test and render
-  previews in Xcode. On macOS 15 it is installed but does not launch; `make doctor`
-  says which case you are in.
-- [lefthook](https://lefthook.dev) for git hooks: `brew install lefthook`
-- The app runs on macOS 14 or later
-
-```bash
-make setup   # check the toolchain, install git hooks
-make run     # build and launch the debug app
-```
-
-## How the app is built
+## Daily loop
 
 ```mermaid
 flowchart LR
-    pkg["Package.swift, Sources/<br/>all code, string catalogs,<br/>unit tests"] --> xb
-    shell["App/: Xcode project,<br/>@main, assets, AppIcon.icon"] --> xb
-    cfg["App/Configs/<br/>Identity.xcconfig, build settings,<br/>Info.plist, entitlements"] --> xb
-    xb["xcodebuild<br/>compile, embed Sparkle,<br/>compile icon, sign"] --> app[".app"] --> smoke["scripts/smoke.sh<br/>check, launch"]
-    pkg --> st["swift test<br/>unit tests, seconds"]
+    setup["make setup<br/>once per clone"] --> edit["edit"]
+    edit --> test["make test<br/>seconds"]
+    test -->|fails| edit
+    test --> look["look at the renders<br/>of changed views"]
+    look --> ci["make ci<br/>before a PR"]
+    ci --> pr["PR: Conventional<br/>Commit title"]
 ```
 
-Xcode builds the app the way it builds any app; `scripts/build-app.sh` only adds the
-version from `version.txt` and, for releases, archives a universal build and signs it
-with the Developer ID. `swift test` builds the package alone, without the app, which
-keeps the unit-test loop fast.
+1. `make setup` once: checks the toolchain and installs the git hooks.
+2. `make test` after every change. Its render tests draw each screen, light and dark,
+   to `.build/renders/<test file>/<test>.png`. Nothing compares them: open the images
+   of the views you changed.
+3. `make ci` before you open a PR. It is the definition of done.
+4. Open the PR with a Conventional Commit title
+   ([CONTRIBUTING](../.github/CONTRIBUTING.md)); it is squash-merged and
+   [released](RELEASING.md).
+
+CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
+`gh run download <run id> -n renders`.
 
 ## Commands
 
-`make help` lists every target.
+`make help` lists every target; these are the ones you use daily.
 
-- `make test` runs the unit tests: seconds, no app, no UI. Run it after every change.
-  Its render tests draw each screen, light and dark, to
-  `.build/renders/<test file>/<test>.png`: how an agent sees a view without Xcode.
-  Nothing compares them, so they catch no change by themselves; look at the images of
-  a view you changed. They draw this Mac's controls. CI uploads the ones it draws on
-  macOS 26 as the run's `renders` artifact: download it from the run's page or with
-  `gh run download <run id> -n renders`.
-- `make feature NAME=Library` creates a feature's files and its render test, adds the
-  test target to the app scheme, and prints the `Package.swift` blocks and the wiring to
-  paste.
-- `make ci` runs lint, the unit tests, the debug `.app` and its launch smoke test. It is
-  the definition of done.
-- `make test:ui` runs the UI tests. On a Mac they drive the real mouse and keyboard,
-  so the app comes to the front and types while they run: leave the machine alone until
-  they finish. GitHub CI runs them after `make ci`. The first run asks for an
-  administrator password to turn on Automation Mode, unless you turn it on once with
-  `sudo automationmodetool enable-automationmode-without-authentication`.
+| Command | Does | When |
+| --- | --- | --- |
+| `make setup` | `make doctor`, then installs the git hooks | once per clone |
+| `make doctor` | checks Xcode, tools and the signing identity | when a build fails oddly |
+| `make test` | package unit tests and renders, no app | after every change |
+| `make run` | builds and launches the debug app, logs in the terminal | to try a change |
+| `make fmt` | formats Swift sources in place | before committing |
+| `make lint` | formatting and `scripts/lint-rules.sh` | part of `make ci` |
+| `make ci` | versions, lint, test, assets, app, smoke | before a PR |
+| `make test:ui` | XCUITests; they take over the mouse and keyboard | when asked; CI runs them on every PR |
+| `make logs` | streams the app's unified logs | while debugging |
+| `make clean` | removes build output | after a toolchain change |
 
-Try the Chinese UI with `make run ARGS="-AppleLanguages '(zh-Hans)'"`.
-
-## Layout
-
-`<App>` is the app's name (`APP_NAME`), set at init. Renaming the app (name, display
-name, bundle identifier) also renames the package, the Xcode project, its targets and the
-scheme, and only happens before the first release.
-
-```text
-Package.swift, Sources/,   all the code, in one Swift package
-Tests/
-App/                       the Xcode shell: the project, @main, assets, configs
-scripts/                   build, sign, notarize, package, publish, lint rules
-.agents/skills/            agent skills, linked from .claude/skills
-.github/                   CI, PR title, release-please, Dependabot, templates
-version.txt                current version, owned by release-please
-```
-
-The code and the shell in detail, and the rules they follow:
-[AGENTS.md](../AGENTS.md#where-things-go); why, with a menu bar monitor as the example:
-[ARCHITECTURE.md](ARCHITECTURE.md).
+| Task | Command |
+| --- | --- |
+| Run in Chinese | `make run ARGS="-AppleLanguages '(zh-Hans)'"` |
+| UI tests without a password prompt | `sudo automationmodetool enable-automationmode-without-authentication`, once |
 
 ## Editors
 
-- Xcode: `xed App/<App>.xcodeproj`. Its Run button builds and launches the real `.app`
-  (bundle identifier, sandbox, Info.plist), with the debugger attached. Previews run
-  in the package targets. `xed .` opens the package alone, without the app.
-- VS Code, Cursor, Zed: the Swift extension (sourcekit-lsp) loads the package at the
-  root; the files in `App/` get no code intelligence. Build and run the app with
-  `make run`.
+| Editor | Setup | Notes |
+| --- | --- | --- |
+| Xcode | `xed App/<App>.xcodeproj` | Run builds the real `.app` with the debugger attached; previews run in the package targets |
+| Xcode, package only | `xed .` | the package without the app shell |
+| VS Code, Cursor, Zed | the Swift extension (sourcekit-lsp) | loads the package at the root; `App/` gets no code intelligence, so use `make run` |
 
-## Agent skills
+`<App>` is the app's name, `APP_NAME` in `App/Configs/Identity.xcconfig`
+([App/AGENTS.md](../App/AGENTS.md) says who sets each identity key).
 
-Skills live in `.agents/skills` (Codex and other agents), linked from `.claude/skills`
-(Claude Code).
+## Where code goes
 
-- `app-icon`: the app icon, from your logo or image, as drawn layers, or through an
-  image-model prompt; it renders every appearance and sets the icon beside installed
-  apps. Agents start it when you ask for an icon.
-- `dmg`: designs the DMG window, from plain to a branded illustration, and wires
-  dmgbuild into the build when you start it. Only you start it: `/dmg` in Claude Code,
-  `$dmg` in Codex.
-- `mac-app-store`: adds a Mac App Store build, beside the Sparkle release or instead of
-  it, and wires it into the build and the code. Only you start it.
-- `homebrew-cask`: puts the app on Homebrew: in the official `homebrew/cask`, which
-  needs a Developer ID and a notable repository and then updates the cask by itself, or
-  in your own tap, which every release updates and which also takes ad-hoc builds. Only
-  you start it.
-
-## Commits and releases
-
-PR titles are Conventional Commits ([CONTRIBUTING](../.github/CONTRIBUTING.md)); PRs are
-squash-merged, and release-please turns `feat` and `fix` into releases. The flow and the
-one-time setup: [RELEASING.md](RELEASING.md). Recipes for launch at login, networking,
-menu bar apps, global keyboard shortcuts, AppKit bridges, crash reporting, the
-Keychain, SwiftData and the privacy manifest: [RECIPES.md](RECIPES.md).
+Where a file belongs and which way dependencies point: [Sources/AGENTS.md](../Sources/AGENTS.md);
+why: [ARCHITECTURE.md](ARCHITECTURE.md). To add a feature, ask your agent: its add-feature
+skill scaffolds the feature and its tests.

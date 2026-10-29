@@ -216,11 +216,5 @@ it. Only you start it: `/mac-app-store` in Claude Code, `$mac-app-store` in Code
 
 ## Beta channel (optional)
 
-Not wired by default. When testers need builds ahead of `main` releases:
-
-1. Release prereleases from a branch with its own release-please config
-   (`"prerelease": true`, `"versioning": "prerelease"`, `"prerelease-type": "beta"`)
-   and `target-branch` on the action.
-2. GitHub never marks a prerelease as latest, so the default feed ignores it. Publish
-   a second appcast for betas with `generate_appcast --channel beta`, and let testers
-   opt in through `SPUUpdaterDelegate.allowedChannels(for:)` behind a setting.
+Not wired by default; to ship betas to opted-in testers, publish them on a separate
+appcast channel as [Sparkle channels](https://sparkle-project.org/documentation/publishing/#channels) describes.
