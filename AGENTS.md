@@ -60,6 +60,7 @@ when the user names them.
 | Skill | Use it to |
 | --- | --- |
 | [add-feature](.agents/skills/add-feature/SKILL.md) | add a screen, window or area as a `<Name>Feature` target, or a service it needs |
+| [macos-recipes](.agents/skills/macos-recipes/SKILL.md) | add launch at login, networking, a menu bar item, a global shortcut, an AppKit bridge, crash reporting, Keychain, SwiftData or a privacy-manifest entry |
 | [app-icon](.agents/skills/app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
 | [dmg](.agents/skills/dmg/SKILL.md) | design the DMG window |
 | [mac-app-store](.agents/skills/mac-app-store/SKILL.md) | add a Mac App Store build |
@@ -73,7 +74,6 @@ when the user names them.
 | [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) | pinned versions, upgrades, mcpbridge, the CI runner | people and agents |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | the daily loop, editor setup, commands | people |
 | [docs/RELEASING.md](docs/RELEASING.md) | running a release, recovery, crash symbolication | people |
-| [docs/RECIPES.md](docs/RECIPES.md) | launch at login, networking, menu bar, shortcuts, SwiftData… | agents |
 | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) | commit and PR titles, the PR flow | people and agents |
 
 ## Commits

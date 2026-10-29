@@ -217,12 +217,12 @@ Then do step 2, and 3a or 3b.
    `AppStoreModules`: a module added to `AppModules` goes in `AppStoreModules` too,
    unless it uses Sparkle. Where they say which target holds Sparkle, it is now
    `SparkleUpdater`; a target that went is gone from them too
-   (`grep -rn PlatformLive Sources/AGENTS.md App/AGENTS.md docs` in the template; `docs/ARCHITECTURE.md`
+   (`grep -rn PlatformLive Sources/AGENTS.md App/AGENTS.md docs .agents/skills/macos-recipes` in the template; `docs/ARCHITECTURE.md`
    describes an example app, so it stays). Say that
    `AppStore-Info.plist` and `AppStore.entitlements` are `Info.plist` and
    `App.entitlements` without Sparkle: a key added to one goes in the other too. In
-   `docs/RECIPES.md`, code that passes `model.updater` on (`grep -n updater
-   docs/RECIPES.md`) takes it as optional now, and builds its control inside `if let`.
+   `.agents/skills/macos-recipes/references/`, code that passes `model.updater` on
+   (`grep -rn updater .agents/skills/macos-recipes`) takes it as optional now, and builds its control inside `if let`.
 
 6. `make fmt`, then `make ci`. `xcodebuild -list -project App/<App>.xcodeproj` lists the
    `AppStore` target and scheme. `make ci` builds only the `<App>` scheme, so compile the
@@ -298,7 +298,7 @@ the Mac App Store section from step 2, trimmed to the App Store target alone
 Sparkle key, Developer ID, recovery, crash symbolication, Homebrew and beta sections.
 In `README.md` the install section points to the App Store, and an update section, if
 there is one, goes: the App Store updates the app. In `AGENTS.md`, `Sources/AGENTS.md`,
-`App/AGENTS.md`, `docs/DEVELOPMENT.md`, `docs/RECIPES.md` and `docs/ARCHITECTURE.md`,
+`App/AGENTS.md`, `docs/DEVELOPMENT.md`, `docs/ARCHITECTURE.md` and the macos-recipes references,
 drop Sparkle, the updater service, the DMG, notarization, the appcast, the publish job,
 the `dmg` and `homebrew-cask` skills and any settings pane that went. A target or
 folder that went (`Platform`, a Settings feature) is described as one to create when

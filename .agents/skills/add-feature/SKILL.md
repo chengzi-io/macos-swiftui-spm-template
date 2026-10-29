@@ -54,7 +54,7 @@ A feature never depends on another feature; only `AppRoot` puts features togethe
    `swift test` fails on an import of a target that is not declared.
 4. **Services.** Work outside the process gets a service: the protocol and its mock in
    `Platform/Core/` or a domain's `Core/`, the live implementation in the matching
-   `Live/` ([recipe: networking](../../../docs/RECIPES.md#networking)).
+   `Live/` ([recipe: networking](../macos-recipes/references/networking.md)).
    `App/Application/MainApp.swift` builds the live one, and the mock under
    `UI_TESTING=1`, and passes it through `AppModel`. A new domain's two targets join
    the `AppModules` product in `Package.swift`; the Xcode project does not change.
