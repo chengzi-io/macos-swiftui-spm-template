@@ -1,0 +1,21 @@
+version: 2
+updates:
+  # Security updates only: a routine bump would arrive as fix(deps) and release a patch
+  # with nothing in it. A security advisory still opens a pull request, and this prefix
+  # makes it a release. To take routine bumps again, raise the limit and allow the
+  # packages that ship.
+  - package-ecosystem: swift
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: fix
+      include: scope
+    open-pull-requests-limit: 0
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+    open-pull-requests-limit: 5

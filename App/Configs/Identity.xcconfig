@@ -1,0 +1,16 @@
+// App identity. Single source for the Xcode build, scripts/, the Makefile and CI.
+// scripts/common.sh reads these lines as plain KEY = value: no quotes, no $(...)
+// references, and no "//" inside a value (xcconfig starts a comment there).
+
+APP_NAME = Pomelo
+APP_DISPLAY_NAME = Pomelo
+BUNDLE_ID = io.chengzi.Pomelo
+APP_CATEGORY = public.app-category.developer-tools
+COPYRIGHT = Copyright © 2026 ChengZi
+
+// Developer ID team. Empty: ad-hoc signing, no notarization.
+TEAM_ID =
+
+// owner/repo on GitHub. Releases, and Sparkle's appcast, are served from its
+// Releases page.
+GITHUB_REPOSITORY = chengzi-io/macos-swiftui-spm-template

@@ -1,0 +1,9 @@
+// UI test target (XCTest). Swift Testing does not drive UI.
+
+PRODUCT_NAME = $(TARGET_NAME)
+PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID).UITests
+GENERATE_INFOPLIST_FILE = YES
+TEST_TARGET_NAME = Pomelo
+// XCTestCase is nonisolated; tests that drive the app opt into @MainActor.
+SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/../Frameworks @loader_path/../Frameworks

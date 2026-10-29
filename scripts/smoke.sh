@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Smoke-tests a built .app (default: the debug build): signature, Info.plist,
+# package resource bundles, compiled assets, then launches it and checks it is still alive
+# after startup.
+# A missing resource bundle crashes the first render through Bundle.module.
+
+source "$(dirname "$0")/common.sh"
+
+app=${1:-$DEBUG_APP}
+[[ -d $app ]] || die "no app at $app; run make app first"
+
+codesign --verify --deep --strict "$app"
+plutil -lint -s "$app/Contents/Info.plist"
+package=$(swift package dump-package)
+package_name=$(jq -r .name <<<"$package")
+for target in $(jq -r '.targets[] | select(.type == "regular" and (.resources | length) > 0) | .name' <<<"$package"); do
+    bundle="${package_name}_$target.bundle"
+    [[ -d "$app/Contents/Resources/$bundle" ]] || die "$app has no $bundle"
+done
+# A missing icon or accent color fails nothing at runtime.
+for asset in Assets.car AppIcon.icns; do
+    [[ -f "$app/Contents/Resources/$asset" ]] || die "$app has no $asset"
+done
+
+output=$(mktemp)
+"$app/Contents/MacOS/$APP_NAME" >"$output" 2>&1 &
+pid=$!
+# A background job ignores Ctrl-C: quit the app however this script ends.
+trap 'kill "$pid" 2>/dev/null || true; rm -f "$output"' EXIT
+sleep 5
+if ! kill -0 "$pid" 2>/dev/null; then
+    cat "$output" >&2
+    die "$app exited during startup"
+fi
+kill "$pid"
+wait "$pid" 2>/dev/null || true
+log "smoke ok: $app"

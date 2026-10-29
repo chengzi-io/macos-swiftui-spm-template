@@ -1,0 +1,4 @@
+# Codex starts this skill only when the user asks for $mac-app-store; Claude Code reads
+# disable-model-invocation in SKILL.md.
+policy:
+  allow_implicit_invocation: false
