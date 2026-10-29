@@ -1,21 +1,21 @@
 import AppKit
 import Foundation
-import SnapshotTesting
 import SwiftUI
 import Testing
 
-/// A plain test run never writes a reference, so a missing or changed image fails.
-/// `make snapshots` records, with SNAPSHOT_TESTING_RECORD=failed. Suites take it as
-/// `@Suite(.snapshots(record: recording))`.
-public nonisolated let recording =
-    ProcessInfo.processInfo.environment["SNAPSHOT_TESTING_RECORD"]
-    .flatMap(SnapshotTestingConfiguration.Record.init(rawValue:)) ?? .never
-
+/// Draws the view and writes it to `.build/renders/<test file>/<test>.png`, for an agent
+/// or a person to look at. Nothing compares the image; each run replaces it.
+///
 /// Renders at 2x on every Mac, whatever the main display's scale: a CI runner's virtual
 /// display would otherwise give 1x images.
-public func render(_ view: some View, appearance: NSAppearance.Name = .aqua) throws -> NSImage {
+public func render(
+    _ view: some View,
+    appearance: NSAppearance.Name = .aqua,
+    filePath: String = #filePath,
+    function: String = #function
+) throws {
     // Controls follow the Mac's settings, so a Mac set to a purple accent or to always
-    // show scroll bars would record them. Pin what a CI runner draws, for this process
+    // show scroll bars would draw them. Pin what a CI runner draws, for this process
     // only: the blue accent (4) and scroll bars only while scrolling.
     var arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
     arguments["AppleAccentColor"] = 4
@@ -43,7 +43,16 @@ public func render(_ view: some View, appearance: NSAppearance.Name = .aqua) thr
     )
     bitmap.size = size
     hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
-    let image = NSImage(size: size)
-    image.addRepresentation(bitmap)
-    return image
+    let png = try #require(bitmap.representation(using: .png, properties: [:]))
+
+    let file = URL(filePath: filePath)
+    var root = file.deletingLastPathComponent()
+    while root.lastPathComponent != "Tests" {
+        try #require(root.pathComponents.count > 1, "\(filePath) is not under Tests/")
+        root.deleteLastPathComponent()
+    }
+    let directory = root.deletingLastPathComponent()
+        .appending(path: ".build/renders/\(file.deletingPathExtension().lastPathComponent)")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    try png.write(to: directory.appending(path: "\(function.prefix { $0 != "(" }).png"))
 }

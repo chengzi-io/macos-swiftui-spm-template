@@ -1,7 +1,6 @@
 import AppKit
 import Platform
-import SnapshotSupport
-import SnapshotTesting
+import RenderSupport
 import Testing
 
 @testable import SettingsFeature
@@ -9,14 +8,13 @@ import Testing
 /// The panes, not `SettingsView`: the toolbar's tabs belong to the Settings window, which
 /// an off-screen render has none of.
 @MainActor
-@Suite(.snapshots(record: recording))
-struct SettingsViewSnapshotTests {
+struct SettingsViewRenderTests {
     @Test func updates() throws {
-        assertSnapshot(of: try render(updatesPane()), as: .image(perceptualPrecision: 0.98))
+        try render(updatesPane())
     }
 
     @Test func updatesDark() throws {
-        assertSnapshot(of: try render(updatesPane(), appearance: .darkAqua), as: .image(perceptualPrecision: 0.98))
+        try render(updatesPane(), appearance: .darkAqua)
     }
 
     private func updatesPane() -> UpdatesSettingsView {

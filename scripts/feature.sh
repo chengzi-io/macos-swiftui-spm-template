@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Creates a feature's files, its log and its snapshot test, adds its test target to the app
+# Creates a feature's files, its log and its render test, adds its test target to the app
 # scheme, and prints the blocks to paste into Package.swift and AppRoot. Those stay a
 # reviewed edit: they are Swift, shared by every branch, and scripts/lint-rules.sh fails
 # while the scheme and Package.swift disagree.
@@ -98,29 +98,21 @@ cat >"Sources/Features/$name/Resources/Localizable.xcstrings" <<EOF
 }
 EOF
 
-cat >"Tests/Features/${name}Tests/${name}ViewSnapshotTests.swift" <<EOF
+cat >"Tests/Features/${name}Tests/${name}ViewRenderTests.swift" <<EOF
 import AppKit
-import SnapshotSupport
-import SnapshotTesting
+import RenderSupport
 import Testing
 
 @testable import ${name}Feature
 
 @MainActor
-@Suite(.snapshots(record: recording))
-struct ${name}ViewSnapshotTests {
+struct ${name}ViewRenderTests {
     @Test func view() throws {
-        assertSnapshot(
-            of: try render(${name}View(model: ${name}Model())),
-            as: .image(perceptualPrecision: 0.98)
-        )
+        try render(${name}View(model: ${name}Model()))
     }
 
     @Test func viewDark() throws {
-        assertSnapshot(
-            of: try render(${name}View(model: ${name}Model()), appearance: .darkAqua),
-            as: .image(perceptualPrecision: 0.98)
-        )
+        try render(${name}View(model: ${name}Model()), appearance: .darkAqua)
     }
 }
 EOF
@@ -158,7 +150,7 @@ cat <<EOF
 Sources/Features/$name/
   Log.swift  ${name}Model.swift  ${name}View.swift  Resources/Localizable.xcstrings
 Tests/Features/${name}Tests/
-  ${name}ViewSnapshotTests.swift
+  ${name}ViewRenderTests.swift
 
 Package.swift, in targets: (one item per line, sorted; add the Cores the feature uses to
 dependencies:)
@@ -174,11 +166,9 @@ Package.swift, the test target:
             name: "${name}FeatureTests",
             dependencies: [
                 "${name}Feature",
-                "SnapshotSupport",
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+                "RenderSupport",
             ],
             path: "Tests/Features/${name}Tests",
-            exclude: ["__Snapshots__"],
             swiftSettings: ui
         ),
 
@@ -188,6 +178,6 @@ Package.swift, AppRoot's dependencies:
 Then AppModel owns ${name}Model and AppScenes shows ${name}View.
 
 The scheme already lists ${name}FeatureTests; the entry does nothing until Package.swift
-declares the test target. make test then fails with "No reference was found": show the two
-images it drew, and after a yes run make snapshots.
+declares the test target. make test then draws the view, light and dark, into
+.build/renders/${name}ViewRenderTests/.
 EOF

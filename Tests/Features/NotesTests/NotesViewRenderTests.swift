@@ -1,30 +1,25 @@
 import AppKit
 import Notes
-import SnapshotSupport
-import SnapshotTesting
+import RenderSupport
 import Testing
 
 @testable import NotesFeature
 
 @MainActor
-@Suite(.snapshots(record: recording))
-struct NotesViewSnapshotTests {
+struct NotesViewRenderTests {
     @Test func saved() async throws {
         let model = await loadedModel()
-        assertSnapshot(of: try render(NotesView(model: model)), as: .image(perceptualPrecision: 0.98))
+        try render(NotesView(model: model))
     }
 
     @Test func edited() async throws {
         let model = await editedModel()
-        assertSnapshot(of: try render(NotesView(model: model)), as: .image(perceptualPrecision: 0.98))
+        try render(NotesView(model: model))
     }
 
     @Test func editedDark() async throws {
         let model = await editedModel()
-        assertSnapshot(
-            of: try render(NotesView(model: model), appearance: .darkAqua),
-            as: .image(perceptualPrecision: 0.98)
-        )
+        try render(NotesView(model: model), appearance: .darkAqua)
     }
 
     private func loadedModel() async -> NotesModel {

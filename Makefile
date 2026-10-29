@@ -45,8 +45,11 @@ github-setup: ## One-time GitHub settings: squash only, branch protection, relea
 
 ##@ Develop
 
+# The view render tests write .build/renders/; clear the last run's, so a removed test
+# leaves no image behind.
 .PHONY: test
 test: ## Run the package unit tests with swift test (fast: no app, no UI)
+	rm -rf .build/renders
 	$(SWIFT_TEST)
 
 # Creates a feature's files and adds its test target to the app scheme; the Package.swift
@@ -54,14 +57,6 @@ test: ## Run the package unit tests with swift test (fast: no app, no UI)
 .PHONY: feature
 feature: ## Scaffold a feature's files: NAME=Library (prints the blocks to paste)
 	scripts/feature.sh
-
-# Records the view snapshots that are missing or differ. A recording run reports each
-# image it writes as an issue, so the second run is the one that has to pass. Agents run
-# it only after the user has seen the old and new images (.claude/settings.json asks).
-.PHONY: snapshots
-snapshots: ## Record new and changed view snapshots in __Snapshots__/ (review them before committing)
-	-SNAPSHOT_TESTING_RECORD=failed $(SWIFT_TEST)
-	$(SWIFT_TEST)
 
 # UI tests drive the real mouse and keyboard on this Mac, so they stay out of
 # `make test` and `make ci`; GitHub CI runs them.

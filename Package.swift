@@ -24,8 +24,7 @@ let package = Package(
         .library(name: "AppModules", targets: ["AppRoot", "Notes", "NotesLive", "Platform", "PlatformLive"])
     ],
     dependencies: [
-        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.19.6"),
+        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0")
     ],
     targets: [
         .target(
@@ -71,9 +70,8 @@ let package = Package(
         ),
         // The test targets' view renderer; nothing in the app depends on it.
         .target(
-            name: "SnapshotSupport",
-            dependencies: [.product(name: "SnapshotTesting", package: "swift-snapshot-testing")],
-            path: "Tests/SnapshotSupport",
+            name: "RenderSupport",
+            path: "Tests/RenderSupport",
             swiftSettings: ui
         ),
         .testTarget(
@@ -87,11 +85,9 @@ let package = Package(
             dependencies: [
                 "NotesFeature",
                 "Notes",
-                "SnapshotSupport",
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+                "RenderSupport",
             ],
             path: "Tests/Features/NotesTests",
-            exclude: ["__Snapshots__"],
             swiftSettings: ui
         ),
         .testTarget(
@@ -99,11 +95,9 @@ let package = Package(
             dependencies: [
                 "SettingsFeature",
                 "Platform",
-                "SnapshotSupport",
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+                "RenderSupport",
             ],
             path: "Tests/Features/SettingsTests",
-            exclude: ["__Snapshots__"],
             swiftSettings: ui
         ),
     ]
