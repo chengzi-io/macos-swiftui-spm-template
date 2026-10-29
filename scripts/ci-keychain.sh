@@ -16,7 +16,7 @@ case ${1:-} in
     setup)
         # appcast.sh signs with it only after the build and notarization.
         [[ -n ${SPARKLE_ED_PRIVATE_KEY:-} ]] ||
-            die "secret SPARKLE_ED_PRIVATE_KEY is empty; see docs/RELEASING.md, One-time setup, step 3"
+            die "secret SPARKLE_ED_PRIVATE_KEY is empty; see the release-setup skill, step 3"
         if [[ -z ${TEAM_ID:-} ]]; then
             log "TEAM_ID empty: ad-hoc release, no signing credentials to import"
             exit 0

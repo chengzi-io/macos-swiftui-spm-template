@@ -1,0 +1,4 @@
+# Codex starts this skill only when the user asks for $release-setup; Claude Code reads
+# disable-model-invocation in SKILL.md.
+policy:
+  allow_implicit_invocation: false

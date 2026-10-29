@@ -4,7 +4,7 @@
 # $RELEASES_URL/latest/download/appcast.xml (no delta updates).
 #
 # EdDSA private key: SPARKLE_ED_PRIVATE_KEY (CI) or the keychain entry created by
-# `make sparkle-keys` (account = BUNDLE_ID).
+# the release-setup skill's sparkle-keys.sh (account = BUNDLE_ID).
 
 source "$(dirname "$0")/common.sh"
 

@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Until the one-time setup is done (docs/RELEASING.md), and in a new repository made from
+  # Until the one-time setup is done (.agents/skills/release-setup), and in a new repository made from
   # the template before init, every push to main would fail; skip with a notice instead.
   setup:
     name: Check release setup
@@ -33,7 +33,7 @@ jobs:
         run: |
           identity_repo=$(sed -nE 's/^GITHUB_REPOSITORY[[:space:]]*=[[:space:]]*([^[:space:]]*).*/\1/p' App/Configs/Identity.xcconfig)
           if [[ -z $CLIENT_ID || -z $PRIVATE_KEY ]]; then
-            echo "::notice::Release skipped: set the variable RELEASE_APP_CLIENT_ID and the release environment's secret RELEASE_APP_PRIVATE_KEY (docs/RELEASING.md, One-time setup, step 2)"
+            echo "::notice::Release skipped: set the variable RELEASE_APP_CLIENT_ID and the release environment's secret RELEASE_APP_PRIVATE_KEY (release-setup skill, step 2)"
             configured=false
           elif [[ ${identity_repo,,} != "${GITHUB_REPOSITORY,,}" ]]; then
             echo "::notice::Release skipped: App/Configs/Identity.xcconfig has GITHUB_REPOSITORY = ${identity_repo:-(empty)}, not $GITHUB_REPOSITORY: initialize the project first"

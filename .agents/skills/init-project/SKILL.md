@@ -76,9 +76,9 @@ user its output; do not work around it by editing files.
    - say what the app does: the sentence at the top of `README.md`;
    - the icon: the `app-icon` skill;
    - if the demo stayed: replace Notes with the first real feature;
-   - one-time release setup in [docs/RELEASING.md](../../../docs/RELEASING.md)
-     (`make github-setup`, the GitHub App, `make sparkle-keys`, optional Developer ID),
-     which needs their GitHub and Apple accounts.
+   - one-time release setup: the `release-setup` skill (repository settings, the
+     GitHub App, the Sparkle key, optional Developer ID), which needs their GitHub and
+     Apple accounts; only they start it.
 
 Each script skips what is already done, so a run that stopped can run again with the
 same arguments. To start over, ask the user first, then

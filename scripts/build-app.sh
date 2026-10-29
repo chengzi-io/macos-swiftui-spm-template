@@ -31,7 +31,7 @@ esac
 
 public_key=$(sparkle_public_key)
 [[ -n ${GITHUB_REPOSITORY:-} && -n $public_key ]] ||
-    die "release builds need GITHUB_REPOSITORY in App/Configs/Identity.xcconfig and SUPublicEDKey in App/Configs/Info.plist (see make sparkle-keys)"
+    die "release builds need GITHUB_REPOSITORY in App/Configs/Identity.xcconfig and SUPublicEDKey in App/Configs/Info.plist (see the release-setup skill)"
 
 # The build number counts commits, and a shallow clone has only the last few: the
 # release would get a lower number than the one before, and Sparkle would not offer it.

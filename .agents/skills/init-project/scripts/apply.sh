@@ -81,7 +81,7 @@ set_identity COPYRIGHT "Copyright © $year $holder"
 set_identity GITHUB_REPOSITORY "$repo"
 set_identity TEAM_ID "$team_id"
 set_identity REQUIRED_LOCALES "$locales"
-# The template's Sparkle key belongs to the template; make sparkle-keys makes the app's.
+# The template's Sparkle key belongs to the template; the release-setup skill makes the app's.
 edit App/Configs/Info.plist -e '/<key>SUPublicEDKey<\/key>/{' -e 'n' -e 's|<string>.*</string>|<string></string>|' -e '}'
 
 log "3/5 LICENSE, CODEOWNERS, issue template link"
