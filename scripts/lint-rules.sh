@@ -81,7 +81,7 @@ check "handle or throw the error instead of try!; in a test, use try #require or
 
 package=$(swift package dump-package)
 
-# Which targets may depend on which (AGENTS.md). Test targets depend on what they test.
+# Which targets may depend on which (Sources/AGENTS.md). Test targets depend on what they test.
 while read -r target dependency; do
     case $dependency in
         *Live)
