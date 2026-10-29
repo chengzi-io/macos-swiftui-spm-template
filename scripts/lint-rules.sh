@@ -180,7 +180,7 @@ fi
 docs=$(git ls-files --cached --others --exclude-standard -- '*.md' | sort -u)
 
 # <path> <max lines>; a file that does not exist yet is skipped. A file joins this list in
-# the change that cuts it to its budget: AGENTS.md 100, README.md 60, docs/ARCHITECTURE.md
+# the change that cuts it to its budget: README.md 60, docs/ARCHITECTURE.md
 # 150, docs/DEVELOPMENT.md 80, docs/RELEASING.md 100, .agents/skills/*/SKILL.md 150.
 while read -r doc budget; do
     [[ -f $doc ]] || continue
@@ -190,6 +190,7 @@ while read -r doc budget; do
         status=1
     fi
 done <<'BUDGETS'
+AGENTS.md 100
 Sources/AGENTS.md 80
 Tests/AGENTS.md 50
 App/AGENTS.md 40
