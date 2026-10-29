@@ -12,26 +12,47 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Until the one-time setup is done (docs/RELEASING.md), and in a new repository made from
+  # the template before init, every push to main would fail; skip with a notice instead.
+  setup:
+    name: Check release setup
+    runs-on: ubuntu-latest
+    # The App's key is a secret of this environment, which only protected branches reach.
+    environment: release
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: App/Configs/Identity.xcconfig
+          sparse-checkout-cone-mode: false
+      - id: check
+        env:
+          CLIENT_ID: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+        run: |
+          identity_repo=$(sed -nE 's/^GITHUB_REPOSITORY[[:space:]]*=[[:space:]]*([^[:space:]]*).*/\1/p' App/Configs/Identity.xcconfig)
+          if [[ -z $CLIENT_ID || -z $PRIVATE_KEY ]]; then
+            echo "::notice::Release skipped: set the variable RELEASE_APP_CLIENT_ID and the release environment's secret RELEASE_APP_PRIVATE_KEY (docs/RELEASING.md, One-time setup, step 2)"
+            configured=false
+          elif [[ ${identity_repo,,} != "${GITHUB_REPOSITORY,,}" ]]; then
+            echo "::notice::Release skipped: App/Configs/Identity.xcconfig has GITHUB_REPOSITORY = ${identity_repo:-(empty)}, not $GITHUB_REPOSITORY: initialize the project first"
+            configured=false
+          else
+            configured=true
+          fi
+          echo "configured=$configured" >>"$GITHUB_OUTPUT"
+
   release-please:
     name: Release please
+    needs: setup
+    if: ${{ needs.setup.outputs.configured == 'true' }}
     runs-on: ubuntu-latest
-    # The App's key is a secret of this environment, which only protected branches reach:
-    # a workflow pushed on any other branch cannot read it.
     environment: release
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      # Every push to main fails here until the one-time setup is done; say what is missing.
-      - name: Check the GitHub App setup
-        env:
-          CLIENT_ID: ${{ vars.RELEASE_APP_CLIENT_ID }}
-          PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-        run: |
-          if [[ -z $CLIENT_ID || -z $PRIVATE_KEY ]]; then
-            echo "::error::Set the variable RELEASE_APP_CLIENT_ID and the release environment's secret RELEASE_APP_PRIVATE_KEY: docs/RELEASING.md, One-time setup, step 2"
-            exit 1
-          fi
       - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: app-token
         with:
@@ -57,13 +78,23 @@ jobs:
     permissions:
       contents: write
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
       TAG: ${{ needs.release-please.outputs.tag_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.release-please.outputs.tag_name }}
           fetch-depth: 0
+      # Same step as in ci.yml: .xcode-version is the one place the Xcode version is written.
+      - name: Select Xcode from .xcode-version
+        run: |
+          xcode_version=$(tr -d '[:space:]' <.xcode-version)
+          developer_dir="/Applications/Xcode_$xcode_version.app/Contents/Developer"
+          [[ -d $developer_dir ]] || { echo "::error::Xcode $xcode_version (.xcode-version) is not installed on this runner"; exit 1; }
+          echo "DEVELOPER_DIR=$developer_dir" >>"$GITHUB_ENV"
+          sudo DEVELOPER_DIR="$developer_dir" xcodebuild -runFirstLaunch
+          sw_vers
+          DEVELOPER_DIR="$developer_dir" xcodebuild -version
+      - run: make doctor
       # Before the credentials: the tests run the package's dependencies' code.
       - run: make lint test
       - name: Import signing credentials
