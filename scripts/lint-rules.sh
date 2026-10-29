@@ -191,6 +191,7 @@ while read -r doc budget; do
     fi
 done <<'BUDGETS'
 AGENTS.md 100
+.agents/skills/add-feature/SKILL.md 150
 Sources/AGENTS.md 80
 Tests/AGENTS.md 50
 App/AGENTS.md 40

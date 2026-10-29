@@ -2,16 +2,19 @@
 # Creates a feature's files, its log and its render test, adds its test target to the app
 # scheme, and prints the blocks to paste into Package.swift and AppRoot. Those stay a
 # reviewed edit: they are Swift, shared by every branch, and scripts/lint-rules.sh fails
-# while the scheme and Package.swift disagree.
+# while the scheme and Package.swift disagree. Run from anywhere inside the project.
+#
+#   scaffold.sh <Name>    <Name> is the area's name: Library makes LibraryFeature
 
-source "$(dirname "$0")/common.sh"
+# shellcheck source=../../../../scripts/common.sh
+source "$(dirname "$0")/../../../../scripts/common.sh"
 
-name=${NAME:-}
+name=${1:-}
 logger=$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')
-[[ -n $name ]] || die "usage: make feature NAME=Library"
+[[ $# -eq 1 && -n $name ]] || die "usage: .agents/skills/add-feature/scripts/scaffold.sh <Name>, such as Library"
 [[ $name =~ ^[A-Z][A-Za-z0-9]*$ ]] ||
-    die "NAME is the area's name and names its types: a capital letter, then letters and digits"
-[[ $name != *Feature ]] || die "NAME is the area's name; its target is already named <Name>Feature"
+    die "<Name> is the area's name and names its types: a capital letter, then letters and digits"
+[[ $name != *Feature ]] || die "<Name> is the area's name, without Feature: ${name%Feature} makes the target $name"
 # Log.<logger> has to be an identifier.
 case $logger in
     as | break | case | catch | class | continue | default | defer | deinit | do | else | enum \
@@ -19,7 +22,7 @@ case $logger in
     | inout | internal | is | let | nil | open | operator | private | protocol | public | repeat \
     | rethrows | return | self | static | struct | subscript | super | switch | throw | throws \
     | true | try | typealias | var | where | while)
-        die "NAME=$name would name the logger Log.$logger, a Swift keyword; pick another name"
+        die "$name would name the logger Log.$logger, a Swift keyword; pick another name"
         ;;
 esac
 [[ ! -e Sources/Features/$name ]] || die "Sources/Features/$name already exists"
@@ -79,24 +82,28 @@ public struct ${name}View: View {
 }
 EOF
 
-cat >"Sources/Features/$name/Resources/Localizable.xcstrings" <<EOF
+# The view's one string, with an entry for each locale of REQUIRED_LOCALES but the source
+# language, marked new: make lint fails until each is translated.
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "${name}" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "${name}"
-          }
-        }
-      }
-    }
-  },
-  "version" : "1.0"
-}
-EOF
+    printf '{\n  "sourceLanguage" : "en",\n  "strings" : {\n    "%s" : {\n' "$name"
+    translations=()
+    for locale in ${REQUIRED_LOCALES:-en}; do
+        [[ $locale == en ]] || translations+=("$locale")
+    done
+    if ((${#translations[@]} == 0)); then
+        printf '\n'
+    else
+        printf '      "localizations" : {\n'
+        for i in "${!translations[@]}"; do
+            separator=,
+            ((i < ${#translations[@]} - 1)) || separator=
+            printf '        "%s" : {\n          "stringUnit" : {\n            "state" : "new",\n            "value" : "%s"\n          }\n        }%s\n' \
+                "${translations[$i]}" "$name" "$separator"
+        done
+        printf '      }\n'
+    fi
+    printf '    }\n  },\n  "version" : "1.0"\n}\n'
+} >"Sources/Features/$name/Resources/Localizable.xcstrings"
 
 cat >"Tests/Features/${name}Tests/${name}ViewRenderTests.swift" <<EOF
 import AppKit
@@ -152,8 +159,8 @@ Sources/Features/$name/
 Tests/Features/${name}Tests/
   ${name}ViewRenderTests.swift
 
-Package.swift, in targets: (one item per line, sorted; add the Cores the feature uses to
-dependencies:)
+Package.swift, in targets: (after the other feature targets; add the Cores the feature
+uses as dependencies:)
         .target(
             name: "${name}Feature",
             path: "Sources/Features/$name",
@@ -161,7 +168,8 @@ dependencies:)
             swiftSettings: ui
         ),
 
-Package.swift, the test target:
+Package.swift, the test target (after the other feature test targets; add the Cores its
+tests use):
         .testTarget(
             name: "${name}FeatureTests",
             dependencies: [
@@ -172,10 +180,12 @@ Package.swift, the test target:
             swiftSettings: ui
         ),
 
-Package.swift, AppRoot's dependencies:
-                "${name}Feature",
+Package.swift, AppRoot's dependencies: add "${name}Feature" after the other features.
 
 Then AppModel owns ${name}Model and AppScenes shows ${name}View.
+
+Translate "${name}" in Resources/Localizable.xcstrings for ${REQUIRED_LOCALES:-en} and mark each
+translated; make lint fails while one is new.
 
 The scheme already lists ${name}FeatureTests; the entry does nothing until Package.swift
 declares the test target. make test then draws the view, light and dark, into

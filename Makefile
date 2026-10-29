@@ -46,12 +46,6 @@ test: ## Run the package unit tests with swift test (fast: no app, no UI)
 	rm -rf .build/renders
 	$(SWIFT_TEST)
 
-# Creates a feature's files and adds its test target to the app scheme; the Package.swift
-# blocks and the wiring are printed, not applied, so they stay a reviewed edit.
-.PHONY: feature
-feature: ## Scaffold a feature's files: NAME=Library (prints the blocks to paste)
-	scripts/feature.sh
-
 # UI tests drive the real mouse and keyboard on this Mac, so they stay out of
 # `make test` and `make ci`; GitHub CI runs them. The result bundle holds the failure
 # screenshots; xcodebuild refuses to overwrite one, so the last run's goes first.
