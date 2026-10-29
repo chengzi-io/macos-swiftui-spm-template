@@ -25,7 +25,7 @@ changing the template itself, leave init alone. Init removes this section.
 
 ```bash
 make test    # unit tests (swift test): seconds; run after every change
-make ci      # definition of done: lint (format, scripts/lint-rules.sh, asset catalogs), unit tests, debug .app, launch smoke test
+make ci      # definition of done: versions, lint (format, scripts/lint-rules.sh), unit tests, asset catalogs (actool), debug .app, launch smoke test
 make run     # build and launch the debug app; logs go to the terminal (or .build/run.log)
 make fmt     # format Swift sources (the pre-commit hook formats staged files too)
 ```

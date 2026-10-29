@@ -4,7 +4,7 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -euo pipefail -c
 .DEFAULT_GOAL := help
-# Targets list their steps in order (ci: lint test app smoke); make -j would run smoke
+# Targets list their steps in order (ci: versions lint test assets app smoke); make -j would run smoke
 # against the previous build's app.
 .NOTPARALLEL:
 
@@ -24,12 +24,6 @@ help: ## List targets
 	@awk '/^##@/ { printf "\n%s\n", substr($$0, 5) } /^([a-z-]|\\:)+:.*## / { match($$0, /^([a-z-]|\\:)+/); target = substr($$0, 1, RLENGTH); gsub(/\\/, "", target); split($$0, parts, "## "); printf "  %-18s %s\n", target, parts[2] }' $(MAKEFILE_LIST)
 
 ##@ Setup
-
-# template-only:start
-.PHONY: init
-init: ## First run after "Use this template": ARGS="--name MyApp --bundle-id com.example.myapp"
-	scripts/init.sh $(ARGS)
-# template-only:end
 
 .PHONY: setup
 setup: doctor ## Check the toolchain and install git hooks
@@ -59,11 +53,15 @@ feature: ## Scaffold a feature's files: NAME=Library (prints the blocks to paste
 	scripts/feature.sh
 
 # UI tests drive the real mouse and keyboard on this Mac, so they stay out of
-# `make test` and `make ci`; GitHub CI runs them.
+# `make test` and `make ci`; GitHub CI runs them. The result bundle holds the failure
+# screenshots; xcodebuild refuses to overwrite one, so the last run's goes first.
+UI_TEST_RESULTS := .build/UITests.xcresult
 .PHONY: test\:ui
 test\:ui: ## Run the UI tests; they take over the mouse and keyboard while they run
+	rm -rf $(UI_TEST_RESULTS)
 	xcodebuild test -quiet -project App/$(APP_TARGET).xcodeproj -scheme $(APP_TARGET) \
 		-derivedDataPath .build/xcode -destination "platform=macOS,arch=$$(uname -m)" \
+		-resultBundlePath $(UI_TEST_RESULTS) \
 		-only-testing:$(APP_TARGET)UITests
 
 .PHONY: fmt
@@ -71,9 +69,13 @@ fmt: ## Format Swift sources in place
 	swift format format --in-place --recursive --parallel $(SWIFT_PATHS)
 
 .PHONY: lint
-lint: ## Check formatting, scripts/lint-rules.sh and the asset catalogs (fails on any finding)
+lint: ## Check formatting and scripts/lint-rules.sh (fails on any finding)
 	swift format lint --strict --recursive --parallel $(SWIFT_PATHS)
 	scripts/lint-rules.sh
+
+# actool runs through a long-lived ibtoold, too slow and flaky for the lint loop.
+.PHONY: assets
+assets: ## Compile the asset catalog and AppIcon.icon with actool (fails on any warning)
 	scripts/lint-assets.sh
 
 .PHONY: app
@@ -94,21 +96,32 @@ smoke: ## Smoke-test the debug .app (or APP=path)
 
 ##@ Verify
 
+# First in make ci, so a local log and a CI log say which toolchain they came from.
+.PHONY: versions
+versions: ## Print the macOS, the selected Xcode and the pinned .xcode-version
+	@echo "macOS $$(sw_vers -productVersion) ($$(sw_vers -buildVersion))"
+	@xcodebuild -version | paste -sd ' ' -
+	@echo ".xcode-version $$(cat .xcode-version 2>/dev/null || echo '(missing)')"
+
 .PHONY: ci
-ci: lint test app smoke ## The definition of done; CI runs this, then make test:ui
+ci: versions lint test assets app smoke ## The definition of done; CI runs this, then make test:ui
 
 ##@ Release (CI runs `make release` after release-please creates the tag)
 
+# The steps of make release, for rerunning one by hand; make help leaves them out.
+# release-app: dist/<App>.app, universal, hardened runtime, signed.
 .PHONY: release-app
-release-app: ## Build dist/<App>.app: universal, hardened runtime, signed
+release-app:
 	scripts/build-app.sh release
 
+# release-dmg: dist/<App>.app into a DMG, signed and notarized.
 .PHONY: release-dmg
-release-dmg: ## Package dist/<App>.app into a DMG, sign and notarize it
+release-dmg:
 	scripts/package-dmg.sh
 
+# appcast: dist/appcast.xml for the DMG.
 .PHONY: appcast
-appcast: ## Generate dist/appcast.xml for the DMG
+appcast:
 	scripts/appcast.sh
 
 .PHONY: release
