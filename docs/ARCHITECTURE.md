@@ -1,7 +1,8 @@
 # Architecture
 
 Why the code is split the way it is, for people reading the template. The rules agents
-follow live in `Sources/AGENTS.md` and `App/AGENTS.md`; this page gives the reasons.
+follow live in [Sources/AGENTS.md](../Sources/AGENTS.md) and [App/AGENTS.md](../App/AGENTS.md);
+this page gives the reasons.
 
 ## How the app is built
 

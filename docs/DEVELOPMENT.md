@@ -57,4 +57,11 @@ CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 | Xcode, package only | `xed .` | the package without the app shell |
 | VS Code, Cursor, Zed | the Swift extension (sourcekit-lsp) | loads the package at the root; `App/` gets no code intelligence, so use `make run` |
 
-`<App>` is the app's name, `APP_NAME` in `App/Configs/Identity.xcconfig`.
+`<App>` is the app's name, `APP_NAME` in `App/Configs/Identity.xcconfig`
+([App/AGENTS.md](../App/AGENTS.md) says who sets each identity key).
+
+## Where code goes
+
+Where a file belongs and which way dependencies point: [Sources/AGENTS.md](../Sources/AGENTS.md);
+why: [ARCHITECTURE.md](ARCHITECTURE.md). To add a feature, ask your agent: its add-feature
+skill scaffolds the feature and its tests.
