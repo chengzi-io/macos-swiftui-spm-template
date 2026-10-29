@@ -41,7 +41,7 @@ keeps the unit-test loop fast.
   a view you changed. They draw this Mac's controls. CI uploads the ones it draws on
   macOS 26 as the run's `renders` artifact: download it from the run's page or with
   `gh run download <run id> -n renders`.
-- `make feature NAME=Library` creates a feature's files and its render test, adds the
+- The add-feature skill creates a feature's files and its render test, adds the
   test target to the app scheme, and prints the `Package.swift` blocks and the wiring to
   paste.
 - `make ci` runs lint, the unit tests, the debug `.app` and its launch smoke test. It is

@@ -230,7 +230,7 @@ same way.
    strings and `swiftSettings: ui`; a `<Name>FeatureTests` test target at
    `Tests/Features/<Name>Tests` that depends on the feature, the Cores it uses and
    `RenderSupport`, as `NotesFeatureTests` does; and `<Name>Feature` in `AppRoot`'s
-   dependencies. `make feature NAME=<Name>` creates the feature's files, adds its test
+   dependencies. the add-feature skill creates the feature's files, adds its test
    target to the `<App>` scheme's Test action and prints these blocks; `make test` runs
    the tests either way, and `make lint` fails while the scheme lacks a test target.
    Without the script, add the test target in Xcode (Product → Scheme → Edit Scheme… →

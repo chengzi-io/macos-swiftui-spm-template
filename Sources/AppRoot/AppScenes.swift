@@ -1,3 +1,4 @@
+import DemoFeature
 import NotesFeature
 import SettingsFeature
 import SwiftUI
@@ -19,6 +20,9 @@ public struct AppScenes: Scene {
             CommandGroup(after: .appInfo) {
                 CheckForUpdatesButton(updater: model.updater)
             }
+        }
+        Window(Text(verbatim: "Demo"), id: "demo") {
+            DemoView(model: model.demo)
         }
         Settings {
             SettingsView(updater: model.updater)

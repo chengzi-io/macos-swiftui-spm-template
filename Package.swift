@@ -29,7 +29,7 @@ let package = Package(
     targets: [
         .target(
             name: "AppRoot",
-            dependencies: ["NotesFeature", "SettingsFeature", "Notes", "Platform"],
+            dependencies: ["NotesFeature", "SettingsFeature", "DemoFeature", "Notes", "Platform"],
             swiftSettings: ui
         ),
         .target(
@@ -43,6 +43,12 @@ let package = Package(
             name: "SettingsFeature",
             dependencies: ["Platform"],
             path: "Sources/Features/Settings",
+            resources: [.process("Resources")],
+            swiftSettings: ui
+        ),
+        .target(
+            name: "DemoFeature",
+            path: "Sources/Features/Demo",
             resources: [.process("Resources")],
             swiftSettings: ui
         ),
@@ -88,6 +94,15 @@ let package = Package(
                 "RenderSupport",
             ],
             path: "Tests/Features/NotesTests",
+            swiftSettings: ui
+        ),
+        .testTarget(
+            name: "DemoFeatureTests",
+            dependencies: [
+                "DemoFeature",
+                "RenderSupport",
+            ],
+            path: "Tests/Features/DemoTests",
             swiftSettings: ui
         ),
         .testTarget(
