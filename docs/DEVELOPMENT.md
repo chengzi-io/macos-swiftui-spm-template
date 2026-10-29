@@ -1,7 +1,7 @@
 # Development
 
 The daily loop, editors and commands, for people working on the app. Toolchain:
-Xcode 26.2, the version CI uses; `make doctor` checks it.
+Xcode 26.2, the version CI uses ([TOOLCHAIN.md](TOOLCHAIN.md)); `make doctor` checks it.
 
 ## Daily loop
 
