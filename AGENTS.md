@@ -1,279 +1,82 @@
 # AGENTS.md
 
-macOS SwiftUI app. All code lives in the Swift package at the repository root
-(`Package.swift`, `Sources/`, `Tests/`); a thin Xcode project, `App/<App>.xcodeproj`,
-builds, signs and packages the app; `scripts/` ships it. `<App>` stands for the app's
-name (`APP_NAME`), which the package, the project, its app target and the scheme carry.
-Setup and the layout live in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md), the commands
-in `make help`; this file is the rules of engagement.
+A macOS SwiftUI app. All code lives in the Swift package at the repository root
+(`Package.swift`, `Sources/`, `Tests/`); `App/<App>.xcodeproj` is a thin Xcode shell that
+builds, signs and packages it, and `scripts/` ships it. `<App>` is the app's name
+(`APP_NAME` in `App/Configs/Identity.xcconfig`): the package, project, app target and
+scheme carry it. This file holds what every task needs; the rest is in the files below.
 
-<!-- template-only:start -->
-## Before init
+## Done means
 
-This repository is still the template, and `README.md` describes the template. When the
-user asks for app work (a feature, an icon, a release), first initialize it with the
-[init-project skill](.agents/skills/init-project/SKILL.md): it asks for the app name,
-bundle identifier and the rest once, previews, applies, and commits
-`chore: initialize <Name> from template`. The one-time release setup in [docs/RELEASING.md](docs/RELEASING.md) needs the user's
-GitHub and Apple accounts, so it stays with them. When the user is
-changing the template itself, leave init alone. Init removes this section.
-<!-- template-only:end -->
+| Command | When | Takes |
+| --- | --- | --- |
+| `make test` | after every change (unit and render tests) | seconds |
+| `make ci` | before calling a task done: the definition of done, same as CI | minutes |
+| `make run` | to launch the debug app; logs go to the terminal | a minute |
+| `make fmt` | to format Swift sources (the pre-commit hook formats staged files) | seconds |
+| `make test:ui` | only when the user asks: it takes over the mouse and keyboard | minutes |
 
-## Gate commands
+CI also runs `make test:ui`, shellcheck and actionlint on every PR. `make help` lists
+every target.
 
-```bash
-make test    # unit tests (swift test): seconds; run after every change
-make ci      # definition of done: versions, lint (format, scripts/lint-rules.sh), unit tests, asset catalogs (actool), debug .app, launch smoke test
-make run     # build and launch the debug app; logs go to the terminal (or .build/run.log)
-make fmt     # format Swift sources (the pre-commit hook formats staged files too)
-```
+## Toolchain
 
-`make test:ui` runs the XCUITests. They take over the user's mouse and keyboard, so run
-them only when the user asks; GitHub CI runs them on every PR.
-
-GitHub CI also runs shellcheck and actionlint over the shell scripts and workflows, at
-the versions pinned in `.github/workflows/ci.yml`; `make ci` does not, since a Mac
-seldom has them.
-
-Toolchain: Xcode 26 (Swift 6.2); the app targets macOS 14+. `make doctor` checks it.
-On macOS 26+ with Xcode 26.3+ and the project open in Xcode, `xcrun mcpbridge` lets an
-agent build, run tests, render previews and search Apple's documentation through Xcode.
-On macOS 15 it does not launch; the make targets do all of it but previews.
-
-## Where things go
-
-```text
-Package.swift                 the package <App>: targets, dependencies, Swift settings
-Sources/
-  AppRoot/                    AppModel (root of the model tree), AppScenes (windows,
-                              commands, Settings), app-wide menus
-  Features/<Name>/            target <Name>Feature: one area of the app, its screens (a
-                              folder each when there are several), <Name>Model, logic
-                              only it uses, Resources/Localizable.xcstrings
-  Platform/                   what any Mac app needs from the system: updates, launch
-                              at login, notifications, preferences
-    Core/<Name>/              target Platform: a protocol for each thing outside the
-                              process, its types, its error enum and a Mock<Name>Service
-    Live/<Name>/              target PlatformLive: Live<Name>Service (system APIs,
-                              network, files, Sparkle)
-Tests/                        Swift Testing, mirroring Sources/ (<Name>FeatureTests);
-                              RenderSupport draws views for the render tests
-App/                          the Xcode shell: <App>.xcodeproj, targets <App> and
-                              <App>UITests
-  Application/                @main, the composition root: builds the live services
-                              (mocks under UI_TESTING=1) and hands them to AppRoot.
-                              Plus the app delegate, assets, AppIcon.icon. No views.
-  UITests/                    XCUITest, a few critical flows; launches with UI_TESTING=1
-  Configs/Identity.xcconfig   app identity (name, bundle id, team, repository): only here
-  Configs/*.xcconfig          build settings; Info.plist and App.entitlements beside them
-  Package.swift               empty: keeps App/ out of the root package in Xcode
-```
-
-Create these the first time something needs them, not before:
-
-- `Sources/<Domain>/` for what this app is about (`Monitor`, `Library`, `Sync`), split
-  as `Platform` is: `Core/<Name>/` is target `<Domain>` (protocols, value types, pure
-  logic and models that several features share, mocks), `Live/<Name>/` is target
-  `<Domain>Live`. A domain with nothing outside the process has no `Live/`. A domain is
-  a group of capabilities that change together, not one per service. Its tests:
-  `<Domain>Tests` in `Tests/<Domain>Tests/`.
-- `Sources/DesignSystem/` for the app's look, once it picks its own: the spacing, corner
-  radii, fonts and colors it repeats, and components several screens share
-  (`StatusBadge(level:)`). It knows no domain: a feature maps its data onto it, and a
-  component that shows a domain's data stays in its feature. System styles (`Form`,
-  `.font(.headline)`, `.secondary`) get no token. Colors go in code
-  (`NSColor(name:dynamicProvider:)`), not an asset catalog; the accent color stays the
-  empty `AccentColor` in `App/Application/Assets.xcassets`, never `.tint`
-  ([why](docs/ARCHITECTURE.md#the-apps-look)).
-- `Sources/Kits/<Name>/` for code that knows nothing of this app: a wrapper of a C or
-  private interface, or `AppKitBridge` for `NSViewRepresentable` wrappers and NSWindow
-  or NSEvent helpers ([RECIPES](docs/RECIPES.md#appkit-bridges)).
-- An extension or helper (a widget, a login item) is another thin target in
-  `App/<Name>/`, linking the domain Cores and the Live it needs, never a feature or
-  `AppRoot`; its views go in a package target of their own.
-
-What the user sees is a feature; what any Mac app needs is `Platform`; what this app is
-about is a domain; what knows nothing of this app is a kit. A target is one folder
-tree, and two targets' folders cannot nest (SwiftPM reports overlapping sources): hence
-`Core/` and `Live/` side by side, each grouped by capability.
-
-A feature is an area the user works in, not a screen: screens that show the same data
-and change together (a menu bar item and its panel) share a target, a folder each.
-Split a target when part of it changes for other reasons. A grown app has some 8 to 15
-library targets; more usually means folders were made into modules.
-
-Dependencies, enforced by `Package.swift` (`make test` fails on an import a target does
-not declare) and `make lint` (fails on a target that depends on a Live, or on a feature
-outside `AppRoot`):
-
-```text
-<App>          ──► AppModules: AppRoot, <Domain>, <Domain>Live, Platform, PlatformLive
-AppRoot        ──► <Name>Feature, <Domain>, Platform
-<Name>Feature  ──► <Domain>, Platform, DesignSystem, Kits
-<Domain>       ──► another <Domain>, Platform, Kits
-…Live          ──► its Core, other Cores, Kits; never another Live
-DesignSystem   ──► Kits
-```
-
-A feature never depends on another feature; only `<App>` knows the live services. A
-domain never depends on another in a cycle; a kit depends on no module of the app. A
-flow that spans domains and runs without a screen (a reading crosses a threshold, so
-notify) belongs to the domain that consumes the others' results, named for what it does
-(`Alerts` uses `Monitor`'s readings and `Platform`'s notifications), with the decision
-as a plain type; not to a Live, `MainApp` or a screen's model. Why, with a menu bar
-monitor as the example: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-`README.md` is the app's page for its users; developer docs go in `docs/`. Skills live
-in `.agents/skills/`, and `.claude/skills/` links to each one: link a new skill the
-same way.
-
-## Rules
-
-- Something outside the process (system API, network, files, UserDefaults, Keychain,
-  the clock) that a model needs is a service: protocol and mock in the Core of
-  `Platform` or its domain, live implementation in the matching Live. Pure logic
-  (formatting, parsing, calculation, state machines) stays a plain type the model calls
-  directly, as `WordCount` is; it gets no protocol. For time, take `any Clock<Duration>`.
-  A package that owns the outside access, its storage and the control the user sees,
-  with no logic of the app's in between, gets no service (KeyboardShortcuts in
-  [RECIPES](docs/RECIPES.md#global-keyboard-shortcuts)): a model test would have nothing
-  to swap. SwiftData is the other exception, since `@Query` keeps a view's list current:
-  the scene sets `.modelContainer(...)`, a view reads with `@Query` and never writes, its
-  feature's model inserts, deletes and saves through a `ModelContext`, and tests,
-  previews and render tests use an in-memory store instead of a mock
-  ([RECIPES](docs/RECIPES.md#swiftdata)).
-- Models are `@Observable` and reach views through initializers, never
-  `.environment(...)`: a missing initializer argument fails the build, a missing
-  environment object crashes at run time. A feature's `<Name>Model` owns its screens'
-  models and the state they share (the selection). `AppModel` owns the features'
-  models, the models a domain shares among features, and what is app-wide (the updater,
-  a global shortcut): a new screen changes its feature's model, not `AppModel`.
-- Every view has a `#Preview` built from mocks.
-- Package resources need `bundle: .module`: `Text("Key", bundle: .module)`,
-  `String(localized: "Key", bundle: .module)`, `Image("name", bundle: .module)`.
-  Without it SwiftUI looks in the main bundle and shows the raw key; nothing fails at
-  compile time. Each target with strings has its own `Localizable.xcstrings` (en,
-  zh-Hans).
-- Feature targets and AppRoot are MainActor by default; `Platform`, the domains and
-  their Live targets are not. Mark UI-bound services and a domain's models
-  `@MainActor`, and background work `@concurrent`: a plain `nonisolated async` function
-  runs on its caller's actor.
-- In MainActor-by-default targets `Bundle.module` is MainActor-isolated, so nonisolated
-  code (Error types, Sendable values) cannot read it. Resolve user-facing text in views
-  or models, as `NoteError.message` in `NotesModel.swift` does. Value types decoded or
-  passed off the main actor there need `nonisolated struct …: Codable, Sendable`.
-- Warnings are errors, in the package and in the app. Fix them; do not silence them.
-  `MemberImportVisibility` is on: import every module whose members a file uses
-  (`import OSLog` for `Logger` interpolation).
-- Errors: each service throws its own `enum …Error: Error`; the model catches once,
-  logs, and turns the error into state the view shows. No empty `catch`, no `try?` on
-  errors that matter.
-- Logging: each module has an internal `Log` enum of `os.Logger`s with its own category
-  (`Log.notes`); subsystem = bundle identifier. Dynamic values stay private unless
-  marked `privacy: .public`; never log tokens or personal data. `make logs` streams
-  them.
-- Feature modules end in `Feature` (`SettingsFeature`), and no module is named after a
-  SwiftUI type: a module called `Settings` or `App` breaks `Settings.SomeType` lookups.
-- Tests: Swift Testing (`@Test`, `#expect`) on models and services, with mocks for
-  every service. A live service with logic of its own (a missing file read as empty, a
-  status code turned into an error) is also tested against the real thing, in a
-  temporary directory or against a local stub, in its domain's test target
-  (`LiveNoteServiceTests`); what it reaches comes in through its initializer, defaulting
-  to the real one. One that only hands calls to a framework, as the updater does, needs
-  no such test. `swift test` does not compile asset or string catalogs, so unit tests
-  never assert localized text or images; `make smoke` covers resources in the real
-  `.app`. XCTest only for UI tests.
-- Screens get render tests (`NotesViewRenderTests` is the pattern): each screen in the
-  states that tell it apart (empty, filled, an error shown in the view), light and dark,
-  in English; a subview shows in its screen's render. An `.alert` or a sheet has no
-  window to draw in, so it never shows in one. `RenderSupport`'s `render` draws them at
-  2x through `NSHostingView`, with controls in the default blue accent and scroll bars
-  hidden, whatever the Mac's settings and the app's accent, and writes
-  `.build/renders/<test file>/<test>.png`. They are how an agent sees a view without
-  Xcode: after changing a view, `make test` and read its images. Nothing compares them,
-  so a view changed by accident shows only to whoever looks. They draw this Mac's
-  controls; CI uploads its own, macOS 26's, as the run's `renders` artifact
-  (`gh run download <run id> -n renders`).
-- App identity changes in `App/Configs/Identity.xcconfig` only. The name, display name
-  and bundle identifier are set at init. A later rename changes the package, project,
-  targets and scheme with them, and only before the first release: after it, they would
-  make a different app.
+Xcode 26.2 only (`.xcode-version`; CI uses the `macos-26` runner), Swift 6.2, macOS 14
+target, warnings as errors. Never raise `swift-tools-version` or use Swift 6.3+ or Xcode
+27 features: [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md).
 
 ## Never
 
-- edit `project.pbxproj` by hand: `App/Application/` and `App/UITests/` are buildable
-  folders that pick up new files; put build settings in `App/Configs/*.xcconfig`, not
-  the project; the app target links one package product, `AppModules`, which lists
-  every module `MainApp` imports
-- add the package with Xcode's "Add Local…": Xcode builds that reference with
-  `-suppress-warnings`, which breaks the build; `App/<App>.xcodeproj` references the
-  repository root as a folder
-- add Tuist or XcodeGen
-- ship or test against `swift build` output; only `make app` and `make release` produce
-  a valid `.app`
-- use `ObservableObject`, `@Published`, `NavigationView` or `foregroundColor(_:)`
-  (`make lint` rejects them)
-- add SwiftLint or SwiftFormat beside `swift format`, a DI container or a networking
-  library
-- skip the git hooks (`--no-verify`, `LEFTHOOK=0`); fix what they report instead
-- commit certificates, `.p12`/`.p8` files or the Sparkle private key
-- edit `version.txt`, `.release-please-manifest.json` or `CHANGELOG.md` by hand;
-  release-please owns them
+- Don't add build settings to `project.pbxproj`, because they belong in `App/Configs/*.xcconfig` (lint fails).
+- Don't make a package target depend on a Live target, because only `MainApp` builds live services (lint fails).
+- Don't delete, loosen or skip a test to turn it green, because the test is the spec; fix the code.
+- Don't write `@unchecked Sendable` or `nonisolated(unsafe)`, because they hide the races Swift 6 catches.
+- Don't silence a warning, because warnings are errors in the package and the app; fix it.
+- Don't add a dependency, DI container, SwiftLint, Tuist or XcodeGen, because Sparkle is the one exception.
+- Don't push, merge, tag or release without the user's go-ahead, because others see it at once.
+- Don't skip the git hooks (`--no-verify`, `LEFTHOOK=0`), because CI runs the same checks; fix what they report.
+- Don't commit certificates, `.p12`/`.p8` files or the Sparkle private key, because the repository may be public.
+- Don't edit `version.txt`, `.release-please-manifest.json` or `CHANGELOG.md`, because release-please owns them.
 
-## Add a feature
+## Before editing, read
 
-1. Add `Sources/Features/<Name>/` with `<Name>View.swift` and `<Name>Model.swift`;
-   `Features/Notes/` is the pattern. A new screen of an existing area goes in that
-   feature's folder, not a new target.
-2. Declare it in `Package.swift`: a `<Name>Feature` target with
-   `path: "Sources/Features/<Name>"`, `resources: [.process("Resources")]` if it has
-   strings and `swiftSettings: ui`; a `<Name>FeatureTests` test target at
-   `Tests/Features/<Name>Tests` that depends on the feature, the Cores it uses and
-   `RenderSupport`, as `NotesFeatureTests` does; and `<Name>Feature` in `AppRoot`'s
-   dependencies. `make feature NAME=<Name>` creates the feature's files, adds its test
-   target to the `<App>` scheme's Test action and prints these blocks; `make test` runs
-   the tests either way, and `make lint` fails while the scheme lacks a test target.
-   Without the script, add the test target in Xcode (Product → Scheme → Edit Scheme… →
-   Test → +) or copy the `NotesFeatureTests` `<TestableReference>` in
-   `App/<App>.xcodeproj/xcshareddata/xcschemes/<App>.xcscheme` and change its three
-   names.
-3. Add every user-facing string to the feature's `Resources/Localizable.xcstrings` in
-   `en` and `zh-Hans`.
-4. Work outside the process gets a service: protocol and mock in `Platform/Core/` or a
-   domain's `Core/`, live implementation in the matching `Live/`
-   ([RECIPES](docs/RECIPES.md#networking) has one).
-   `App/Application/MainApp.swift` builds the live one and the mock under
-   `UI_TESTING=1`, and passes it through `AppModel`. A new domain's two targets join
-   the `AppModules` product in `Package.swift`, which the app links; the Xcode project
-   does not change. The composition stays in `MainApp`: which updater an app gets
-   depends on its Xcode target (an App Store build carries no Sparkle), and package
-   targets cannot see a target's build settings.
-5. `AppModel` owns the feature's model; `AppScenes` shows its view.
-6. Test the model in `Tests/Features/<Name>Tests/` with mocks, and render its
-   screens. A flow worth guarding end to end gets an XCUITest in `App/UITests/`.
-7. New capability (network, files, camera…)? Add the entitlement to
-   `App/Configs/App.entitlements` and its usage description as
-   `INFOPLIST_KEY_NS…UsageDescription` in `App/Configs/App.xcconfig`.
-8. `make ci`.
+Before changing files in a directory, read its `AGENTS.md` first: tools that start at
+the root (Codex) load only this file, not the nested ones.
 
-The Notes demo is a placeholder: the `Notes` domain (`Sources/Notes`), `Features/Notes`,
-`NotesTests`, `NotesFeatureTests`, `NotesUITests`, and their lines in `Package.swift`
-(its targets and their place in `AppModules`), the `<App>` scheme's Test action,
-`AppModel`, `AppScenes` and `MainApp.swift`. Replace it with the first real feature, and
-point this file's examples (`WordCount`, `NoteError.message`, `Log.notes`,
-`NotesViewRenderTests`, `LiveNoteServiceTests`, `NotesFeatureTests`, `Features/Notes/`)
-at their counterparts in it. Recipes for launch at login, networking, menu bar apps,
-global keyboard shortcuts, AppKit bridges, crash reporting, the Keychain, SwiftData and
-the privacy manifest: [docs/RECIPES.md](docs/RECIPES.md).
+| Directory | Read | Covers |
+| --- | --- | --- |
+| `Sources/` | [Sources/AGENTS.md](Sources/AGENTS.md) | layers, where code goes, dependency direction, concurrency and DI, forbidden APIs |
+| `Tests/` | [Tests/AGENTS.md](Tests/AGENTS.md) | Swift Testing, mocks, render tests, test discipline, UI tests |
+| `App/` | [App/AGENTS.md](App/AGENTS.md) | the Xcode shell, xcconfigs and identity, `MainApp` as composition root, the icon |
+| `scripts/` | [scripts/AGENTS.md](scripts/AGENTS.md) | bash conventions, `common.sh`, BSD tools, shellcheck |
+| `.github/` | [.github/AGENTS.md](.github/AGENTS.md) | workflows, pinned actions, the Xcode version, actionlint |
 
-Skills in `.agents/skills/`: `app-icon` makes the app icon. Skills that change the build
-or the release start only when the user asks for them by name: `dmg` designs the DMG
-window, `mac-app-store` adds an App Store build, `homebrew-cask` puts the app on
-Homebrew.
+## Skills
 
-## Commits and releases
+Skills live in `.agents/skills/`; `.claude/skills/` links to each one, so link a new
+skill the same way. The last three change the build or the release: start them only
+when the user names them.
 
-Conventional Commits. PRs are squash-merged and the PR title becomes the commit on
-`main`; CI checks it. release-please turns `feat` and `fix` commits into a release PR.
-Merging it tags `vX.Y.Z` with a draft release, and the release workflow attaches the
-DMG, dSYM and appcast, then publishes it. Details: [docs/RELEASING.md](docs/RELEASING.md).
+| Skill | Use it to |
+| --- | --- |
+| [app-icon](.agents/skills/app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
+| [dmg](.agents/skills/dmg/SKILL.md) | design the DMG window |
+| [mac-app-store](.agents/skills/mac-app-store/SKILL.md) | add a Mac App Store build |
+| [homebrew-cask](.agents/skills/homebrew-cask/SKILL.md) | publish the app as a Homebrew cask |
+
+## Docs
+
+| File | What it covers | Reader |
+| --- | --- | --- |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | why the app is layered this way | people; agents when needed |
+| [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) | pinned versions, upgrades, mcpbridge, the CI runner | people and agents |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | the daily loop, editor setup, commands | people |
+| [docs/RELEASING.md](docs/RELEASING.md) | running a release, recovery, crash symbolication | people |
+| [docs/RECIPES.md](docs/RECIPES.md) | launch at login, networking, menu bar, shortcuts, SwiftData… | agents |
+| [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) | commit and PR titles, the PR flow | people and agents |
+
+## Commits
+
+Conventional Commits; the squash-merged PR title becomes the commit on `main`. One PR
+does one thing and ends with `make ci` green. Details:
+[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md).
