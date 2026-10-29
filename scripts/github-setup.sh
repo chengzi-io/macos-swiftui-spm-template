@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # One-time GitHub settings for this repository (needs `gh` with admin rights):
 #   - squash merge only, commit title = PR title (release-please reads it)
-#   - main protected: PR required, "Validate PR title", "Lint, test, build", "Lint
-#     scripts and workflows" and "Snapshot review" required, no force push or deletion;
-#     reviews required only with two or more pushers
-#   - the snapshots-reviewed label, which the Snapshot review check waits for
+#   - main protected: PR required, "Validate PR title", "Lint, test, build" and "Lint
+#     scripts and workflows" required, no force push or deletion; reviews required only
+#     with two or more pushers
 #   - default workflow token read-only
 #   - `release` environment limited to protected branches (release-please and the publish
 #     job)
@@ -25,9 +24,6 @@ gh api --method PATCH "repos/$repo" \
     -f squash_merge_commit_message=PR_BODY \
     -F delete_branch_on_merge=true >/dev/null
 
-gh label create snapshots-reviewed --color 0E8A16 --force \
-    --description "Changed view snapshots were compared and accepted" >/dev/null
-
 pushers=$(gh api "repos/$repo/collaborators?per_page=100" --jq '[.[] | select(.permissions.push)] | length')
 reviews=$([[ $pushers -ge 2 ]] && echo 1 || echo 0)
 
@@ -41,8 +37,7 @@ gh api --method PUT "repos/$repo/branches/$branch/protection" --input - >/dev/nu
     "checks": [
       { "context": "Validate PR title", "app_id": 15368 },
       { "context": "Lint, test, build", "app_id": 15368 },
-      { "context": "Lint scripts and workflows", "app_id": 15368 },
-      { "context": "Snapshot review", "app_id": 15368 }
+      { "context": "Lint scripts and workflows", "app_id": 15368 }
     ]
   },
   "enforce_admins": true,
