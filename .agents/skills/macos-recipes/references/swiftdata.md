@@ -5,7 +5,7 @@ store would give that up. So SwiftData is the one store without a service: a vie
 with `@Query`, the feature's model writes through a `ModelContext`, and tests use an
 in-memory store in place of a mock. The model types belong to a domain, so they go in
 its Core, which imports SwiftData. A `Library` domain that keeps bookmarks, in
-`Sources/Library/Core/Bookmark/`:
+`Sources/Domains/Library/Bookmark/`:
 
 ```swift
 import Foundation

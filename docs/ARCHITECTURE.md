@@ -28,7 +28,7 @@ flowchart LR
 | Feature | an area the user works in: screens and their model | domain Cores, Platform, DesignSystem |
 | Domain Core | protocols for what is outside the process, value types, pure logic, mocks | other Cores, kits |
 | Domain Live | the real implementations of a Core's protocols | its own Core, other Cores, kits; never another Live |
-| Platform | what any Mac app needs: updates, launch at login, notifications | split into Core and Live like a domain |
+| Platform | the domain every Mac app has: updates, launch at login, notifications | nothing of the app |
 | DesignSystem | spacing, radii, fonts, colors, shared components; knows no domain | nothing of the app |
 | Kit | a wrapper of a C or private interface that knows nothing of the app | nothing of the app |
 | AppRoot | the root model and the scenes | features, Cores |
@@ -109,7 +109,7 @@ flowchart TB
 | Reading fans through SMC | `SMCKit`, used by `MonitorLive` | a kit knows nothing of the app |
 | A widget | another thin target in `App/` linking `Monitor` and the Live it needs | it cannot use features or `AppRoot` |
 
-Adding memory touches `Monitor/Core/Memory/`, `Monitor/Live/Memory/` and a panel, plus
+Adding memory touches `Domains/Monitor/Memory/`, `Domains/MonitorLive/Memory/` and a panel, plus
 `Sampler` and `MonitorModel`. `Package.swift`, the Xcode project and `AppModel` stay
 unchanged.
 

@@ -4,7 +4,7 @@
 changes system state, so it is a service. The user can switch the item off in System
 Settings > General > Login Items; the status then reads `requiresApproval`, and only
 System Settings can switch it back on. The protocol, its status and its mock go in
-`Platform/Core/LaunchAtLogin/`:
+`Domains/Platform/LaunchAtLogin/`:
 
 ```swift
 public enum LaunchAtLoginError: Error {
@@ -46,7 +46,7 @@ public final class MockLaunchAtLoginService: LaunchAtLoginService {
 }
 ```
 
-The live one goes in `Platform/Live/LaunchAtLogin/`:
+The live one goes in `Domains/PlatformLive/LaunchAtLogin/`:
 
 ```swift
 import Platform
