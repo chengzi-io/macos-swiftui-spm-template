@@ -1,6 +1,9 @@
 # macOS SwiftUI app template, built for coding agents
 
 [![CI](https://github.com/chengzi-io/macos-swiftui-spm-template/actions/workflows/ci.yml/badge.svg)](https://github.com/chengzi-io/macos-swiftui-spm-template/actions/workflows/ci.yml)
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-000000?logo=apple)
+![Swift 6.2](https://img.shields.io/badge/Swift-6.2-F05138?logo=swift&logoColor=white)
+![Xcode 26.2](https://img.shields.io/badge/Xcode-26.2-147EFB?logo=xcode&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 Ship a native macOS app with the boring parts done and the structure enforced: `swift
@@ -25,17 +28,6 @@ flowchart TB
 One rule holds it together: a feature never imports a Live target — the build rejects
 it — so every test and preview runs on mocks, and `swift test` builds no app, no Xcode.
 Why each layer exists: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-## The daily loop
-
-```mermaid
-flowchart LR
-    you["you or your agent"] --> test["swift test — seconds"]
-    test --> ci["make ci — the definition of done"]
-    ci --> tag["tag"]
-    tag --> ship["make release: sign, notarize, DMG, appcast"]
-    ship --> user["Sparkle auto-updates your users"]
-```
 
 ## For / not for
 
