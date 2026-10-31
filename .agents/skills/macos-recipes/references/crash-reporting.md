@@ -5,7 +5,7 @@ Developer ID apps get no crash reports from Apple; they stay in
 
 - **Sentry**: add `https://github.com/getsentry/sentry-cocoa` to
   `Package.swift` with an `exact:` version as a dependency of
-  `PlatformLive` (create it beside `Platform/Core` if the app has none), start it from a
+  `PlatformLive` (create it beside `Domains/Platform/` if the app has none), start it from a
   function there that
   `AppDelegate.applicationDidFinishLaunching` calls, and upload
   `dist/*.dSYM.zip` with `sentry-cli debug-files upload` in the publish job. Declare

@@ -9,12 +9,24 @@ source "$(dirname "$0")/common.sh"
 
 # All of App/: an extension's target gets its own folder there.
 swift_paths=(App Sources Tests)
-# Platform and each domain: Core/ holds protocols, types, logic and mocks, Live/ the live
-# implementations.
-core_paths=(Sources/*/Core)
-live_paths=(Sources/*/Live)
-# Everything but Live/: the code that takes the time from an injected Clock.
-non_live_paths=(App Tests Sources/AppRoot Sources/Features "${core_paths[@]}")
+# The manifest itself says where every target lives, so the checks below read it instead
+# of guessing from directory shapes.
+package=$(swift package dump-package)
+# Domains under Sources/Domains/: the <Name> target holds protocols, types, logic and
+# mocks, <Name>Live the live implementations. The target's name picks its side, so a
+# renamed or misplaced folder cannot dodge a rule.
+core_paths=()
+live_paths=()
+while read -r name path; do
+    case $name in
+        *Live) live_paths+=("$path") ;;
+        *) core_paths+=("$path") ;;
+    esac
+done < <(jq -r '.targets[]
+    | select(.type == "regular" and ((.path // "") | startswith("Sources/Domains/")))
+    | "\(.name) \(.path)"' <<<"$package")
+# Everything but the Live targets: the code that takes the time from an injected Clock.
+non_live_paths=(App Tests Sources/AppRoot Sources/Features ${core_paths[@]+"${core_paths[@]}"})
 test_paths=(Tests App/UITests)
 # An import, with any attributes or access level before it (@preconcurrency, public), and
 # the kind of a single-symbol import (import struct SwiftUI.Color).
@@ -29,8 +41,6 @@ check() {
     local message=$1 pattern=$2 path hits paths=()
     shift 2
     for path in "$@"; do
-        # A glob left as written matched nothing: no domain has that layer yet.
-        [[ $path != *'*'* ]] || continue
         [[ -d $path ]] || die "lint-rules.sh: no directory $path"
         paths+=("$path")
     done
@@ -61,9 +71,9 @@ check "use NavigationStack or NavigationSplitView, not NavigationView" \
 check "use foregroundStyle(_:), not foregroundColor(_:)" \
     '\.foregroundColor\(' "${swift_paths[@]}"
 check "Core and Live hold no views; UI belongs in a feature" \
-    "${import}SwiftUI\\b" "${core_paths[@]}" "${live_paths[@]}"
+    "${import}SwiftUI\\b" ${core_paths[@]+"${core_paths[@]}"} ${live_paths[@]+"${live_paths[@]}"}
 check "Core holds protocols, types, logic and mocks; system frameworks belong in Live" \
-    "${import}(?:AppKit|IOKit|Network|Sparkle)\\b" "${core_paths[@]}"
+    "${import}(?:AppKit|IOKit|Network|Sparkle)\\b" ${core_paths[@]+"${core_paths[@]}"}
 check "fix the isolation instead of silencing the compiler: an actor, a Sendable value, or state behind OSAllocatedUnfairLock" \
     '@unchecked\s+Sendable\b|nonisolated\(unsafe\)' "${swift_paths[@]}"
 check "pass models through initializers, not the environment: a missing argument fails the build, a missing environment object crashes at run time" \
@@ -78,8 +88,6 @@ check "log with the module's Logger (Log.swift), not print: print reaches no log
     '(?<![.\w])(?:print|debugPrint)\(' "${swift_paths[@]}"
 check "handle or throw the error instead of try!; in a test, use try #require or let the test throw" \
     '\btry!' "${swift_paths[@]}"
-
-package=$(swift package dump-package)
 
 # Which targets may depend on which (Sources/AGENTS.md). Test targets depend on what they test.
 while read -r target dependency; do

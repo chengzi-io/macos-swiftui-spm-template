@@ -7,7 +7,7 @@ Swift Testing unit tests and render tests for the package. Supplements the root
 
 | Path | Tests |
 |---|---|
-| `Tests/<Domain>Tests/` | a domain's Core logic, and its Live services that have logic of their own |
+| `Tests/Domains/<Domain>Tests/` | a domain's Core logic, and its Live services that have logic of their own |
 | `Tests/Features/<Name>Tests/` | target `<Name>FeatureTests`: the feature's models and render tests |
 | `Tests/RenderSupport/` | not tests: `render` draws views to PNG for the render tests |
 | `App/UITests/` | XCUITest for a few critical flows only |

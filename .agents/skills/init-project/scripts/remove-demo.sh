@@ -18,7 +18,7 @@ scheme=$XCODE_PROJECT/xcshareddata/xcschemes/$APP_TARGET.xcscheme
 [[ -f $scheme ]] || die "no $scheme"
 
 log "1/4 the demo's files"
-for path in Sources/Notes Sources/Features/Notes Tests/NotesTests Tests/Features/NotesTests App/UITests/NotesUITests.swift; do
+for path in Sources/Domains/Notes Sources/Domains/NotesLive Sources/Features/Notes Tests/Domains/NotesTests Tests/Features/NotesTests App/UITests/NotesUITests.swift; do
     if [[ -e $path ]]; then
         run "remove $path" rm -rf "$path"
     else

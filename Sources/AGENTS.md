@@ -10,23 +10,24 @@ this way: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 |---|---|---|
 | `AppRoot/` | `AppRoot` | `AppModel` (root of the model tree), `AppScenes` (windows, commands, Settings) |
 | `Features/<Name>/` | `<Name>Feature` | one area the user works in: its screens, `<Name>Model`, logic only it uses, `Resources/Localizable.xcstrings` |
-| `Platform/Core/<Name>/` | `Platform` | what any Mac app needs from the system: a protocol per outside thing, its types, its error enum, `Mock<Name>Service` |
-| `Platform/Live/<Name>/` | `PlatformLive` | `Live<Name>Service`: system APIs, network, files, Sparkle |
-| `<Domain>/Core/<Name>/` | `<Domain>` | what this app is about: protocols, value types, pure logic, shared models, mocks |
-| `<Domain>/Live/<Name>/` | `<Domain>Live` | the domain's live services; none when nothing is outside the process |
+| `Domains/<Name>/` | `<Name>` | what this app is about: protocols, value types, pure logic, shared models, mocks |
+| `Domains/<Name>Live/` | `<Name>Live` | the domain's live services; none when nothing is outside the process |
+| `Domains/Platform/` | `Platform` | the domain every Mac app has: a protocol per outside thing, its types, its error enum, `Mock<Name>Service`; it depends on no other domain |
+| `Domains/PlatformLive/` | `PlatformLive` | `Live<Name>Service`: system APIs, network, files, Sparkle |
 
-- Create a folder the first time something needs it: a new domain (`Monitor`, `Sync`), `DesignSystem/` (tokens and shared components, no domain), `Kits/<Name>/` (code that knows nothing of this app).
+- Create a folder the first time something needs it: a new domain in `Domains/` (`Monitor`, `Sync`), `DesignSystem/` (tokens and shared components, no domain), `Kits/<Name>/` (code that knows nothing of this app).
 - A feature is an area, not a screen: screens that share data and change together share a target, a folder each.
 - A domain groups capabilities that change together, not one per service. Every new library target is declared in `Package.swift`; a domain's two targets join the `AppModules` product.
+- A folder under `Domains/` carries its target's name, files directly in it; a service gets a subfolder when the domain grows a second one.
 - Do not name a module after a SwiftUI type (`Settings`, `App`): it breaks `Settings.SomeType` lookups. Features end in `Feature`.
 
 ## Dependencies
 
 | Target | May depend on |
 |---|---|
-| `AppRoot` | `<Name>Feature`, `<Domain>`, `Platform` |
-| `<Name>Feature` | `<Domain>`, `Platform`, `DesignSystem`, `Kits` |
-| `<Domain>` | another `<Domain>` (no cycles), `Platform`, `Kits` |
+| `AppRoot` | `<Name>Feature`, `<Domain>` |
+| `<Name>Feature` | `<Domain>`, `DesignSystem`, `Kits` |
+| `<Domain>` | another `<Domain>` (no cycles), `Kits` |
 | `…Live` | its Core, other Cores, `Kits`; never another Live |
 | `DesignSystem` | `Kits` |
 

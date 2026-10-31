@@ -3,7 +3,7 @@
 `URLSession` with async/await and `Codable`; no networking library. The sandbox already
 grants `com.apple.security.network.client` (Sparkle needs it). The protocol, the types
 it returns, its error and its mock go in the Core of the domain that uses them; release
-notes are about the app itself, so `Platform/Core/ReleaseNotes/`:
+notes are about the app itself, so `Domains/Platform/ReleaseNotes/`:
 
 ```swift
 public struct ReleaseNotes: Decodable, Sendable {
@@ -31,7 +31,7 @@ public struct MockReleaseNotesService: ReleaseNotesService {
 }
 ```
 
-The request goes in `Platform/Live/ReleaseNotes/`:
+The request goes in `Domains/PlatformLive/ReleaseNotes/`:
 
 ```swift
 import Foundation

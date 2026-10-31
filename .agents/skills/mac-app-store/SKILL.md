@@ -28,7 +28,7 @@ It is written for apps made from macos-swiftui-spm-template, once its init has r
   root (`Package.swift`, `Sources/`); the `<App>` target links one of its products,
   `AppModules`, which lists every module `App/Application/` imports.
 - Updates go through an `UpdaterService` protocol in a Core target
-  (`grep -rln 'protocol UpdaterService' Sources` finds it; `Sources/Platform/Core/` in
+  (`grep -rln 'protocol UpdaterService' Sources` finds it; `Sources/Domains/Platform/` in
   the template), and the one file that imports Sparkle implements it.
   `App/Application/MainApp.swift` builds the updater (a mock under `UI_TESTING=1`), and
   the app hands it down from there to every view that shows an update control.
@@ -99,8 +99,8 @@ Then do step 2, and 3a or 3b.
 
 1. Move Sparkle into its own target, so the App Store build can still link the other
    live services. `grep -rln '^import Sparkle' Sources` names the file that wraps it;
-   `git mv` it into a `Sparkle/` folder beside the `Live/` folder it left
-   (`Sources/Platform/Sparkle/` in the template). In `Package.swift`, add the target
+   `git mv` it into a `SparkleUpdater/` folder beside the `PlatformLive/` folder it
+   left (`Sources/Domains/SparkleUpdater/` in the template). In `Package.swift`, add the target
    (its dependency is the Core target that declares `UpdaterService`), take the Sparkle
    dependency off the target the file left, add `SparkleUpdater` to the `AppModules`
    product, and add the product the AppStore target links, `AppModules` without
@@ -110,7 +110,7 @@ Then do step 2, and 3a or 3b.
            .target(
                name: "SparkleUpdater",
                dependencies: ["Platform", .product(name: "Sparkle", package: "Sparkle")],
-               path: "Sources/Platform/Sparkle",
+               path: "Sources/Domains/SparkleUpdater",
                swiftSettings: common
            ),
    ```
@@ -123,11 +123,11 @@ Then do step 2, and 3a or 3b.
    A target needs sources: one left without any goes, with its directory, its place in
    both products and every dependency on it, imports included. In the template
    `PlatformLive` holds nothing else, so it goes and `MainApp` imports `SparkleUpdater`
-   in its place. Every check in `scripts/lint-rules.sh` whose paths include the folder
-   the file left covers the new folder too, in its paths and its message: its
-   `Sources/*/Live` glob does not match `Sparkle/`, so
-   `live_paths=(Sources/*/Live Sources/Platform/Sparkle)`. A check that keeps Sparkle
-   out of a folder does not.
+   in its place. `lint-rules.sh` reads every target's path from `swift package
+   dump-package`, so the new folder is covered on its own; only the Live side is picked
+   by target name, and `SparkleUpdater` has no `Live` suffix: add it to that case
+   (`*Live|SparkleUpdater)`), or the check that keeps system frameworks in Live
+   rejects its `import Sparkle`.
 
 2. The App Store build has no updater. When you are done:
 

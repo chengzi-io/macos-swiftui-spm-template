@@ -48,24 +48,24 @@ let package = Package(
         ),
         .target(
             name: "Notes",
-            path: "Sources/Notes/Core",
+            path: "Sources/Domains/Notes",
             swiftSettings: common
         ),
         .target(
             name: "NotesLive",
             dependencies: ["Notes"],
-            path: "Sources/Notes/Live",
+            path: "Sources/Domains/NotesLive",
             swiftSettings: common
         ),
         .target(
             name: "Platform",
-            path: "Sources/Platform/Core",
+            path: "Sources/Domains/Platform",
             swiftSettings: common
         ),
         .target(
             name: "PlatformLive",
             dependencies: ["Platform", .product(name: "Sparkle", package: "Sparkle")],
-            path: "Sources/Platform/Live",
+            path: "Sources/Domains/PlatformLive",
             swiftSettings: common
         ),
         // The test targets' view renderer; nothing in the app depends on it.
@@ -77,7 +77,7 @@ let package = Package(
         .testTarget(
             name: "NotesTests",
             dependencies: ["Notes", "NotesLive"],
-            path: "Tests/NotesTests",
+            path: "Tests/Domains/NotesTests",
             swiftSettings: common
         ),
         .testTarget(
