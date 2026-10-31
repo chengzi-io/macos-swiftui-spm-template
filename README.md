@@ -1,4 +1,4 @@
-# macOS SwiftUI SPM Template
+# macOS SwiftUI app template, built for coding agents
 
 [![CI](https://github.com/chengzi-io/macos-swiftui-spm-template/actions/workflows/ci.yml/badge.svg)](https://github.com/chengzi-io/macos-swiftui-spm-template/actions/workflows/ci.yml)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-000000?logo=apple)
@@ -6,25 +6,60 @@
 ![Xcode 26.2](https://img.shields.io/badge/Xcode-26.2-147EFB?logo=xcode&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-A macOS SwiftUI app template for building with coding agents: all code in a Swift
-package, a thin Xcode shell, `make` as the one entry point, and releases that ship a DMG
-and update through Sparkle.
+Ship a native macOS app with the boring parts done and the structure enforced: `swift
+test` runs unit and render tests in seconds without building the app; a new feature or
+domain needs zero Xcode project edits; a feature cannot import a live service, so tests
+and previews run on mocks; a pushed tag ships a signed, notarized DMG that updates your
+users through Sparkle. One entry point — `make` — shared by people and agents.
 
-| Light | Dark |
+## How it is organized
+
+```mermaid
+flowchart TB
+    main["App/Application/MainApp.swift — @main<br/>the only code that builds the Live services"]
+    root["Sources/AppRoot — AppModel, windows, Settings"]
+    feature["Sources/Features/&lt;Name&gt; — a user area: its screens and model"]
+    core["Sources/Domains/&lt;Name&gt; — protocol, types, mock"]
+    live["Sources/Domains/&lt;Name&gt;Live — system APIs, network, files"]
+    main --> root --> feature --> core
+    main --> live --> core
+```
+
+One rule holds it together: a feature never imports a Live target — the build rejects
+it — so every test and preview runs on mocks, and `swift test` builds no app, no Xcode.
+Why each layer exists: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## For / not for
+
+| For | Not for |
 | --- | --- |
-| ![The Notes demo in light mode](docs/assets/notes-light.png) | ![The Notes demo in dark mode](docs/assets/notes-dark.png) |
-
-The Notes demo, drawn by its render test. Init can remove it.
+| a native macOS app, small to medium, built by one person or an agent | iOS, cross-platform, or a large team with its own conventions |
 
 ## What you get
 
-| Area | In the box |
+| Mechanism | What it buys you |
 | --- | --- |
-| Code | One Swift package: features, domains split into Core and Live, `AppRoot` ([why](docs/ARCHITECTURE.md)) |
-| Rules | [AGENTS.md](AGENTS.md) for agents; Swift 6 language mode, warnings as errors, `make lint` |
-| Tests | Swift Testing, light and dark renders of every screen, XCUITests on CI |
-| Releases | release-please, Developer ID or ad-hoc signing, notarization, Sparkle 2 ([flow](docs/RELEASING.md)) |
-| App basics | App Sandbox, English and Simplified Chinese strings, privacy manifest, Icon Composer icon |
+| all code in one Swift package | `swift test` in seconds; any editor understands the project |
+| a thin Xcode shell: buildable folders, settings in `App/Configs/*.xcconfig` | a feature or domain joins without touching `project.pbxproj` |
+| `make lint` enforces the layering: services come in through `init`, mocks in tests | an agent cannot quietly wire a screen to the real system |
+| every screen rendered light and dark by a render test | CI uploads the images; a broken layout is seen, not guessed |
+| Swift 6 language mode, warnings as errors, lefthook, pinned toolchain | what compiles is clean; `make ci` is the same gate CI runs |
+| release-please plus a one-time release setup | a tag ships a notarized DMG, appcast and changelog |
+| eight skills ([`.agents/skills/`](.agents/skills)) | the agent knows the big moves: a feature, the icon, the DMG, the release setup, a Mac App Store build, a Homebrew cask |
+| string catalogs enforced per `REQUIRED_LOCALES`, sandbox, privacy manifest, Icon Composer icon | the parts every App Store review asks for, done |
+
+## Start
+
+1. Click **Use this template** on GitHub and clone your new repository.
+2. `make setup` — checks the toolchain and installs the git hooks.
+3. Open it in your agent and say **initialize the app**: it asks for the name, bundle id
+   and the rest, shows what will change, and commits. Removing the Notes demo — a small
+   worked example of a feature — is one of its options.
+4. `make ci` — green means your app builds, passes its tests and launches.
+5. Ask the agent for your first feature. `make help` lists everything; `make run` starts
+   the app.
+
+Day-to-day commands and editors: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Prerequisites
 
@@ -34,16 +69,6 @@ The Notes demo, drawn by its render test. Init can remove it.
 | `sudo xcodebuild -runFirstLaunch` | Xcode's first-launch tasks, once |
 | `brew install lefthook gh`, then `gh auth login` | git hooks; GitHub for init and pull requests |
 | A coding agent that reads `AGENTS.md` | Claude Code, Codex, Cursor or similar |
-
-## Start
-
-1. Click **Use this template** on GitHub and clone your new repository.
-2. Open it in your agent and say **initialize the app**. The agent asks for the name and
-   the rest, shows what will change, and commits it.
-3. Run `make ci`: green means your app builds, passes its tests and launches.
-4. Ask the agent to add your first feature, then to replace the Notes demo.
-
-Day-to-day commands and editors: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Contributing
 

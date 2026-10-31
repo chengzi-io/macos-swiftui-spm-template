@@ -208,7 +208,6 @@ scripts/AGENTS.md 30
 .github/AGENTS.md 30
 docs/TOOLCHAIN.md 60
 .github/CONTRIBUTING.md 50
-README.md 60
 docs/ARCHITECTURE.md 150
 docs/DEVELOPMENT.md 80
 docs/RELEASING.md 100
