@@ -89,11 +89,6 @@ apps with a Developer ID from notable repositories and updates the cask by itsel
 own tap takes any build, and every release updates it. Only you start it:
 `/homebrew-cask` in Claude Code, `$homebrew-cask` in Codex.
 
-## Mac App Store (optional)
-
-The `mac-app-store` skill adds an App Store build, beside this release or instead of
-it. Only you start it: `/mac-app-store` in Claude Code, `$mac-app-store` in Codex.
-
 ## Beta channel (optional)
 
 Not wired by default; publish betas on a separate appcast channel as

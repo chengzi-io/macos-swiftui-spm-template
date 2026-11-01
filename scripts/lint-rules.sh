@@ -238,8 +238,8 @@ while read -r doc; do
 done <<<"$docs"
 
 # A make target named in the docs is one make help lists: `make x` in text, or a line of a
-# ``` block starting with make. Skills are left out: their wiring adds targets (make release-mas)
-# to the Makefile it is copied into.
+# ``` block starting with make. Skills are left out: their wiring can add targets to the
+# Makefile it is copied into.
 targets=$(make --no-print-directory -s help | awk '/^  [a-z]/ { print $1 }')
 while read -r doc; do
     [[ -n $doc && $doc != .agents/* ]] || continue

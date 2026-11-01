@@ -45,7 +45,7 @@ Why each layer exists: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | every screen rendered light and dark by a render test | CI uploads the images; a broken layout is seen, not guessed |
 | Swift 6 language mode, warnings as errors, lefthook, pinned toolchain | what compiles is clean; `make ci` is the same gate CI runs |
 | release-please plus a one-time release setup | a tag ships a notarized DMG, appcast and changelog |
-| eight skills ([`.agents/skills/`](.agents/skills)) | the agent knows the big moves: a feature, the icon, the DMG, the release setup, a Mac App Store build, a Homebrew cask |
+| seven skills ([`.agents/skills/`](.agents/skills)) | the agent knows the big moves: a feature, the icon, the DMG, the release setup, a Homebrew cask |
 | string catalogs enforced per `REQUIRED_LOCALES`, sandbox, privacy manifest, Icon Composer icon | the parts every App Store review asks for, done |
 
 ## Start

@@ -54,7 +54,7 @@ the root (Codex) load only this file, not the nested ones.
 ## Skills
 
 Skills live in `.agents/skills/`; `.claude/skills/` links to each one, so link a new
-skill the same way. The last four change the build or the release: start them only
+skill the same way. The last three change the build or the release: start them only
 when the user names them.
 
 | Skill | Use it to |
@@ -64,7 +64,6 @@ when the user names them.
 | [app-icon](.agents/skills/app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
 | [dmg](.agents/skills/dmg/SKILL.md) | design the DMG window |
 | [release-setup](.agents/skills/release-setup/SKILL.md) | do the one-time release setup: repository settings, release-please's App, the Sparkle key, Developer ID |
-| [mac-app-store](.agents/skills/mac-app-store/SKILL.md) | add a Mac App Store build |
 | [homebrew-cask](.agents/skills/homebrew-cask/SKILL.md) | publish the app as a Homebrew cask |
 
 ## Docs
