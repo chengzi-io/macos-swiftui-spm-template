@@ -212,6 +212,7 @@ AGENTS.md 100
 .agents/skills/setup-project/SKILL.md 150
 # template-only:end
 .agents/skills/add-feature/SKILL.md 150
+.agents/skills/next-step/SKILL.md 150
 .agents/skills/add-capability/SKILL.md 150
 .agents/skills/design-app-icon/SKILL.md 150
 .agents/skills/design-dmg-window/SKILL.md 150

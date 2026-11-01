@@ -77,7 +77,8 @@ as skipped until release setup is done.
 
 ## Next
 
-`make status` says where the project stands.
+Tell the user to say **next step** whenever they want to go on: the `next-step` skill
+reads `make status`, says what comes next and runs it once they agree.
 
 ## Changes
 
