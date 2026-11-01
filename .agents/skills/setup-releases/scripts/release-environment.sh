@@ -19,7 +19,7 @@ echo "environment:  $(gh api "repos/$repo/environments/release" --jq .deployment
 
 cat >&2 <<EOF
 
-Still manual (release-setup skill, steps 2 to 4):
+Still manual (setup-releases skill, steps 3 to 5):
   - GitHub App for release-please: variable RELEASE_APP_CLIENT_ID
   - release environment secrets: RELEASE_APP_PRIVATE_KEY, SPARKLE_ED_PRIVATE_KEY, and
     with a Developer ID the DEVELOPER_ID_P12_* and NOTARY_API_* secrets

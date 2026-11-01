@@ -8,7 +8,7 @@ them. For people and agents.
 | What | Version | Set in |
 | --- | --- | --- |
 | Xcode | 26.2, the same as CI | `.xcode-version` (CI, the release workflow and `make doctor` read it) |
-| CI runner | GitHub `macos-26` | `.github/workflows/ci.yml`, `release.yml` |
+| CI runner | GitHub `macos-26` | `.github/workflows/ci.yml`, `release.yml` (added by `setup-releases`) |
 | Swift compiler | 6.2, the one in Xcode 26.2 | follows Xcode |
 | Swift language mode | 6 | `swift-tools-version: 6.2` (`Package.swift`, `App/Package.swift`); `SWIFT_VERSION = 6.0` (`App/Configs/Project.xcconfig`) |
 | Deployment target | macOS 14 | `platforms` in `Package.swift`; `MACOSX_DEPLOYMENT_TARGET` in `Project.xcconfig` |

@@ -105,28 +105,9 @@ versions: ## Print the macOS, the selected Xcode and the pinned .xcode-version
 .PHONY: ci
 ci: versions lint test assets app smoke ## The definition of done; CI runs this, then make test:ui
 
-##@ Release (CI runs `make release` after release-please creates the tag)
-
-# The steps of make release, for rerunning one by hand; make help leaves them out.
-# release-app: dist/<App>.app, universal, hardened runtime, signed.
-.PHONY: release-app
-release-app:
-	scripts/build-app.sh release
-
-# release-dmg: dist/<App>.app into a DMG, signed and notarized.
-.PHONY: release-dmg
-release-dmg:
-	scripts/package-dmg.sh
-
-# appcast: dist/appcast.xml for the DMG.
-.PHONY: appcast
-appcast:
-	scripts/appcast.sh
-
-.PHONY: release
-release: ## Full release into dist/: app, notarization, DMG, dSYM, appcast, checksums
-	scripts/release.sh
-
 .PHONY: clean
 clean: ## Remove build output
 	rm -rf .build dist
+
+# The release targets live in release.mk, which the setup-releases skill adds.
+-include release.mk

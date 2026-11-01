@@ -64,7 +64,7 @@ when the user names them.
 | [add-capability](.agents/skills/add-capability/SKILL.md) | add launch at login, networking, a menu bar item, a global shortcut, an AppKit bridge, crash reporting, Keychain, SwiftData or a privacy-manifest entry |
 | [design-app-icon](.agents/skills/design-app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
 | [design-dmg-window](.agents/skills/design-dmg-window/SKILL.md) | design the DMG window |
-| [release-setup](.agents/skills/release-setup/SKILL.md) | do the one-time release setup: the release environment, release-please's App, the Sparkle key, Developer ID |
+| [setup-releases](.agents/skills/setup-releases/SKILL.md) | install and finish the release pipeline: the wiring, the release environment, release-please's App, the Sparkle key, the first release |
 | [setup-developer-id](.agents/skills/setup-developer-id/SKILL.md) | sign and notarize releases with a Developer ID: certificate, notary key, `TEAM_ID`, five secrets |
 | [setup-homebrew](.agents/skills/setup-homebrew/SKILL.md) | publish the app as a Homebrew cask, in an own tap or `homebrew/cask` |
 
@@ -75,7 +75,7 @@ when the user names them.
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | why the app is layered this way | people; agents when needed |
 | [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) | pinned versions, upgrades, mcpbridge, the CI runner | people and agents |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | the daily loop, editor setup, commands | people |
-| [docs/RELEASING.md](docs/RELEASING.md) | running a release, recovery, crash symbolication | people |
+| [wiring/docs/RELEASING.md](.agents/skills/setup-releases/wiring/docs/RELEASING.md) | running a release, recovery, crash symbolication (installed as `docs/RELEASING.md`) | people |
 | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) | commit and PR titles, the PR flow | people and agents |
 
 ## Commits

@@ -81,12 +81,15 @@ else
     line -- dmg "the plain window (optional)" design-dmg-window
 fi
 
-if ! sparkle_key=$(plutil -extract SUPublicEDKey raw App/Configs/Info.plist 2>/dev/null); then
-    line "?" releases "App/Configs/Info.plist has no SUPublicEDKey"
-elif [[ -z $sparkle_key ]]; then
-    line -- releases "not set up (optional until you ship)" release-setup
+# setup-releases installs scripts/release-status.sh: one ok or todo line per step on stdout.
+if [[ ! -f scripts/release-status.sh ]]; then
+    line -- releases "not set up (optional until you ship)" setup-releases
+elif ! report=$(scripts/release-status.sh 2>&1); then
+    line "?" releases "scripts/release-status.sh: $(tail -n 1 <<<"$report")"
+elif todo=$(grep -m 1 '^todo' <<<"$report"); then
+    line todo releases "${todo#todo  }" setup-releases
 else
-    line "?" releases "the Sparkle key is set; release-setup's scripts/check.sh checks the rest"
+    line ok releases "set up: merging a release PR publishes it"
 fi
 
 if [[ -n ${TEAM_ID:-} ]]; then

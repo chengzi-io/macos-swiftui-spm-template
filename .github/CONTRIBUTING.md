@@ -35,9 +35,9 @@ The checks stop mistakes, not someone set on getting past them. With two or more
 `main` also needs an approving review, and nobody approves their own PR. A token that can
 push can merge, so give an agent no write access, or a GitHub account of its own.
 
-release-please turns `feat` and `fix` commits into a release PR; merging it tags
-`vX.Y.Z`, and the release workflow attaches the DMG, dSYM and appcast:
-[docs/RELEASING.md](../docs/RELEASING.md).
+Once the [setup-releases](../.agents/skills/setup-releases/SKILL.md) skill has installed
+it, release-please turns `feat` and `fix` commits into a release PR; merging it tags
+`vX.Y.Z`, and the release workflow attaches the DMG, dSYM and appcast.
 
 ## Docs style
 

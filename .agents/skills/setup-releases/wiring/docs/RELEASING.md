@@ -49,9 +49,12 @@ read `releases/latest/download/appcast.xml`.
 
 ## Setup
 
-A repository needs a one-time setup before its first release; until then the Release
-workflow skips with a notice. The `release-setup` skill walks you through it
-(`/release-setup` in Claude Code, `$release-setup` in Codex).
+The `setup-releases` skill installs this pipeline (`scripts/install.sh` in the skill) and
+walks through the release environment, the GitHub App, the Sparkle key and the signing;
+until then the Release workflow skips with a notice. The first release is **0.1.0**: it
+lands with the first `feat` or `fix` PR and doubles as the pipeline's first end-to-end
+run. The icon, the Sparkle key and the other setup commits are `chore`, so they release
+nothing.
 
 ## Recovering from a failed or bad release
 

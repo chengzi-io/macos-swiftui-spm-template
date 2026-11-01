@@ -44,6 +44,11 @@ jobs:
       - name: Dry-run setup-project
         run: .agents/skills/setup-project/scripts/init.sh --dry-run --name Example --repo example/example --codeowner @example
       # template-only:end
+      # template-only:start
+      # The release wiring of setup-releases must install into an app made from this template and build there.
+      - name: Install setup-releases on a copy
+        run: .agents/skills/setup-releases/scripts/ci-install-check.sh
+      # template-only:end
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -93,3 +98,5 @@ jobs:
       - run: git ls-files -z '*.sh' | xargs -0 shellcheck --external-sources --source-path=SCRIPTDIR --severity=warning
       # Also runs shellcheck over every workflow's run: steps.
       - run: actionlint
+      # The release workflow ships inside the setup-releases skill until it is installed.
+      - run: actionlint .agents/skills/setup-releases/wiring/.github/workflows/release.yml
