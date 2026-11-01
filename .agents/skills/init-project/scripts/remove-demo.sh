@@ -13,8 +13,8 @@ case ${1:-} in
     --dry-run) dry_run=1 ;;
     *) sed -n '2,7p' "$0" | sed -E 's/^# ?//' >&2; exit 1 ;;
 esac
-[[ $APP_TARGET != "$TEMPLATE_NAME" ]] || die "run apply.sh first: the demo goes after the rename"
-scheme=$XCODE_PROJECT/xcshareddata/xcschemes/$APP_TARGET.xcscheme
+[[ $APP_NAME != "$TEMPLATE_NAME" ]] || die "run apply.sh first: the demo goes after the rename"
+scheme=$XCODE_SCHEME
 [[ -f $scheme ]] || die "no $scheme"
 
 log "1/4 the demo's files"

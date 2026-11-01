@@ -31,7 +31,7 @@ validates every one; do not pre-judge them yourself.
 
 | Input | Flag | Default |
 | --- | --- | --- |
-| App name (`APP_NAME`; the .app, executable, package, targets, scheme) | `--name` | none: ask |
+| App name (`APP_NAME`; the .app, the executable, the Xcode project and its scheme) | `--name` | none: ask |
 | Display name (`APP_DISPLAY_NAME`) | `--display-name` | the app name |
 | Bundle id (`BUNDLE_ID`) | `--bundle-id` | `com.<gh login>.<lowercased name>` |
 | GitHub repository | `--repo` | the `origin` remote |

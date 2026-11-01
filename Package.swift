@@ -15,7 +15,7 @@ let common: [SwiftSetting] = [
 let ui = common + [.defaultIsolation(MainActor.self)]
 
 let package = Package(
-    name: "Pomelo",
+    name: "AppPackage",
     defaultLocalization: "en",
     platforms: [.macOS(.v14)],
     products: [

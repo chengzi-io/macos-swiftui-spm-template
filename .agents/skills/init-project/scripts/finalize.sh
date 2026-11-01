@@ -12,7 +12,7 @@ case ${1:-} in
     --dry-run) dry_run=1 ;;
     *) sed -n '2,6p' "$0" | sed -E 's/^# ?//' >&2; exit 1 ;;
 esac
-[[ $(identity APP_NAME) != "$TEMPLATE_NAME" && $APP_TARGET != "$TEMPLATE_NAME" ]] ||
+[[ $APP_NAME != "$TEMPLATE_NAME" ]] ||
     die "run apply.sh first: the app is still named $TEMPLATE_NAME"
 skill=.agents/skills/init-project
 link=.claude/skills/init-project

@@ -30,7 +30,7 @@ esac
 if grep -q "name: \"${name}Feature\"" Package.swift; then
     die "Package.swift already declares ${name}Feature"
 fi
-scheme="$XCODE_PROJECT/xcshareddata/xcschemes/$APP_TARGET.xcscheme"
+scheme=$XCODE_SCHEME
 [[ -f $scheme ]] || die "no $scheme"
 if grep -q "BlueprintIdentifier = \"${name}FeatureTests\"" "$scheme"; then
     die "$scheme already lists ${name}FeatureTests"

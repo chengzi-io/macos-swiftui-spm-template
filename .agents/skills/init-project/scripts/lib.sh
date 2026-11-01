@@ -83,7 +83,7 @@ preflight() {
         fail ".release-please-manifest.json is not at 0.0.0"
     [[ -z $(git tag -l 'v*') ]] || fail "release tags exist: this app has shipped"
     # A clean tree keeps the init diff reviewable and undoable. A run that stopped
-    # halfway may resume: the project or the identity already carries the new name.
+    # halfway may resume: the identity, and with it the project, carries the new name.
     if [[ -n $(git status --porcelain) ]] && ! resuming; then
         fail "the working tree has changes; commit or stash them first"
     fi
@@ -91,12 +91,12 @@ preflight() {
 
 resuming() {
     [[ -n $name && $name != "$TEMPLATE_NAME" ]] &&
-        [[ $APP_TARGET == "$name" || $(identity APP_NAME) == "$name" ]]
+        [[ $APP_NAME == "$name" ]]
 }
 
-# The names the Xcode project already uses: renaming the targets rewrites them in
-# project.pbxproj. Then module and framework names an app module would shadow.
-RESERVED="Application AppModules Configs Debug Frameworks Products
+# The app's module takes its name: no name the project, its targets or the package
+# already use, and no module or framework an app module would shadow.
+RESERVED="Application AppModules AppPackage AppUITests Configs Debug Frameworks Products
 Release Resources Sources Tests UITests App Settings Notes Scene View Window WindowGroup
 Text Image Color Button Label List Form Menu Toggle Commands SwiftUI AppKit Foundation
 Observation Combine Swift XCTest Testing OSLog Sparkle"
@@ -137,7 +137,7 @@ validate() {
         fail "--name $name: a capital letter, then letters and digits; it names the .app, the executable and the package"
     if [[ $name == "$TEMPLATE_NAME" ]]; then
         fail "--name $name is the template's name; pick the app's own"
-    elif [[ $name != "$APP_TARGET" ]]; then
+    elif [[ $name != "$APP_NAME" ]]; then
         for word in $RESERVED; do
             [[ $name != "$word" ]] || found=1
         done

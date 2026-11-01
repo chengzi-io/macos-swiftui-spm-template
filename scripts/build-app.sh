@@ -10,7 +10,7 @@ source "$(dirname "$0")/common.sh"
 xcodebuild_args=(
     -quiet
     -project "$XCODE_PROJECT"
-    -scheme "$APP_TARGET"
+    -scheme "$APP_NAME"
     -derivedDataPath "$DERIVED_DATA"
     MARKETING_VERSION="$VERSION"
     CURRENT_PROJECT_VERSION="$BUILD_NUMBER"

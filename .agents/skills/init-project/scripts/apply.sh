@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Makes the template the user's app: renames the package, Xcode project, targets and
-# scheme; writes App/Configs/Identity.xcconfig (REQUIRED_LOCALES included); LICENSE,
+# Makes the template the user's app: renames the Xcode project and its scheme; writes
+# App/Configs/Identity.xcconfig (REQUIRED_LOCALES included); LICENSE,
 # CODEOWNERS and the issue template link; README.md from wiring/README.md; removes
 # docs/assets/icon.* and docs/assets/notes-*.png. Runs check.sh's rules first and stops on any problem.
 #
@@ -36,45 +36,35 @@ else
     trap 'status=$?; rm -rf "$TMP"; ((status == 0)) || echo "error: apply stopped halfway; with the user'"'"'s consent, undo it with: git reset --hard && git clean -fd" >&2' EXIT
 fi
 year=$(date +%Y)
-old=$APP_TARGET
+old=$APP_NAME
 
-log "1/5 rename the package, Xcode project, targets and scheme to $name"
+log "1/5 rename the Xcode project and its scheme to $name"
 if [[ $old == "$name" ]]; then
-    echo "   done already: App/$name.xcodeproj" >&2
+    echo "   done already: $XCODE_PROJECT" >&2
 else
+    [[ -f $XCODE_SCHEME ]] || die "no $XCODE_SCHEME"
+    # The targets stay App and AppUITests; only the project, the scheme and the product
+    # carry the app's name.
+    edit "$XCODE_SCHEME" \
+        -e "s/BuildableName = \"$old\.app\"/BuildableName = \"$name.app\"/" \
+        -e "s/container:$old\.xcodeproj/container:$name.xcodeproj/"
+    # The one place the project names itself: a comment Xcode writes when it saves.
+    edit "$XCODE_PROJECT/project.pbxproj" -e "s/PBXProject \"$old\"/PBXProject \"$name\"/g"
     schemes=$XCODE_PROJECT/xcshareddata/xcschemes
-    [[ -f $schemes/$old.xcscheme ]] || die "no $schemes/$old.xcscheme"
-    grep -qx "    name: \"$old\"," Package.swift || die "Package.swift does not name the package $old"
-    edit "$XCODE_PROJECT/project.pbxproj" \
-        -e "s/(remoteInfo|path|name|productName) = $old(UITests)?(\.app|\.xctest)?;/\1 = $name\2\3;/" \
-        -e "s#/\* $old(UITests)?(\.app|\.xctest)? \*/#/* $name\1\2 */#g" \
-        -e "s/(PBXNativeTarget|PBXProject) \"$old(UITests)?\"/\1 \"$name\2\"/g"
-    # Every scheme points into the project; BuildableName is the product, named by APP_NAME.
-    for scheme in "$schemes"/*.xcscheme; do
-        edit "$scheme" \
-            -e "s/BlueprintName = \"$old(UITests)?\"/BlueprintName = \"$name\1\"/" \
-            -e "s/BuildableName = \"${old}UITests\.xctest\"/BuildableName = \"${name}UITests.xctest\"/" \
-            -e "s/BuildableName = \"$APP_NAME\.app\"/BuildableName = \"$name.app\"/" \
-            -e "s/container:$old\.xcodeproj/container:$name.xcodeproj/"
-    done
-    edit App/Configs/UITests.xcconfig -e "s/^TEST_TARGET_NAME = $old\$/TEST_TARGET_NAME = $name/"
-    edit Package.swift -e "s/^    name: \"$old\",\$/    name: \"$name\",/"
-    run "git mv $schemes/$old.xcscheme $schemes/$name.xcscheme" git mv "$schemes/$old.xcscheme" "$schemes/$name.xcscheme"
+    run "git mv $XCODE_SCHEME $schemes/$name.xcscheme" git mv "$XCODE_SCHEME" "$schemes/$name.xcscheme"
     run "git mv $XCODE_PROJECT App/$name.xcodeproj" git mv "$XCODE_PROJECT" "App/$name.xcodeproj"
-    if ((dry_run == 0)); then
-        grep -qx "TEST_TARGET_NAME = $name" App/Configs/UITests.xcconfig || die "TEST_TARGET_NAME in App/Configs/UITests.xcconfig is not $name"
-        grep -qx "    name: \"$name\"," Package.swift || die "Package.swift does not name the package $name"
-        grep -qF "name = $name; path = ..;" "App/$name.xcodeproj/project.pbxproj" || die "App/$name.xcodeproj does not reference the package as $name"
-        if ((skip_xcode == 0)); then
-            targets=$(xcodebuild -list -json -project "App/$name.xcodeproj" | plutil -extract project.targets json -o - -)
-            [[ $targets == *"\"$name\""* && $targets == *"\"${name}UITests\""* ]] ||
-                die "App/$name.xcodeproj has targets $targets, expected $name and ${name}UITests"
-        fi
+    # Right after the move: the scripts find the project through APP_NAME.
+    set_identity APP_NAME "$name"
+    if ((dry_run == 0 && skip_xcode == 0)); then
+        list=$(xcodebuild -list -json -project "App/$name.xcodeproj")
+        targets=$(plutil -extract project.targets json -o - - <<<"$list")
+        schemes=$(plutil -extract project.schemes json -o - - <<<"$list")
+        [[ $targets == *'"App"'* && $targets == *'"AppUITests"'* && $schemes == *"\"$name\""* ]] ||
+            die "App/$name.xcodeproj has targets $targets and schemes $schemes, expected App, AppUITests and $name"
     fi
 fi
 
 log "2/5 identity: App/Configs/Identity.xcconfig"
-set_identity APP_NAME "$name"
 set_identity APP_DISPLAY_NAME "$display_name"
 set_identity BUNDLE_ID "$bundle_id"
 set_identity COPYRIGHT "Copyright © $year $holder"
