@@ -28,17 +28,23 @@ Run `init.sh` with no arguments, from the repository root:
     .agents/skills/setup-project/scripts/init.sh
 
 It is read-only. It checks the tools and the repository (Xcode matches `.xcode-version`,
-`gh` signed in, `origin`, version `0.0.0`, a clean tree) and prints every default it can
-work out, one per line. Fix what it reports, or ask the user to, and keep that list.
+`gh` signed in unless `--codeowner` is given, `origin`, version `0.0.0`, a clean tree) and
+prints every default it can work out, one per line. Fix what it reports, or ask the user to, and keep that list.
 
 ## Ask once
 
-One message: the app's name (the `name` line has its default, or `(ask)`), and one
-sentence on what the app does (for `--about`; it is optional, and the README placeholder
-stays without it). Then list every other default for the user to change: `display-name`,
-`bundle-id`, `category`, `repo`, `codeowner`, `copyright`, `locales`. `en` is always a
-required locale, as the source language; only the listed locales are required in every
-string catalog. `TEAM_ID` is not asked: it keeps its current value.
+One message, in two parts:
+
+1. The two values marked `(permanent after the first release)`: the app's name (`name`)
+   and its bundle id (`bundle-id`, by default `io.github.<repository owner>.<name>`).
+   Show each default, or `(ask)`, and get an answer for each, even if it is "keep it":
+   a default is never a confirmation. A new name changes the default bundle id with it,
+   so confirm that one again.
+2. One sentence on what the app does (for `--about`; optional, and the README
+   placeholder stays without it), and the defaults the user can change at any time:
+   `display-name`, `category`, `repo`, `codeowner`, `copyright`, `locales`. `en` is always
+   a required locale, as the source language; only the listed locales are required in
+   every string catalog. `TEAM_ID` is not asked: it keeps its current value.
 
 ## Plan
 

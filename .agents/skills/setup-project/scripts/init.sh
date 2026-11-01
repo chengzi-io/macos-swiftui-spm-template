@@ -14,7 +14,8 @@
 #   --about "..."           one sentence on what the app does, for README.md; optional,
 #                           the placeholder line stays when it is not given
 #   --display-name "My App" APP_DISPLAY_NAME; defaults to NAME
-#   --bundle-id com.example.myapp  BUNDLE_ID; defaults to com.<gh login>.<name, lowercase>
+#   --bundle-id io.github.owner.myapp  BUNDLE_ID; defaults to io.github.<repository owner>.<name>,
+#                           lowercase
 #   --category VALUE        APP_CATEGORY; defaults to the current one. VALUE is
 #                           public.app-category. plus one of these 40:
 #     business, developer-tools, education, entertainment, finance, games, action-games,
@@ -123,8 +124,8 @@ preflight() {
     if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
         gh_login=$(gh api user --jq .login 2>/dev/null) || gh_login=""
     fi
-    if [[ -z $gh_login && (-z $codeowner || -z $bundle_id) ]]; then
-        fail "gh is not signed in (gh auth login); without it, pass --codeowner and --bundle-id"
+    if [[ -z $gh_login && -z $codeowner ]]; then
+        fail "gh is not signed in (gh auth login); without it, pass --codeowner"
     fi
     git remote get-url origin >/dev/null 2>&1 || [[ -n $repo ]] ||
         fail "no origin remote; add one or pass --repo owner/repo"
@@ -180,7 +181,7 @@ default_name() {
 
 # resolve_defaults: fills in what the user left out. Call after preflight.
 resolve_defaults() {
-    local remote lower
+    local remote
     if [[ -z $repo ]] && remote=$(git remote get-url origin 2>/dev/null); then
         repo=$(sed -E 's#^(git@[^:]+:|ssh://[^/]+/|https?://[^/]+/)##; s#\.git$##' <<<"$remote")
     fi
@@ -190,9 +191,9 @@ resolve_defaults() {
     display_name=${display_name:-$name}
     holder=${holder:-${repo%%/*}}
     [[ -n $codeowner || -z $gh_login ]] || codeowner=@$gh_login
-    if [[ -z $bundle_id && -n $gh_login && -n $name ]]; then
-        lower=$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')
-        bundle_id="com.$(printf '%s' "$gh_login" | tr '[:upper:]' '[:lower:]').$lower"
+    # The repository owner holds <owner>.github.io, so the id is theirs, whoever runs this.
+    if [[ -z $bundle_id && -n $repo && -n $name ]]; then
+        bundle_id=$(printf 'io.github.%s.%s' "${repo%%/*}" "$name" | tr '[:upper:]' '[:lower:]')
     fi
     category=${category:-$(identity APP_CATEGORY)}
     locales=${locales:-en}
@@ -258,10 +259,10 @@ print_defaults() {
     local year
     year=$(date +%Y)
     cat <<OUT
-name            ${name:-(ask)}
+name            ${name:-(ask)}  (permanent after the first release)
 about           (optional)
 display-name    ${display_name:-(ask)}
-bundle-id       ${bundle_id:-(ask)}
+bundle-id       ${bundle_id:-(ask)}  (permanent after the first release)
 category        ${category:-(ask)}
 repo            ${repo:-(ask)}
 codeowner       ${codeowner:-(ask)}

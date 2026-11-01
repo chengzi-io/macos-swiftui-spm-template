@@ -42,7 +42,7 @@ jobs:
       # template-only:start
       # Every edit setup-project makes must still find its target.
       - name: Dry-run setup-project
-        run: .agents/skills/setup-project/scripts/init.sh --dry-run --name Example --bundle-id com.example.example --repo example/example --codeowner @example
+        run: .agents/skills/setup-project/scripts/init.sh --dry-run --name Example --repo example/example --codeowner @example
       # template-only:end
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
