@@ -64,7 +64,7 @@ when the user names them.
 | [macos-recipes](.agents/skills/macos-recipes/SKILL.md) | add launch at login, networking, a menu bar item, a global shortcut, an AppKit bridge, crash reporting, Keychain, SwiftData or a privacy-manifest entry |
 | [app-icon](.agents/skills/app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
 | [dmg](.agents/skills/dmg/SKILL.md) | design the DMG window |
-| [release-setup](.agents/skills/release-setup/SKILL.md) | do the one-time release setup: repository settings, release-please's App, the Sparkle key, Developer ID |
+| [release-setup](.agents/skills/release-setup/SKILL.md) | do the one-time release setup: the release environment, release-please's App, the Sparkle key, Developer ID |
 | [homebrew-cask](.agents/skills/homebrew-cask/SKILL.md) | publish the app as a Homebrew cask |
 
 ## Docs
@@ -81,4 +81,6 @@ when the user names them.
 
 Conventional Commits; the squash-merged PR title becomes the commit on `main`. One PR
 does one thing and ends with `make ci` green. Details:
-[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md).
+[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md). With the user's go-ahead, run
+`make github-settings` again when a second person gets push access: `main` then needs
+an approving review.

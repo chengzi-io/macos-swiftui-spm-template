@@ -56,9 +56,9 @@ elif ! repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>&1); then
 elif error=$(gh api "repos/$repo/branches/main/protection" 2>&1 >/dev/null); then
     line ok repo "$repo: main is protected"
 elif [[ $error == *"Branch not protected"* ]]; then
-    line todo repo "$repo: main is not protected" "release-setup, step 1"
+    line todo repo "$repo: main is not protected" "make github-settings"
 elif [[ $error == *"Branch not found"* ]]; then
-    line todo repo "$repo: main is not pushed yet" "git push origin main, then release-setup, step 1"
+    line todo repo "$repo: main is not pushed yet" "git push origin main, then make github-settings"
 else
     line "?" repo "$repo: cannot read main's protection: ${error#gh: }"
 fi

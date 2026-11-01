@@ -274,7 +274,7 @@ print_after() {
     cat <<OUT
 After setup-project:
   1. make setup && make ci, then commit: chore: initialize $name from template
-  2. with the user's consent: git push origin main, then protect main (release-setup, step 1)
+  2. with the user's consent: git push origin main, then make github-settings
   3. build the app: add-feature (the first feature replaces Notes), macos-recipes, app-icon, dmg
   4. to ship: release-setup
   make status shows where the project stands at any time.

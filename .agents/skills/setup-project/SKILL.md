@@ -64,9 +64,10 @@ deletion are staged), then
 
 ## Push and protect, with consent
 
-Ask before `git push origin main`. Then run step 1 of the `release-setup` skill, which
-protects `main`; it needs the user's GitHub account, so only they start it. Tell the user
-the first Release run shows as skipped until release setup is done.
+Ask before `git push origin main`. Then ask before `make github-settings`, and say what it
+changes: from then on `main` only takes pull requests, admins included. It needs `gh`
+signed in with admin rights on the repository. Tell the user the first Release run shows
+as skipped until release setup is done.
 
 ## Next
 
