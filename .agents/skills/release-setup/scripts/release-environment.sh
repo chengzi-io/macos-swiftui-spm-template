@@ -8,7 +8,7 @@ source "$(dirname "$0")/../../../../scripts/common.sh"
 
 repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 gh api "repos/$repo/branches/main/protection" >/dev/null ||
-    die "main is not protected on $repo, so no branch could reach the environment; run make github-settings first"
+    die "main is not protected on $repo, so no branch could reach the environment; run make github-settings (a private repository needs GitHub Pro or a paid plan for it)"
 log "configure the release environment of $repo"
 
 gh api --method PUT "repos/$repo/environments/release" --input - >/dev/null <<'JSON'

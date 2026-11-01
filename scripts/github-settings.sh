@@ -10,9 +10,9 @@
 #   - the default workflow token read-only
 #   - Dependabot alerts and security updates
 #   - private vulnerability reporting, secret scanning and push protection
-# A private repository's plan may lack branch protection (GitHub Free), secret scanning
-# or private vulnerability reporting: each is reported as skipped, with GitHub's reason.
-# Any other failure, and any failure on a public repository, stops the script.
+# A private repository gets no private vulnerability reporting (GitHub offers it on public
+# ones only), and its plan may lack branch protection (GitHub Free) or secret scanning:
+# each is reported as skipped, with the reason. Any other failure stops the script.
 #
 #   github-settings.sh
 
@@ -80,7 +80,11 @@ JSON
 # Security updates need the alerts on first.
 gh api --method PUT "repos/$repo/vulnerability-alerts" >/dev/null
 gh api --method PUT "repos/$repo/automated-security-fixes" >/dev/null
-plan_limited "private vulnerability reporting" --method PUT "repos/$repo/private-vulnerability-reporting"
+if [[ $visibility == public ]]; then
+    gh api --method PUT "repos/$repo/private-vulnerability-reporting" >/dev/null
+else
+    skipped+="private vulnerability reporting: GitHub offers it on public repositories only"$'\n'
+fi
 plan_limited "secret scanning" --method PATCH "repos/$repo" --input - <<'JSON'
 {
   "security_and_analysis": {
