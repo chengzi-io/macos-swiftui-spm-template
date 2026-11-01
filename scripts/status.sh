@@ -36,11 +36,15 @@ else
     line ok setup "Xcode $xcode, git hooks installed"
 fi
 
-if [[ -d .agents/skills/init-project ]]; then
-    line todo project "still the template" init-project
+# template-only:start
+if [[ -d .agents/skills/setup-project ]]; then
+    line todo project "still the template" setup-project
 else
-    line ok project "$APP_DISPLAY_NAME, $BUNDLE_ID"
+# template-only:end
+line ok project "$APP_DISPLAY_NAME, $BUNDLE_ID"
+# template-only:start
 fi
+# template-only:end
 
 if ! command -v gh >/dev/null; then
     line "?" repo "gh is not installed: brew install gh"
