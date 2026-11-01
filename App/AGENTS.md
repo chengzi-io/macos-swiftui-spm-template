@@ -5,7 +5,7 @@ Supplements the root [AGENTS.md](../AGENTS.md).
 
 | Path | Holds |
 |---|---|
-| `<App>.xcodeproj` | targets `<App>` and `<App>UITests`; links one package product, `AppModules` |
+| `<App>.xcodeproj` | scheme `<App>`; targets `App` and `AppUITests`, whatever the app's name; links one package product, `AppModules` |
 | `Application/MainApp.swift` | `@main`, the composition root: the only code that builds Live services |
 | `Application/` | the app delegate, `Log.swift`, `Assets.xcassets`, `AppIcon.icon`, `PrivacyInfo.xcprivacy`; no views |
 | `Configs/Identity.xcconfig` | the app's identity: the only place to change it |

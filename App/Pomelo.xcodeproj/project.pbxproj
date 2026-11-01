@@ -16,20 +16,20 @@
 			containerPortal = 0A0000000000000000000001 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 0A0000000000000000000020;
-			remoteInfo = Pomelo;
+			remoteInfo = App;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0A0000000000000000000010 /* Pomelo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pomelo.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		0A0000000000000000000011 /* PomeloUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PomeloUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A0000000000000000000010 /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A0000000000000000000011 /* AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A0000000000000000000012 /* Identity.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Identity.xcconfig; sourceTree = "<group>"; };
 		0A0000000000000000000013 /* Project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
 		0A0000000000000000000014 /* App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = App.xcconfig; sourceTree = "<group>"; };
 		0A0000000000000000000015 /* UITests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = UITests.xcconfig; sourceTree = "<group>"; };
 		0A0000000000000000000016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0A0000000000000000000017 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
-		0A0000000000000000000018 /* Pomelo */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Pomelo; path = ..; sourceTree = "<group>"; };
+		0A0000000000000000000018 /* AppPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = AppPackage; path = ..; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -67,7 +67,7 @@
 		0A0000000000000000000002 = {
 			isa = PBXGroup;
 			children = (
-				0A0000000000000000000018 /* Pomelo */,
+				0A0000000000000000000018 /* AppPackage */,
 				0A0000000000000000000005 /* Application */,
 				0A0000000000000000000006 /* UITests */,
 				0A0000000000000000000004 /* Configs */,
@@ -78,8 +78,8 @@
 		0A0000000000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0A0000000000000000000010 /* Pomelo.app */,
-				0A0000000000000000000011 /* PomeloUITests.xctest */,
+				0A0000000000000000000010 /* App.app */,
+				0A0000000000000000000011 /* AppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -100,9 +100,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		0A0000000000000000000020 /* Pomelo */ = {
+		0A0000000000000000000020 /* App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0A0000000000000000000024 /* Build configuration list for PBXNativeTarget "Pomelo" */;
+			buildConfigurationList = 0A0000000000000000000024 /* Build configuration list for PBXNativeTarget "App" */;
 			buildPhases = (
 				0A0000000000000000000021 /* Sources */,
 				0A0000000000000000000022 /* Frameworks */,
@@ -115,17 +115,17 @@
 			fileSystemSynchronizedGroups = (
 				0A0000000000000000000005 /* Application */,
 			);
-			name = Pomelo;
+			name = App;
 			packageProductDependencies = (
 				A61185E003404DEF815872DD /* AppModules */,
 			);
-			productName = Pomelo;
-			productReference = 0A0000000000000000000010 /* Pomelo.app */;
+			productName = App;
+			productReference = 0A0000000000000000000010 /* App.app */;
 			productType = "com.apple.product-type.application";
 		};
-		0A0000000000000000000030 /* PomeloUITests */ = {
+		0A0000000000000000000030 /* AppUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0A0000000000000000000034 /* Build configuration list for PBXNativeTarget "PomeloUITests" */;
+			buildConfigurationList = 0A0000000000000000000034 /* Build configuration list for PBXNativeTarget "AppUITests" */;
 			buildPhases = (
 				0A0000000000000000000031 /* Sources */,
 				0A0000000000000000000032 /* Frameworks */,
@@ -139,11 +139,11 @@
 			fileSystemSynchronizedGroups = (
 				0A0000000000000000000006 /* UITests */,
 			);
-			name = PomeloUITests;
+			name = AppUITests;
 			packageProductDependencies = (
 			);
-			productName = PomeloUITests;
-			productReference = 0A0000000000000000000011 /* PomeloUITests.xctest */;
+			productName = AppUITests;
+			productReference = 0A0000000000000000000011 /* AppUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -180,8 +180,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				0A0000000000000000000020 /* Pomelo */,
-				0A0000000000000000000030 /* PomeloUITests */,
+				0A0000000000000000000020 /* App */,
+				0A0000000000000000000030 /* AppUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -223,7 +223,7 @@
 /* Begin PBXTargetDependency section */
 		0A0000000000000000000037 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 0A0000000000000000000020 /* Pomelo */;
+			target = 0A0000000000000000000020 /* App */;
 			targetProxy = 0A0000000000000000000038 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -274,7 +274,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0A0000000000000000000024 /* Build configuration list for PBXNativeTarget "Pomelo" */ = {
+		0A0000000000000000000024 /* Build configuration list for PBXNativeTarget "App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0A0000000000000000000025 /* Debug */,
@@ -283,7 +283,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0A0000000000000000000034 /* Build configuration list for PBXNativeTarget "PomeloUITests" */ = {
+		0A0000000000000000000034 /* Build configuration list for PBXNativeTarget "AppUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0A0000000000000000000035 /* Debug */,

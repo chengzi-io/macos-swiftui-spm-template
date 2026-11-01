@@ -33,14 +33,12 @@ log() {
     echo "==> $*" >&2
 }
 
-# App/<App>.xcodeproj names the app target and its scheme <App>, which carry APP_NAME.
-# Only a folder with a project.pbxproj counts: Xcode can leave its window state behind
-# in an old project path.
-projects=(App/*.xcodeproj/project.pbxproj)
-[[ ${#projects[@]} -eq 1 && -f ${projects[0]} ]] ||
-    die "expected one Xcode project in App/, found: ${projects[*]}"
-XCODE_PROJECT=${projects[0]%/project.pbxproj}
-APP_TARGET=$(basename "$XCODE_PROJECT" .xcodeproj)
+# The Xcode project and its scheme carry APP_NAME; the targets inside are always App and
+# AppUITests, so renaming the app moves the project and the scheme, not what is in them.
+XCODE_PROJECT=App/$APP_NAME.xcodeproj
+XCODE_SCHEME=$XCODE_PROJECT/xcshareddata/xcschemes/$APP_NAME.xcscheme
+[[ -f $XCODE_PROJECT/project.pbxproj ]] ||
+    die "no $XCODE_PROJECT/project.pbxproj; the project is named after APP_NAME in App/Configs/Identity.xcconfig: git mv it and its scheme to match"
 
 # Prints SUPublicEDKey from App/Configs/Info.plist, the key installed copies check
 # updates against; empty until the release-setup skill's sparkle-keys.sh writes it.

@@ -8,10 +8,11 @@ SHELL := /bin/bash
 # against the previous build's app.
 .NOTPARALLEL:
 
-# App/<App>.xcodeproj names the app target and its scheme.
-APP_TARGET := $(patsubst App/%.xcodeproj/project.pbxproj,%,$(wildcard App/*.xcodeproj/project.pbxproj))
-ifneq ($(words $(APP_TARGET)),1)
-$(error expected one Xcode project in App/, found: $(APP_TARGET))
+# The Xcode project and its scheme carry APP_NAME; the UI test target is always AppUITests.
+APP_NAME := $(shell sed -nE 's/^APP_NAME[[:space:]]*=[[:space:]]*//p' App/Configs/Identity.xcconfig)
+XCODE_PROJECT := App/$(APP_NAME).xcodeproj
+ifeq ($(wildcard $(XCODE_PROJECT)/project.pbxproj),)
+$(error no $(XCODE_PROJECT)/project.pbxproj; the project is named after APP_NAME in App/Configs/Identity.xcconfig: git mv it and its scheme to match)
 endif
 SWIFT_PATHS := Package.swift Sources Tests App
 # Fails on an import of a module the target does not declare, as Package.swift's
@@ -49,10 +50,10 @@ UI_TEST_RESULTS := .build/UITests.xcresult
 .PHONY: test\:ui
 test\:ui: ## Run the UI tests; they take over the mouse and keyboard while they run
 	rm -rf $(UI_TEST_RESULTS)
-	xcodebuild test -quiet -project App/$(APP_TARGET).xcodeproj -scheme $(APP_TARGET) \
+	xcodebuild test -quiet -project $(XCODE_PROJECT) -scheme $(APP_NAME) \
 		-derivedDataPath .build/xcode -destination "platform=macOS,arch=$$(uname -m)" \
 		-resultBundlePath $(UI_TEST_RESULTS) \
-		-only-testing:$(APP_TARGET)UITests
+		-only-testing:AppUITests
 
 .PHONY: fmt
 fmt: ## Format Swift sources in place
