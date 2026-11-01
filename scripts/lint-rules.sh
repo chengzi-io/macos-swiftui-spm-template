@@ -215,6 +215,8 @@ AGENTS.md 100
 .agents/skills/design-app-icon/SKILL.md 150
 .agents/skills/design-dmg-window/SKILL.md 150
 .agents/skills/release-setup/SKILL.md 150
+.agents/skills/setup-developer-id/SKILL.md 150
+.agents/skills/setup-homebrew/SKILL.md 150
 Sources/AGENTS.md 80
 Tests/AGENTS.md 50
 App/AGENTS.md 40

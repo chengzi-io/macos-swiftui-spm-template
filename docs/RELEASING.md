@@ -84,10 +84,10 @@ atos -o <App>.app.dSYM/Contents/Resources/DWARF/<App> -arch arm64 -l <load addre
 
 ## Homebrew cask (optional)
 
-The `homebrew-cask` skill puts the app on Homebrew. The official `homebrew/cask` takes
+The `setup-homebrew` skill puts the app on Homebrew. The official `homebrew/cask` takes
 apps with a Developer ID from notable repositories and updates the cask by itself; your
 own tap takes any build, and every release updates it. Only you start it:
-`/homebrew-cask` in Claude Code, `$homebrew-cask` in Codex.
+`/setup-homebrew` in Claude Code, `$setup-homebrew` in Codex.
 
 ## Beta channel (optional)
 

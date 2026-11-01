@@ -65,7 +65,8 @@ when the user names them.
 | [design-app-icon](.agents/skills/design-app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
 | [design-dmg-window](.agents/skills/design-dmg-window/SKILL.md) | design the DMG window |
 | [release-setup](.agents/skills/release-setup/SKILL.md) | do the one-time release setup: the release environment, release-please's App, the Sparkle key, Developer ID |
-| [homebrew-cask](.agents/skills/homebrew-cask/SKILL.md) | publish the app as a Homebrew cask |
+| [setup-developer-id](.agents/skills/setup-developer-id/SKILL.md) | sign and notarize releases with a Developer ID: certificate, notary key, `TEAM_ID`, five secrets |
+| [setup-homebrew](.agents/skills/setup-homebrew/SKILL.md) | publish the app as a Homebrew cask, in an own tap or `homebrew/cask` |
 
 ## Docs
 

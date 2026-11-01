@@ -92,13 +92,13 @@ fi
 if [[ -n ${TEAM_ID:-} ]]; then
     line ok signing "Developer ID, team $TEAM_ID"
 else
-    line -- signing "ad-hoc (optional)" "release-setup, Developer ID"
+    line -- signing "ad-hoc (optional)" setup-developer-id
 fi
 
 if [[ -f scripts/update-cask.sh ]]; then
     line ok homebrew "every release updates the own tap"
 else
-    line -- homebrew "not set up (optional, after the first release)" homebrew-cask
+    line -- homebrew "not set up (optional, after the first release)" setup-homebrew
 fi
 
 echo "next: ${next:-nothing required; build the app with add-feature}"
