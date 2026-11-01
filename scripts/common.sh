@@ -40,6 +40,13 @@ XCODE_SCHEME=$XCODE_PROJECT/xcshareddata/xcschemes/$APP_NAME.xcscheme
 [[ -f $XCODE_PROJECT/project.pbxproj ]] ||
     die "no $XCODE_PROJECT/project.pbxproj; the project is named after APP_NAME in App/Configs/Identity.xcconfig: git mv it and its scheme to match"
 
+# Prints one digest of every file in App/Application/AppIcon.icon and its path, so
+# status.sh can tell the template's icon from the app's own.
+icon_digest() {
+    (cd App/Application && find AppIcon.icon -type f -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256) |
+        shasum -a 256 | awk '{ print $1 }'
+}
+
 # Prints SUPublicEDKey from App/Configs/Info.plist, the key installed copies check
 # updates against; empty until the release-setup skill's sparkle-keys.sh writes it.
 sparkle_public_key() {
