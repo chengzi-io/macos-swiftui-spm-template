@@ -39,6 +39,11 @@ jobs:
           sw_vers
           DEVELOPER_DIR="$developer_dir" xcodebuild -version
       - run: make doctor
+      # template-only:start
+      # Every edit setup-project makes must still find its target.
+      - name: Dry-run setup-project
+        run: .agents/skills/setup-project/scripts/init.sh --dry-run --name Example --bundle-id com.example.example --repo example/example --codeowner @example
+      # template-only:end
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
