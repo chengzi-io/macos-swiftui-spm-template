@@ -80,29 +80,9 @@ listener.stateUpdateHandler = { state in
     default: break
     }
 }
-listener.start(queue: queue)
-ready.wait()
-let base = "http://127.0.0.1:\(listener.port!.rawValue)"
-
-// Contents: release-please's changelog commits and tags; pull requests: the release PR
-// and its labels. Nothing else, and no webhook.
-let manifest: [String: Any] = [
-    "name": "\(name)-release",
-    "url": "https://github.com/\(repo)",
-    "hook_attributes": ["url": "https://github.com/\(repo)", "active": false],
-    "redirect_url": "\(base)/created",
-    "setup_url": "\(base)/installed",
-    "public": false,
-    "default_permissions": ["contents": "write", "pull_requests": "write"],
-    "default_events": [String](),
-]
-let manifestJSON: String
-do {
-    manifestJSON = String(
-        decoding: try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys]), as: UTF8.self)
-} catch {
-    fail("cannot encode the App manifest: \(error)")
-}
+// Set once the listener is ready, before the browser makes the first request.
+var base = ""
+var manifestJSON = ""
 
 func escapeHTML(_ text: String) -> String {
     text.replacingOccurrences(of: "&", with: "&amp;").replacingOccurrences(of: "\"", with: "&quot;")
@@ -193,6 +173,30 @@ listener.newConnectionHandler = { connection in
             respond(connection, "404 Not Found", body: "")
         }
     }
+}
+
+// The connection handler must be in place before the listener starts.
+listener.start(queue: queue)
+ready.wait()
+base = "http://127.0.0.1:\(listener.port!.rawValue)"
+
+// Contents: release-please's changelog commits and tags; pull requests: the release PR
+// and its labels. Nothing else, and no webhook.
+let manifest: [String: Any] = [
+    "name": "\(name)-release",
+    "url": "https://github.com/\(repo)",
+    "hook_attributes": ["url": "https://github.com/\(repo)", "active": false],
+    "redirect_url": "\(base)/created",
+    "setup_url": "\(base)/installed",
+    "public": false,
+    "default_permissions": ["contents": "write", "pull_requests": "write"],
+    "default_events": [String](),
+]
+do {
+    manifestJSON = String(
+        decoding: try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys]), as: UTF8.self)
+} catch {
+    fail("cannot encode the App manifest: \(error)")
 }
 
 log("opening \(base)/ to create the App")
