@@ -96,7 +96,7 @@ resuming() {
 
 # The names the Xcode project already uses: renaming the targets rewrites them in
 # project.pbxproj. Then module and framework names an app module would shadow.
-RESERVED="Application AppModules AppStore AppStoreModules Configs Debug Frameworks Products
+RESERVED="Application AppModules Configs Debug Frameworks Products
 Release Resources Sources Tests UITests App Settings Notes Scene View Window WindowGroup
 Text Image Color Button Label List Form Menu Toggle Commands SwiftUI AppKit Foundation
 Observation Combine Swift XCTest Testing OSLog Sparkle"
