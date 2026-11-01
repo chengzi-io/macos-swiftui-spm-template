@@ -46,7 +46,7 @@ ok "swift format $(swift format --version)"
 command -v jq >/dev/null || die "jq missing (ships with macOS 15+); run: brew install jq"
 ok "jq"
 
-# The rest is for this Mac only: git hooks, gh for pull requests and the release-setup skill,
+# The rest is for this Mac only: git hooks, gh for pull requests and the setup-releases skill,
 # and local releases. CI needs none of it.
 if [[ -n ${CI:-} ]]; then
     exit 0

@@ -21,8 +21,8 @@ flowchart LR
    of the views you changed.
 3. `make ci` before you open a PR. It is the definition of done.
 4. Open the PR with a Conventional Commit title
-   ([CONTRIBUTING](../.github/CONTRIBUTING.md)); it is squash-merged and
-   [released](RELEASING.md).
+   ([CONTRIBUTING](../.github/CONTRIBUTING.md)); it is squash-merged, and
+   [released](../.agents/skills/setup-releases/SKILL.md) once that skill has run.
 
 CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 `gh run download <run id> -n renders`.

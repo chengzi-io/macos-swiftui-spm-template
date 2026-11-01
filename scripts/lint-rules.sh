@@ -197,7 +197,8 @@ fi
 docs=$(git ls-files --cached --others --exclude-standard -- '*.md' | sort -u)
 
 # <path> <max lines>; a file that does not exist yet is skipped. A file joins this list in
-# the change that cuts it to its budget: .agents/skills/*/SKILL.md 150.
+# the change that cuts it to its budget: .agents/skills/*/SKILL.md 150. A skill's wiring/
+# file is budgeted at its path in the skill, where it is edited.
 while read -r doc budget; do
     [[ -f $doc ]] || continue
     lines=$(wc -l <"$doc" | tr -d ' ')
@@ -211,8 +212,13 @@ AGENTS.md 100
 .agents/skills/setup-project/SKILL.md 150
 # template-only:end
 .agents/skills/add-feature/SKILL.md 150
-.agents/skills/macos-recipes/SKILL.md 150
-.agents/skills/release-setup/SKILL.md 150
+.agents/skills/next-step/SKILL.md 150
+.agents/skills/add-capability/SKILL.md 150
+.agents/skills/design-app-icon/SKILL.md 150
+.agents/skills/design-dmg-window/SKILL.md 150
+.agents/skills/setup-releases/SKILL.md 150
+.agents/skills/setup-developer-id/SKILL.md 150
+.agents/skills/setup-homebrew/SKILL.md 150
 Sources/AGENTS.md 80
 Tests/AGENTS.md 50
 App/AGENTS.md 40
@@ -222,7 +228,7 @@ docs/TOOLCHAIN.md 60
 .github/CONTRIBUTING.md 50
 docs/ARCHITECTURE.md 150
 docs/DEVELOPMENT.md 80
-docs/RELEASING.md 100
+.agents/skills/setup-releases/wiring/docs/RELEASING.md 100
 BUDGETS
 
 # Every AGENTS.md has a CLAUDE.md beside it that only loads it.
@@ -237,12 +243,19 @@ done <<<"$docs"
 
 # Relative links resolve; the #fragment is not checked. A skill copies its wiring/ files
 # elsewhere, so their links point from where they land.
+landing() {
+    case $1 in
+        .agents/skills/*/wiring/*) printf '%s\n' "${1#*/wiring/}" ;;
+        *) printf '%s\n' "$1" ;;
+    esac
+}
 while read -r doc; do
-    [[ -n $doc && $doc != .agents/skills/*/wiring/* ]] || continue
+    [[ -n $doc ]] || continue
+    landed=$(landing "$doc")
     while IFS=: read -r line target; do
         target=${target%%#*}
         [[ -n $target ]] || continue
-        if [[ ! -e "$(dirname "$doc")/$target" ]]; then
+        if [[ ! -e "$(dirname "$landed")/$target" ]]; then
             echo "error: $doc:$line links to $target, which does not exist" >&2
             status=1
         fi
@@ -250,11 +263,17 @@ while read -r doc; do
 done <<<"$docs"
 
 # A make target named in the docs is one make help lists: `make x` in text, or a line of a
-# ``` block starting with make. Skills are left out: their wiring can add targets to the
-# Makefile it is copied into.
+# ``` block starting with make. A skill's wiring/*.mk adds targets to the Makefile it lands
+# in, so a target it defines counts as listed; other skill files are left out.
 targets=$(make --no-print-directory -s help | awk '/^  [a-z]/ { print $1 }')
+for mk in .agents/skills/*/wiring/*.mk; do
+    [[ -f $mk ]] || continue
+    targets="$targets
+$(sed -nE 's/^([a-z][a-z-]*):.*/\1/p' "$mk")"
+done
 while read -r doc; do
-    [[ -n $doc && $doc != .agents/* ]] || continue
+    [[ -n $doc ]] || continue
+    [[ $doc != .agents/* || $doc == .agents/skills/*/wiring/* ]] || continue
     while IFS=: read -r line target; do
         if ! grep -qxF -- "$target" <<<"$targets"; then
             echo "error: $doc:$line names make $target, which make help does not list" >&2

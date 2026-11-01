@@ -55,17 +55,28 @@ the root (Codex) load only this file, not the nested ones.
 ## Skills
 
 Skills live in `.agents/skills/`; `.claude/skills/` links to each one, so link a new
-skill the same way. The last three change the build or the release: start them only
-when the user names them.
+skill the same way. When the user says "next step", run the `next-step` skill.
+
+<!-- template-only:start -->
+While `.agents/skills/setup-project` exists, the app is still the template: run
+[setup-project](.agents/skills/setup-project/SKILL.md) before any other skill.
+<!-- template-only:end -->
+
+`setup-*` skills set up the project's infrastructure once and change the build or the
+release: start one only when the user names it or agrees to it in `next-step`. `add-*`
+and `design-*` skills are everyday development, any time after the `make status` project
+line is `ok`.
 
 | Skill | Use it to |
 | --- | --- |
+| [next-step](.agents/skills/next-step/SKILL.md) | say where the project stands and run what comes next, with consent |
+| [setup-releases](.agents/skills/setup-releases/SKILL.md) | install and finish the release pipeline: the wiring, the release environment, release-please's App, the Sparkle key, the first release |
+| [setup-developer-id](.agents/skills/setup-developer-id/SKILL.md) | sign and notarize releases with a Developer ID: certificate, notary key, `TEAM_ID`, five secrets |
+| [setup-homebrew](.agents/skills/setup-homebrew/SKILL.md) | publish the app as a Homebrew cask, in an own tap or `homebrew/cask` |
 | [add-feature](.agents/skills/add-feature/SKILL.md) | add a screen, window or area as a `<Name>Feature` target, or a service it needs |
-| [macos-recipes](.agents/skills/macos-recipes/SKILL.md) | add launch at login, networking, a menu bar item, a global shortcut, an AppKit bridge, crash reporting, Keychain, SwiftData or a privacy-manifest entry |
-| [app-icon](.agents/skills/app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
-| [dmg](.agents/skills/dmg/SKILL.md) | design the DMG window |
-| [release-setup](.agents/skills/release-setup/SKILL.md) | do the one-time release setup: the release environment, release-please's App, the Sparkle key, Developer ID |
-| [homebrew-cask](.agents/skills/homebrew-cask/SKILL.md) | publish the app as a Homebrew cask |
+| [add-capability](.agents/skills/add-capability/SKILL.md) | add launch at login, networking, a menu bar item, a global shortcut, an AppKit bridge, crash reporting, Keychain, SwiftData or a privacy-manifest entry |
+| [design-app-icon](.agents/skills/design-app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
+| [design-dmg-window](.agents/skills/design-dmg-window/SKILL.md) | design the DMG window |
 
 ## Docs
 
@@ -74,7 +85,7 @@ when the user names them.
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | why the app is layered this way | people; agents when needed |
 | [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) | pinned versions, upgrades, mcpbridge, the CI runner | people and agents |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | the daily loop, editor setup, commands | people |
-| [docs/RELEASING.md](docs/RELEASING.md) | running a release, recovery, crash symbolication | people |
+| [wiring/docs/RELEASING.md](.agents/skills/setup-releases/wiring/docs/RELEASING.md) | running a release, recovery, crash symbolication (installed as `docs/RELEASING.md`) | people |
 | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) | commit and PR titles, the PR flow | people and agents |
 
 ## Commits

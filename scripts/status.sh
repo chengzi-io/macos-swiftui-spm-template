@@ -64,7 +64,7 @@ else
 fi
 
 if [[ $(icon_digest) == "$TEMPLATE_ICON" ]]; then
-    line todo icon "App/Application/AppIcon.icon is the template's" app-icon
+    line todo icon "App/Application/AppIcon.icon is the template's" design-app-icon
 else
     line ok icon "the app's own AppIcon.icon"
 fi
@@ -78,27 +78,30 @@ fi
 if [[ -d App/Configs/DMG ]]; then
     line ok dmg "a designed window (App/Configs/DMG)"
 else
-    line -- dmg "the plain window (optional)" dmg
+    line -- dmg "the plain window (optional)" design-dmg-window
 fi
 
-if ! sparkle_key=$(plutil -extract SUPublicEDKey raw App/Configs/Info.plist 2>/dev/null); then
-    line "?" releases "App/Configs/Info.plist has no SUPublicEDKey"
-elif [[ -z $sparkle_key ]]; then
-    line -- releases "not set up (optional until you ship)" release-setup
+# setup-releases installs scripts/release-status.sh: one ok or todo line per step on stdout.
+if [[ ! -f scripts/release-status.sh ]]; then
+    line -- releases "not set up (optional until you ship)" setup-releases
+elif ! report=$(scripts/release-status.sh 2>&1); then
+    line "?" releases "scripts/release-status.sh: $(tail -n 1 <<<"$report")"
+elif todo=$(grep -m 1 '^todo' <<<"$report"); then
+    line todo releases "${todo#todo  }" setup-releases
 else
-    line "?" releases "the Sparkle key is set; release-setup's scripts/check.sh checks the rest"
+    line ok releases "set up: merging a release PR publishes it"
 fi
 
 if [[ -n ${TEAM_ID:-} ]]; then
     line ok signing "Developer ID, team $TEAM_ID"
 else
-    line -- signing "ad-hoc (optional)" "release-setup, Developer ID"
+    line -- signing "ad-hoc (optional)" setup-developer-id
 fi
 
 if [[ -f scripts/update-cask.sh ]]; then
     line ok homebrew "every release updates the own tap"
 else
-    line -- homebrew "not set up (optional, after the first release)" homebrew-cask
+    line -- homebrew "not set up (optional, after the first release)" setup-homebrew
 fi
 
 echo "next: ${next:-nothing required; build the app with add-feature}"

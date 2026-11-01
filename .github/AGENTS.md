@@ -7,7 +7,7 @@ Rules for the workflows, templates and repository settings files. Supplements th
 |---|---|
 | `workflows/ci.yml` | every PR: `make ci` and `make test:ui` on `macos-26`; shellcheck and actionlint on Linux |
 | `workflows/pr-title.yml` | every PR: the title follows Conventional Commits, since it becomes the squash commit |
-| `workflows/release.yml` | every push to `main`: release-please, then `make release` and the upload when a tag is cut |
+| `workflows/release.yml` | added by the `setup-releases` skill: every push to `main`, release-please, then `make release` and the upload when a tag is cut |
 | `dependabot.yml` | security updates for Swift packages; weekly bumps of the pinned actions |
 
 ## Rules
@@ -17,7 +17,7 @@ Rules for the workflows, templates and repository settings files. Supplements th
 - Run the Mac jobs on `macos-26`: GitHub's `macos-15` image (15.7.9) crashes in Xcode 26 compiling `AppIcon.icon`.
 - Keep `run:` steps short: logic belongs in a `make` target or a script in `scripts/`, which runs locally too.
 - Give each workflow `permissions: contents: read` and raise it only in the job that needs more.
-- Pass secrets to a step through `env:`, never inline in `run:`; `release.yml` only reaches them through the `release` environment.
+- Pass secrets to a step through `env:`, never inline in `run:`; `release.yml` (added by `setup-releases`) only reaches them through the `release` environment.
 - Run `actionlint` after editing a workflow; CI runs version 1.7.12.
 
 ## Never
