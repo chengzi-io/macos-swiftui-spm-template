@@ -183,6 +183,13 @@ if [[ -n $hits ]]; then
     status=1
 fi
 
+# status.sh tells an app made from the template that its icon is still the template's, so
+# while the template's init skill is here, its TEMPLATE_ICON follows the icon.
+if [[ -d .agents/skills/init-project ]] && ! grep -qx "TEMPLATE_ICON=$(icon_digest)" scripts/status.sh; then
+    echo "error: TEMPLATE_ICON in scripts/status.sh is not the digest of App/Application/AppIcon.icon; set it to $(icon_digest)" >&2
+    status=1
+fi
+
 # Docs stay inside their line budgets, link only to files that exist and name only make
 # targets that make help lists. Tracked and new files alike, ignored ones (.build/) not.
 docs=$(git ls-files --cached --others --exclude-standard -- '*.md' | sort -u)

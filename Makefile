@@ -34,6 +34,10 @@ setup: doctor ## Check the toolchain and install git hooks
 doctor: ## Check Xcode, tools and signing identity
 	scripts/doctor.sh
 
+.PHONY: status
+status: ## Show where the project stands, from template to release, and what comes next
+	scripts/status.sh
+
 ##@ Develop
 
 # The view render tests write .build/renders/; clear the last run's, so a removed test
