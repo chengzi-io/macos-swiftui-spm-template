@@ -24,5 +24,5 @@ Rules for the workflows, templates and repository settings files. Supplements th
 
 | Do not | Because |
 |---|---|
-| edit repository settings, secrets or branch protection from an agent | they are the user's; ask them |
+| change repository settings, secrets or branch protection without the user's go-ahead | they are the user's; `make github-settings` changes the settings, and from then on `main` only takes PRs, admins included: tell them first |
 | check out or run PR code in a `pull_request_target` workflow (`pr-title.yml` reads only the title) | it runs with the base repository's token and secrets |

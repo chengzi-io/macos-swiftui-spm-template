@@ -1,6 +1,6 @@
 ---
 name: release-setup
-description: Walk the user through the one-time release setup of this repository - GitHub settings and branch protection, the GitHub App for release-please, the Sparkle signing key, and optionally a Developer ID - checking what is already done. Use when the user asks to set up releases, after init, on a new Mac, or to rotate a key.
+description: Walk the user through the one-time release setup of this repository - the release environment, the GitHub App for release-please, the Sparkle signing key, and optionally a Developer ID - checking what is already done. Use when the user asks to set up releases, after init, on a new Mac, or to rotate a key.
 disable-model-invocation: true
 ---
 
@@ -32,16 +32,18 @@ anywhere inside the project. `<App>` is `APP_NAME` in `App/Configs/Identity.xcco
   Developer Program); show the table in
   [references/developer-id.md](references/developer-id.md#what-users-get) if unsure.
 
-## 1. Repository settings
+## 1. Repository settings and the release environment
+
+The `make status` repo line says `ok` once `main` is protected. If it does not, run
+`make github-settings` with the user's go-ahead; what it changes for them:
+[CONTRIBUTING](../../../.github/CONTRIBUTING.md#pr-flow). Then:
 
 ```bash
-<skill>/scripts/github-setup.sh
+<skill>/scripts/release-environment.sh
 ```
 
-Squash merge only, with the PR title as the commit title; `main` requires a PR and the
-three checks below; the workflow token is read-only; the `release` environment only
-runs from protected branches; private vulnerability reporting is on. It prints the
-settings it reads back.
+It limits the `release` environment, which holds the secrets of steps 2 to 4, to
+protected branches, and prints the policy it reads back.
 
 | Required check | Your PRs | Release PR |
 | --- | --- | --- |
@@ -50,19 +52,8 @@ settings it reads back.
 | `Lint scripts and workflows` | runs | runs, passes |
 
 A skipped required check counts as passed: release-please's PRs (branch
-`release-please--*`, opened by its App as a Bot) skip the first two.
-
-Tell the user, before running it: **from now on `main` only takes pull requests,
-admins included** (`enforce_admins: true`). A direct `git push origin main` is
-rejected, so every later change, the commits of steps 3 and 4 too, goes through a
-branch and a PR.
-
-The checks stop mistakes, not someone set on getting past them: a PR can rewrite its
-own workflow, and an admin can lift the protection. A token that can push a branch can
-merge it too, so an agent holding the user's token can merge work they never saw. To
-prevent that, give the agent no write access (it commits; the user pushes and merges),
-or a GitHub account of its own and rerun the script: with two or more pushers `main`
-needs an approving review, and nobody approves their own PR.
+`release-please--*`, opened by its App as a Bot) skip the first two. The commits of
+steps 3 and 4 go through a branch and a PR too.
 
 ## 2. GitHub App for release-please
 

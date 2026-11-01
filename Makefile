@@ -38,6 +38,10 @@ doctor: ## Check Xcode, tools and signing identity
 status: ## Show where the project stands, from template to release, and what comes next
 	scripts/status.sh
 
+.PHONY: github-settings
+github-settings: ## Set the GitHub repository's merge, branch protection and security settings
+	scripts/github-settings.sh
+
 ##@ Develop
 
 # The view render tests write .build/renders/; clear the last run's, so a removed test

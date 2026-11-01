@@ -28,6 +28,13 @@ follows Conventional Commits (CI checks it): `<type>(<scope>): <subject>`.
    shellcheck and actionlint.
 3. The PR is squash-merged once CI is green.
 
+`make github-settings` enforces this flow on GitHub, admins included: a direct push to
+`main` is rejected. Run it after the first push, and again when a second person can push.
+
+The checks stop mistakes, not someone set on getting past them. With two or more pushers,
+`main` also needs an approving review, and nobody approves their own PR. A token that can
+push can merge, so give an agent no write access, or a GitHub account of its own.
+
 release-please turns `feat` and `fix` commits into a release PR; merging it tags
 `vX.Y.Z`, and the release workflow attaches the DMG, dSYM and appcast:
 [docs/RELEASING.md](../docs/RELEASING.md).

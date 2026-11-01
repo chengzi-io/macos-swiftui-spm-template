@@ -36,6 +36,7 @@ CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 | `make setup` | `make doctor`, then installs the git hooks | once per clone |
 | `make doctor` | checks Xcode, tools and the signing identity | when a build fails oddly |
 | `make status` | where the project stands, from template to release, and what comes next | any time |
+| `make github-settings` | squash merge, `main` protected, Dependabot and secret scanning on GitHub | after the first push; when a second person can push |
 | `make test` | package unit tests and renders, no app | after every change |
 | `make run` | builds and launches the debug app, logs in the terminal | to try a change |
 | `make fmt` | formats Swift sources in place | before committing |

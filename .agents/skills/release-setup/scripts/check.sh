@@ -25,10 +25,15 @@ has() {
 squash=$(gh api "repos/$repo" --jq '.allow_squash_merge and (.allow_merge_commit | not) and (.allow_rebase_merge | not)')
 protected=$(gh api "repos/$repo/branches/main/protection" --jq '.enforce_admins.enabled' 2>/dev/null || echo false)
 environment=$(gh api "repos/$repo/environments/release" --jq '.deployment_branch_policy.protected_branches' 2>/dev/null || echo false)
-if [[ $squash == true && $protected == true && $environment == true ]]; then
+if [[ $squash == true && $protected == true ]]; then
     report "1 repository settings" ok
 else
-    report "1 repository settings" todo "run $(dirname "$0")/github-setup.sh"
+    report "1 repository settings" todo "run make github-settings"
+fi
+if [[ $environment == true ]]; then
+    report "1 release environment" ok
+else
+    report "1 release environment" todo "run $(dirname "$0")/release-environment.sh"
 fi
 
 variables=$(gh variable list --json name --jq '.[].name')
