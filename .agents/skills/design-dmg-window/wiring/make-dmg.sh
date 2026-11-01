@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Creates an unsigned DMG of an .app with an /Applications link, in the Finder window
-# that App/Configs/DMG/settings.py designs: background, window size, icon spots. The dmg
-# skill installs it as scripts/make-dmg.sh in place of the plain version;
+# that App/Configs/DMG/settings.py designs: background, window size, icon spots. The
+# design-dmg-window skill installs it as scripts/make-dmg.sh in place of the plain version;
 # package-dmg.sh signs and notarizes the result.
 #   make-dmg.sh <app> <dmg>
 
@@ -10,7 +10,7 @@ source "$(dirname "$0")/common.sh"
 app=${1:?usage: make-dmg.sh <app> <dmg>}
 dmg=${2:?usage: make-dmg.sh <app> <dmg>}
 [[ -d $app ]] || die "no app at $app"
-[[ -f App/Configs/DMG/settings.py ]] || die "no App/Configs/DMG/settings.py; the dmg skill writes it"
+[[ -f App/Configs/DMG/settings.py ]] || die "no App/Configs/DMG/settings.py; the design-dmg-window skill writes it"
 mkdir -p "$(dirname "$dmg")"
 rm -f "$dmg"
 

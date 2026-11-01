@@ -64,7 +64,7 @@ else
 fi
 
 if [[ $(icon_digest) == "$TEMPLATE_ICON" ]]; then
-    line todo icon "App/Application/AppIcon.icon is the template's" app-icon
+    line todo icon "App/Application/AppIcon.icon is the template's" design-app-icon
 else
     line ok icon "the app's own AppIcon.icon"
 fi
@@ -78,7 +78,7 @@ fi
 if [[ -d App/Configs/DMG ]]; then
     line ok dmg "a designed window (App/Configs/DMG)"
 else
-    line -- dmg "the plain window (optional)" dmg
+    line -- dmg "the plain window (optional)" design-dmg-window
 fi
 
 if ! sparkle_key=$(plutil -extract SUPublicEDKey raw App/Configs/Info.plist 2>/dev/null); then

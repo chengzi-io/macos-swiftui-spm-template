@@ -61,9 +61,9 @@ when the user names them.
 | Skill | Use it to |
 | --- | --- |
 | [add-feature](.agents/skills/add-feature/SKILL.md) | add a screen, window or area as a `<Name>Feature` target, or a service it needs |
-| [macos-recipes](.agents/skills/macos-recipes/SKILL.md) | add launch at login, networking, a menu bar item, a global shortcut, an AppKit bridge, crash reporting, Keychain, SwiftData or a privacy-manifest entry |
-| [app-icon](.agents/skills/app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
-| [dmg](.agents/skills/dmg/SKILL.md) | design the DMG window |
+| [add-capability](.agents/skills/add-capability/SKILL.md) | add launch at login, networking, a menu bar item, a global shortcut, an AppKit bridge, crash reporting, Keychain, SwiftData or a privacy-manifest entry |
+| [design-app-icon](.agents/skills/design-app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
+| [design-dmg-window](.agents/skills/design-dmg-window/SKILL.md) | design the DMG window |
 | [release-setup](.agents/skills/release-setup/SKILL.md) | do the one-time release setup: the release environment, release-please's App, the Sparkle key, Developer ID |
 | [homebrew-cask](.agents/skills/homebrew-cask/SKILL.md) | publish the app as a Homebrew cask |
 

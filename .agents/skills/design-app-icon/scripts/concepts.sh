@@ -3,7 +3,7 @@
 # transparent 1024 × 1024 canvas) goes on a plain white icon, rendered at 128 pt and at
 # 32 pt side by side, three concepts to a row.
 # Runs from anywhere inside the project; paths are relative to its root.
-#   concepts.sh [dir]    default .build/app-icon/concepts → <dir>.png
+#   concepts.sh [dir]    default .build/icon/concepts → <dir>.png
 set -euo pipefail
 
 die() {
@@ -13,7 +13,7 @@ die() {
 
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$(git rev-parse --show-toplevel)"
-dir=${1:-.build/app-icon/concepts}
+dir=${1:-.build/icon/concepts}
 dir=${dir%/}
 svgs=()
 for svg in "$dir"/*.svg; do

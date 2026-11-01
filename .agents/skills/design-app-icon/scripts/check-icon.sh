@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Renders an Icon Composer .icon the ways people will see it, on two sheets:
-#   .build/app-icon/<name>-check.png  macOS 26 in all six appearances (ictool, Icon
+#   .build/icon/<name>-check.png  macOS 26 in all six appearances (ictool, Icon
 #       Composer's own renderer), 32 pt (the Finder list and menus), and this Mac's
 #       Finder icon: on macOS 14 and 15 that is the flattened image actool bakes.
-#   .build/app-icon/<name>-dock.png   this Mac's icon between installed apps, at 128 pt
+#   .build/icon/<name>-dock.png   this Mac's icon between installed apps, at 128 pt
 #       and 32 pt.
 # Fails on property names this Xcode ignores (lint-icon.swift) and on anything actool
 # rejects or warns about, as the app build does.
@@ -37,7 +37,7 @@ ictool="$(xcode-select -p)/../Applications/Icon Composer.app/Contents/Executable
 icon="$(cd "$icon" && pwd)"
 name=$(basename "$icon" .icon)
 xcrun swift "$here/lint-icon.swift" "$icon/icon.json"
-out="$PWD/.build/app-icon"
+out="$PWD/.build/icon"
 renders="$out/$name"
 rm -rf "$renders"
 mkdir -p "$renders"
@@ -65,7 +65,7 @@ plist="$preview/Contents/Info.plist"
 plutil -create xml1 "$plist"
 plutil -insert CFBundlePackageType -string APPL "$plist"
 plutil -insert CFBundleExecutable -string Preview "$plist"
-plutil -insert CFBundleIdentifier -string "app-icon.preview.$RANDOM$RANDOM" "$plist"
+plutil -insert CFBundleIdentifier -string "icon-preview.$RANDOM$RANDOM" "$plist"
 /usr/libexec/PlistBuddy -c "Merge $tmp/icon.plist" "$plist" >/dev/null
 
 # ictool renders without validating; actool above has.
