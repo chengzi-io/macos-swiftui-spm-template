@@ -77,8 +77,8 @@ as skipped until release setup is done.
 
 ## Next
 
-Tell the user to say **next step** whenever they want to go on: the `next-step` skill
-reads `make status`, says what comes next and runs it once they agree.
+Tell the user to run `make status` whenever they want to go on: the first `todo` line is
+the next step, and the last line says how to start it.
 
 ## Changes
 

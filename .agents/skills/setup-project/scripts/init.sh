@@ -274,8 +274,8 @@ print_after() {
 After setup-project:
   1. make setup && make ci, then commit: chore: initialize $name from template
   2. with the user's consent: git push origin main, then make github-settings
-  3. then say "next step": the next-step skill walks the rest (the first feature, the
-     icon, the DMG window, releases), one step at a time
+  3. `make status` lists what is left (the first feature, the icon, the DMG window,
+     releases), one step at a time
 OUT
 }
 
