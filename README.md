@@ -68,7 +68,7 @@ flowchart LR
     ship -.-> brew["setup-homebrew"]
 ```
 
-The first feature replaces the Notes demo. `make help` lists every command; `make run`
+The first feature takes the demo's place. `make help` lists every command; `make run`
 starts the app.
 
 Day-to-day commands and editors: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).

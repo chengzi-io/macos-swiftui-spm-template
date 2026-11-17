@@ -13,19 +13,18 @@ Swift Testing unit tests and render tests for the package. Supplements the root
 | `App/UITests/` | XCUITest for a few critical flows only |
 
 - Every test target is listed in the `<App>` scheme's Test action; `make lint` fails on one that is missing.
-- Examples below name the Notes demo; once it is replaced, use the first real feature.
 
 ## Write
 
 - Use Swift Testing (`@Test`, `#expect`, `try #require`), not XCTest; XCTest is only for `App/UITests/`.
-- Test models and services with the mocks from their Core, passed in through `init` (`NotesModel(service: MockNoteService(text: …))`).
+- Test models and services with the mocks from their Core, passed in through `init` (`<Name>Model(service: Mock<Name>Service(…))`).
 - Time comes from an injected `Clock`: no `Date()`, no `Task.sleep`, no waiting on the wall clock.
-- A Live service with logic of its own (a missing file read as empty) is tested against the real thing, in a temporary directory or a local stub (`LiveNoteServiceTests`). One that only forwards to a framework needs no such test.
+- A Live service with logic of its own (a missing file read as empty) is tested against the real thing, in a temporary directory or a local stub (`Live<Name>ServiceTests`). One that only forwards to a framework needs no such test.
 - `swift test` does not compile asset or string catalogs: never assert localized text or images; `make smoke` covers resources in the built `.app`.
 
 ## Render tests
 
-- Each screen in the states that tell it apart (empty, filled, error), light and dark, in English (`NotesViewRenderTests`).
+- Each screen in the states that tell it apart (empty, filled, error), light and dark, in English (`<Name>ViewRenderTests`).
 - `render` writes `.build/renders/<test file>/<test>.png`. After changing a view, run `make test` and look at its images: nothing compares them.
 - An `.alert` or a sheet has no window to draw in, so it never shows in a render.
 - CI uploads them as the `renders` artifact: `gh run download <run id> -n renders`.
@@ -41,7 +40,7 @@ Swift Testing unit tests and render tests for the package. Supplements the root
 ## Flaky tests
 
 Reproduce in a loop, find the cause, then fix it; do not retry or skip:
-`for i in {1..20}; do swift test --filter NotesModelTests || break; done`
+`for i in {1..20}; do swift test --filter <Name>ModelTests || break; done`
 
 ## UI tests
 
