@@ -45,7 +45,7 @@ area, keep it and go on: the demo is the feature. Otherwise:
 - `AppModel`, `AppScenes`, `MainApp`: every line naming Notes — the model property and its
   `init` parameter, the view, the `NoteService` and the `noteService:` argument.
 - Check: `git grep -n Notes -- '*.swift' Package.swift` names nothing,
-  `swift package dump-package | grep -c Notes` prints 0, `make test` passes.
+  `swift package dump-package` loads and lists no Notes target, `make test` passes.
 
 Until step 4 wires the new view, `AppScenes` shows
 `Color.clear.frame(minWidth: 480, minHeight: 320)`.
