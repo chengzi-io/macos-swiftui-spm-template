@@ -10,8 +10,8 @@ this way: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 |---|---|---|
 | `AppRoot/` | `AppRoot` | `AppModel` (root of the model tree), `AppScenes` (windows, commands, Settings) |
 | `Features/<Name>/` | `<Name>Feature` | one area the user works in: its screens, `<Name>Model`, logic only it uses, `Resources/Localizable.xcstrings` |
-| `Domains/<Name>/` | `<Name>` | what this app is about: protocols, value types, pure logic, shared models, mocks |
-| `Domains/<Name>Live/` | `<Name>Live` | the domain's live services; none when nothing is outside the process |
+| `Domains/<Name>/` | `<Name>` | the domain's Core, what this app is about: protocols, value types, pure logic, shared models, mocks |
+| `Domains/<Name>Live/` | `<Name>Live` | the domain's Live, its live services; none when nothing is outside the process |
 | `Domains/Platform/` | `Platform` | the domain every Mac app has: a protocol per outside thing, its types, its error enum, `Mock<Name>Service`; it depends on no other domain |
 | `Domains/PlatformLive/` | `PlatformLive` | `Live<Name>Service`: system APIs, network, files, Sparkle |
 
@@ -34,11 +34,12 @@ this way: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 - Only the app target (`App/Application/MainApp.swift`) knows the Live targets; `make lint` fails on any other target depending on one, or on a feature depending on a feature.
 - `make test` fails on an import the target does not declare (`--explicit-target-dependency-import-check`).
 - A flow that spans domains without a screen belongs to the domain that consumes the others' results, as a plain type; not to a Live, `MainApp` or a model.
+- A feature that shows another feature's screen or changes its state takes a closure through `init`, which `AppRoot` fills since it sees both; a window opens by its id (`openWindow`).
 - Sparkle is the one third-party package: pinned `exact` in `Package.swift`, used only by `PlatformLive`. Do not add another package without the user's yes.
 
 ## Concurrency and services
 
-- Features, `AppRoot` and `RenderSupport` default to MainActor (`swiftSettings: ui`); `Platform`, domains and Lives do not (`common`). Keep it that way.
+- Features, `AppRoot` and `RenderSupport` default to MainActor (`swiftSettings: ui`); `Platform`, domains and Lives do not (`common`). Keep it that way; `make lint` fails on a target with neither.
 - Mark UI-bound services and a domain's models `@MainActor`, background work `@concurrent`; a plain `nonisolated async` function runs on its caller's actor.
 - In MainActor targets `Bundle.module` is MainActor-isolated: resolve user-facing text in views or models; values decoded off the main actor need `nonisolated struct …: Codable, Sendable`.
 - Anything outside the process (system API, network, files, UserDefaults, Keychain, the clock) is a service: protocol and mock in a Core, live implementation in the matching Live, passed in through an initializer. No DI container.
@@ -50,10 +51,10 @@ this way: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 ## Write
 
 - Every view has a `#Preview` built from mocks.
-- Package resources need `bundle: .module` (`Text("Key", bundle: .module)`); without it the raw key shows and nothing fails to compile.
+- Package resources need `bundle: .module` (`Text("Key", bundle: .module)`); without it the app's bundle is searched, the raw key shows and nothing fails to compile.
 - Every user-facing string goes in its target's `Localizable.xcstrings`, translated into each locale of `REQUIRED_LOCALES` (`App/Configs/Identity.xcconfig`).
 - Errors: each service throws its own `enum …Error: Error`; the model catches once, logs, and turns it into state the view shows. No empty `catch`, no `try?` on errors that matter.
-- Logging: each module has an internal `Log` enum of `os.Logger`s (subsystem: the bundle id) with its own category; dynamic values stay private unless marked `privacy: .public`. Never log tokens or personal data.
+- Logging: a module that logs has an internal `Log` enum (`Log.swift`) of `os.Logger`s (subsystem: the bundle id) with its own category; dynamic values stay private unless marked `privacy: .public`. Never log tokens or personal data.
 - Warnings are errors. Fix them, do not silence them. `MemberImportVisibility` is on: import every module whose members a file uses.
 
 ## Forbidden (`make lint`, [scripts/lint-rules.sh](../scripts/lint-rules.sh))
@@ -67,6 +68,7 @@ this way: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 | `import AppKit`, `IOKit`, `Network`, `Sparkle` in a Core | system frameworks belong in a Live |
 | `@unchecked Sendable`, `nonisolated(unsafe)` | an actor, a `Sendable` value, or `OSAllocatedUnfairLock` |
 | `.environment(model)`, `@Environment(Model.self)` | pass the model through `init` |
+| a string literal in a control or modifier (`Button("Save")`, `.help("…")`), `Text("Save")` without `bundle:` | `Text("Save", bundle: .module)`, in a `label:` closure for a control |
 | `static let shared` | pass the service through `init` |
 | `Date()`, `Date.now` outside a Live | an injected `Clock` |
 | `print`, `debugPrint` | the module's `Log` |

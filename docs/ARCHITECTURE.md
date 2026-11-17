@@ -54,7 +54,6 @@ Features see protocols; only `MainApp` builds the live implementations.
 | --- | --- |
 | Tests and previews run against mocks | nothing touches the system, so tests are fast and repeatable |
 | A feature cannot import a Live | it does not depend on one, so `make test` fails on the import |
-| Each app target composes its own services | an App Store build picks no Sparkle updater in its own `MainApp`; a package target cannot see which target builds it |
 
 ## Where does this code go?
 

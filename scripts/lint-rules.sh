@@ -88,6 +88,11 @@ check "log with the module's Logger (Log.swift), not print: print reaches no log
     '(?<![.\w])(?:print|debugPrint)\(' "${swift_paths[@]}"
 check "handle or throw the error instead of try!; in a test, use try #require or let the test throw" \
     '\btry!' "${swift_paths[@]}"
+# A control or modifier given a string literal looks it up in the app's bundle, not in the
+# target's own catalog, so it shows the key in every language and nothing fails to compile.
+check "a string literal here never translates: pass Text(\"…\", bundle: .module), in a label: closure for a control, or Text(verbatim:) for text that is not translated" \
+    '\b(?:Button|Label|Toggle|Picker|Section|Menu|Link|NavigationLink|TextField|SecureField|DisclosureGroup|GroupBox|LabeledContent|Stepper|DatePicker|ColorPicker|ProgressView|ControlGroup|Tab|CommandMenu|Window|WindowGroup|MenuBarExtra)\(\s*"|\.(?:navigationTitle|navigationSubtitle|help|alert|confirmationDialog|badge|accessibilityLabel|accessibilityHint|accessibilityValue)\(\s*"|\b(?:Text\(|String\(localized:)\s*"(?:[^"\\]|\\.)*"\s*\)' \
+    Sources/AppRoot Sources/Features
 
 # Which targets may depend on which (Sources/AGENTS.md). Test targets depend on what they test.
 while read -r target dependency; do
@@ -104,6 +109,16 @@ while read -r target dependency; do
     esac
 done < <(jq -r '.targets[] | select(.type == "regular") | .name as $target
     | .dependencies[] | (.byName // .target // empty)[0] | "\($target) \(.)"' <<<"$package")
+
+# A target declared without swiftSettings builds with none of them: warnings pass, and its
+# async functions run on another actor than in every other target. Package.swift's common
+# treats warnings as errors and ui is common plus one setting, so that setting tells.
+while read -r target; do
+    [[ -n $target ]] || continue
+    echo "error: $target has no swiftSettings in Package.swift; give it common, or ui for a target that draws views" >&2
+    status=1
+done < <(jq -r '.targets[] | select(.type == "regular" or .type == "test")
+    | select([.settings[]? | .kind.treatAllWarnings._0] | index("error") | not) | .name' <<<"$package")
 
 # Xcode's Test action lists test bundles by hand. A package test target the app scheme does
 # not list is skipped without a word by ⌘U and xcodebuild test; SwiftPM runs it either way,
