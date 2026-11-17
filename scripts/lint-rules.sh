@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Checks what swift format and the compiler cannot: APIs agents reach for out of
 # habit, imports and target dependencies that would break the module layering, the
-# files that have to agree with Package.swift or with each other, and the docs' links.
-# Package.swift only makes a target declare what it imports, and any target can import a
-# system framework.
+# files that have to agree with Package.swift or with each other, the docs' links, and
+# the rule that nothing here reads a skill. Package.swift only makes a target declare what
+# it imports, and any target can import a system framework.
 
 source "$(dirname "$0")/common.sh"
 
@@ -253,5 +253,16 @@ while read -r doc; do
         my $start = $fence ? qr/^\s*(?:\$\s+)?|`/ : qr/`/;
         while (/(?:$start)make\s+([a-z][a-z:-]*[a-z])/g) { print "$.:$1\n" }' "$doc")
 done <<<"$docs"
+
+# The template describes itself. A skill may read the template; the template never reads a
+# skill, so a moved skill takes nothing here with it and needs nothing here to work. A
+# skill's own docs are the exception, and the .claude/ links into them; so is this file,
+# which spells the pattern out.
+if offenders=$(git ls-files --cached --others --exclude-standard -z -- ':(exclude).agents/**' ':(exclude).claude/**' ':(exclude)scripts/lint-rules.sh' |
+    xargs -0 grep -lE '\.agents/skills|\.claude/skills' 2>/dev/null); then
+    echo "error: these files reach into a skill, which the template does not read; spell out the file rather than a skill path:" >&2
+    echo "$offenders" | sed 's/^/  /' >&2
+    status=1
+fi
 
 exit $status
