@@ -6,8 +6,9 @@ description: Add a feature to this app - a new area the user works in, as a <Nam
 # Add feature
 
 Adds one `<Name>Feature` target end to end, and ends with `make ci` green.
-`scripts/scaffold.sh` writes the files and the scheme entry; the `Package.swift`
-blocks and the wiring are printed for you to paste, so they stay a reviewed edit.
+`scripts/scaffold.sh` writes the files, declares the targets in `Package.swift` through
+`swift package add-target` and lists the test target in the scheme; the wiring is printed
+for you to do, so it stays a reviewed edit.
 `<skill>` is `.agents/skills/add-feature`; its scripts run from anywhere inside the
 project. `<App>` is `APP_NAME` in `App/Configs/Identity.xcconfig`.
 
@@ -43,10 +44,11 @@ Agree on it with the user if the request does not say.
 
 ### 2. Scaffold
 
-`<skill>/scripts/scaffold.sh <Name>`. It refuses a name in use, a lowercase one and one
-whose logger would be a Swift keyword; pick another name, do not create the files by
-hand. It prints three `Package.swift` blocks and the files it wrote
-([what it makes](references/scaffold-output.md)).
+`<skill>/scripts/scaffold.sh <Name> [Core...]`, the Cores being the targets the feature's
+code uses (`Notes`, `Platform`). It refuses a name in use, a lowercase one and one whose
+logger would be a Swift keyword; pick another name, do not create the files by hand. It
+writes the files, adds both targets to `Package.swift` and the test target to the scheme,
+and prints the wiring left ([what it makes](references/scaffold-output.md)).
 
 ### 3. Replace the Notes demo (first feature only)
 
@@ -62,17 +64,15 @@ While `Sources/Features/Notes` exists, the demo goes: it is the template's, not 
 
 The new feature is wired where the demo was, in step 6.
 
-### 4. Declare it in `Package.swift`
+### 4. Check `Package.swift`
 
-Paste the blocks the scaffold printed:
+The scaffold declares it, through `swift package add-target`: `<Name>Feature` with
+`resources`, `swiftSettings: ui` and the Cores; `<Name>FeatureTests` depending on the
+feature, `RenderSupport` and those Cores; `"<Name>Feature"` in `AppRoot`. A Core the feature
+needs later joins with `swift package add-target-dependency <Core> <Name>Feature`.
 
-- the `<Name>Feature` target after the other features, with the Cores it uses in
-  `dependencies:` and `swiftSettings: ui`;
-- the `<Name>FeatureTests` test target after the other feature tests, depending on
-  the feature, the Cores its tests use and `RenderSupport`, as the scaffold
-  printed it;
-- `"<Name>Feature"` in `AppRoot`'s `dependencies`.
-
+`git diff Package.swift` shows it. `add-target` appends after the test targets, and SwiftPM
+reads no order into the list, so leave it there or move it beside the other features.
 `make lint` fails while the scheme and `Package.swift` disagree on test targets, and
 `swift test` fails on an import of a target that is not declared.
 
@@ -126,7 +126,7 @@ and its usage description as `INFOPLIST_KEY_NS…UsageDescription` in
 | --- | --- |
 | `Sources/Features/<Name>/`, `Tests/Features/<Name>Tests/` | created by the scaffold |
 | `App/<App>.xcodeproj/xcshareddata/xcschemes/<App>.xcscheme` | `<Name>FeatureTests` added to the Test action |
-| `Package.swift` | the feature and test targets, and `AppRoot`'s dependency |
+| `Package.swift` | the feature and test targets and `AppRoot`'s dependency, written by `swift package add-target` |
 | `AppRoot/AppModel.swift`, `AppRoot/AppScenes.swift` | the model and the view wired in; `remove-demo.sh` rewrites both, first feature only |
 | `App/Configs/App.entitlements`, `App/Configs/App.xcconfig` | only for a capability (step 10) |
 

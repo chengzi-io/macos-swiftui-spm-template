@@ -1,32 +1,39 @@
 #!/usr/bin/env bash
-# Creates a feature's files, its log and its render test, adds its test target to the app
-# scheme, and prints the blocks to paste into Package.swift and AppRoot. Those stay a
-# reviewed edit: they are Swift, shared by every branch, and scripts/lint-rules.sh fails
-# while the scheme and Package.swift disagree. Run from anywhere inside the project.
+# Creates a feature's files, its log and its render test, declares its targets in
+# Package.swift and its test target in the app scheme, and prints the wiring left for the
+# feature to work. The manifest edits go through `swift package add-target`, so SwiftPM
+# parses the Swift, not this script; the wiring stays a reviewed edit. Run from anywhere
+# inside the project.
 #
-#   scaffold.sh <Name>    <Name> is the area's name: Library makes LibraryFeature
+#   scaffold.sh <Name> [Core...]    <Name> is the area's name: Library makes LibraryFeature;
+#                                  each Core is a target its code uses, such as Notes
 
 # shellcheck source=../../../../scripts/common.sh
 source "$(dirname "$0")/../../../../scripts/common.sh"
 
 name=${1:-}
+cores=("${@:2}")
 logger=$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')
-[[ $# -eq 1 && -n $name ]] || die "usage: .agents/skills/add-feature/scripts/scaffold.sh <Name>, such as Library"
+[[ -n $name ]] || die "usage: .agents/skills/add-feature/scripts/scaffold.sh <Name> [Core...], such as Library Notes"
 [[ $name =~ ^[A-Z][A-Za-z0-9]*$ ]] ||
     die "<Name> is the area's name and names its types: a capital letter, then letters and digits"
 [[ $name != *Feature ]] || die "<Name> is the area's name, without Feature: ${name%Feature} makes the target $name"
 # Log.<logger> has to be an identifier.
 case $logger in
-    as | break | case | catch | class | continue | default | defer | deinit | do | else | enum \
-    | extension | fallthrough | false | fileprivate | for | func | guard | if | import | in | init \
-    | inout | internal | is | let | nil | open | operator | private | protocol | public | repeat \
-    | rethrows | return | self | static | struct | subscript | super | switch | throw | throws \
-    | true | try | typealias | var | where | while)
-        die "$name would name the logger Log.$logger, a Swift keyword; pick another name"
-        ;;
+as | break | case | catch | class | continue | default | defer | deinit | do | else | enum | \
+    extension | fallthrough | false | fileprivate | for | func | guard | if | import | in | init | \
+    inout | internal | is | let | nil | open | operator | private | protocol | public | repeat | \
+    rethrows | return | self | static | struct | subscript | super | switch | throw | throws | \
+    true | try | typealias | var | where | while)
+    die "$name would name the logger Log.$logger, a Swift keyword; pick another name"
+    ;;
 esac
 [[ ! -e Sources/Features/$name ]] || die "Sources/Features/$name already exists"
 [[ ! -e Tests/Features/${name}Tests ]] || die "Tests/Features/${name}Tests already exists"
+for core in ${cores[@]+"${cores[@]}"}; do
+    [[ $core =~ ^[A-Z][A-Za-z0-9]*$ ]] ||
+        die "a Core is a target's name, a capital letter then letters and digits: $core"
+done
 if grep -q "name: \"${name}Feature\"" Package.swift; then
     die "Package.swift already declares ${name}Feature"
 fi
@@ -37,8 +44,54 @@ if grep -q "BlueprintIdentifier = \"${name}FeatureTests\"" "$scheme"; then
 fi
 command -v xmllint >/dev/null || die "xmllint missing; it ships with macOS"
 
+# Before the targets go into the manifest: `swift package dump-package` below reads them
+# from disk, and a failure here leaves no half-written feature behind.
 log "create Sources/Features/$name and Tests/Features/${name}Tests"
 mkdir -p "Sources/Features/$name/Resources" "Tests/Features/${name}Tests"
+
+# SwiftPM writes the targets into Package.swift itself: `add-target` appends the block,
+# `add-target-dependency` the name in AppRoot's list. Parsing the manifest's Swift here is
+# the alternative, and it breaks on a nested array or a comment.
+log "Package.swift: ${name}Feature, ${name}FeatureTests and AppRoot's dependency"
+feature_deps=()
+if ((${#cores[@]} > 0)); then
+    feature_deps=(--dependencies "${cores[@]}")
+fi
+swift package add-target "${name}Feature" --type library --path "Sources/Features/$name" \
+    ${feature_deps[@]+"${feature_deps[@]}"} 1>&2
+swift package add-target "${name}FeatureTests" --type test --testing-library swift-testing \
+    --path "Tests/Features/${name}Tests" \
+    --dependencies "${name}Feature" RenderSupport ${cores[@]+"${cores[@]}"} 1>&2
+swift package add-target-dependency "${name}Feature" AppRoot 1>&2
+
+# add-target writes its stub at Sources/<Target>, taking --path for the manifest alone, so
+# what it made there goes and the directories above stay.
+for stray in "Sources/${name}Feature" "Tests/${name}FeatureTests"; do
+    [[ ! -e $stray ]] || rm -rf "$stray"
+done
+
+# add-target has no flag for a target's resources or swiftSettings, and SwiftPM has no
+# command for either: the view finds its catalog through Bundle.module, which a target has
+# only with resources, and both targets draw, so both need ui.
+add_manifest_lines() {
+    perl -0pi -e 's/(            name: "'"$1"'",\n(?:            .*\n)*?            path: "[^"]+")\n/$1,\n'"$2"'\n/' Package.swift
+}
+add_manifest_lines "${name}Feature" '            resources: [.process("Resources")],
+            swiftSettings: ui'
+add_manifest_lines "${name}FeatureTests" '            swiftSettings: ui'
+# add-target-dependency writes .target(name: "X"); every other entry is a plain name.
+perl -pi -e 's/\.target\(name: "'"${name}Feature"'"\)/"'"${name}Feature"'"/g' Package.swift
+# Multi-element arrays get no trailing comma from add-target, and lint-rules.sh would say
+# so one run later.
+swift format format --in-place Package.swift
+
+manifest=$(swift package dump-package) || die "Package.swift no longer loads; git diff it"
+for target in "${name}Feature" "${name}FeatureTests"; do
+    jq -e --arg target "$target" \
+        'any(.targets[] | select(.name == $target) | .settings[]?; .kind.defaultIsolation? != null)' \
+        <<<"$manifest" >/dev/null ||
+        die "Package.swift: $target has no swiftSettings: ui; add it there by hand"
+done
 
 cat >"Sources/Features/$name/Log.swift" <<EOF
 import Foundation
@@ -159,35 +212,16 @@ Sources/Features/$name/
 Tests/Features/${name}Tests/
   ${name}ViewRenderTests.swift
 
-Package.swift, in targets: (after the other feature targets; add the Cores the feature
-uses as dependencies:)
-        .target(
-            name: "${name}Feature",
-            path: "Sources/Features/$name",
-            resources: [.process("Resources")],
-            swiftSettings: ui
-        ),
-
-Package.swift, the test target (after the other feature test targets; add the Cores its
-tests use):
-        .testTarget(
-            name: "${name}FeatureTests",
-            dependencies: [
-                "${name}Feature",
-                "RenderSupport",
-            ],
-            path: "Tests/Features/${name}Tests",
-            swiftSettings: ui
-        ),
-
-Package.swift, AppRoot's dependencies: add "${name}Feature" after the other features.
+Package.swift and $scheme already name them: ${name}Feature, ${name}FeatureTests and
+AppRoot's dependency, written by swift package add-target. git diff shows what it wrote;
+add the Cores the feature uses with
+    swift package add-target-dependency <Core> ${name}Feature
+and make test fails until one is declared ('no such module').
 
 Then AppModel owns ${name}Model and AppScenes shows ${name}View.
 
 Translate "${name}" in Resources/Localizable.xcstrings for ${REQUIRED_LOCALES:-en} and mark each
 translated; make lint fails while one is new.
 
-The scheme already lists ${name}FeatureTests; the entry does nothing until Package.swift
-declares the test target. make test then draws the view, light and dark, into
-.build/renders/${name}ViewRenderTests/.
+make test then draws the view, light and dark, into .build/renders/${name}ViewRenderTests/.
 EOF
