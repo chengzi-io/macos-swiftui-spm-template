@@ -40,8 +40,8 @@ fi
 if [[ -d .agents/skills/setup-project ]]; then
     line todo project "still the template" setup-project
 else
-# template-only:end
-line ok project "$APP_DISPLAY_NAME, $BUNDLE_ID"
+    # template-only:end
+    line ok project "$APP_DISPLAY_NAME, $BUNDLE_ID"
 # template-only:start
 fi
 # template-only:end

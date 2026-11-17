@@ -19,8 +19,8 @@ core_paths=()
 live_paths=()
 while read -r name path; do
     case $name in
-        *Live) live_paths+=("$path") ;;
-        *) core_paths+=("$path") ;;
+    *Live) live_paths+=("$path") ;;
+    *) core_paths+=("$path") ;;
     esac
 done < <(jq -r '.targets[]
     | select(.type == "regular" and ((.path // "") | startswith("Sources/Domains/")))
@@ -97,15 +97,15 @@ check "a string literal here never translates: pass Text(\"…\", bundle: .modul
 # Which targets may depend on which (Sources/AGENTS.md). Test targets depend on what they test.
 while read -r target dependency; do
     case $dependency in
-        *Live)
-            echo "error: $target depends on $dependency; only the app target builds Live services (App/Application/MainApp.swift) and hands them over as their Core protocols" >&2
-            status=1
-            ;;
-        *Feature)
-            [[ $target == AppRoot ]] && continue
-            echo "error: $target depends on $dependency; a feature never depends on another, and only AppRoot puts them together" >&2
-            status=1
-            ;;
+    *Live)
+        echo "error: $target depends on $dependency; only the app target builds Live services (App/Application/MainApp.swift) and hands them over as their Core protocols" >&2
+        status=1
+        ;;
+    *Feature)
+        [[ $target == AppRoot ]] && continue
+        echo "error: $target depends on $dependency; a feature never depends on another, and only AppRoot puts them together" >&2
+        status=1
+        ;;
     esac
 done < <(jq -r '.targets[] | select(.type == "regular") | .name as $target
     | .dependencies[] | (.byName // .target // empty)[0] | "\($target) \(.)"' <<<"$package")
@@ -260,8 +260,8 @@ done <<<"$docs"
 # elsewhere, so their links point from where they land.
 landing() {
     case $1 in
-        .agents/skills/*/wiring/*) printf '%s\n' "${1#*/wiring/}" ;;
-        *) printf '%s\n' "$1" ;;
+    .agents/skills/*/wiring/*) printf '%s\n' "${1#*/wiring/}" ;;
+    *) printf '%s\n' "$1" ;;
     esac
 }
 while read -r doc; do
