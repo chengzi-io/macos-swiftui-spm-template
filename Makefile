@@ -45,11 +45,13 @@ github-settings: ## Set the GitHub repository's merge, branch protection and sec
 ##@ Develop
 
 # The view render tests write .build/renders/; clear the last run's, so a removed test
-# leaves no image behind.
+# leaves no image behind. FILTER narrows the run to the suites its regex matches
+# (`make test FILTER=Notes`); the images go either way, so none survives a run that did
+# not draw it.
 .PHONY: test
-test: ## Run the package unit tests with swift test (fast: no app, no UI)
+test: ## Run the package unit tests with swift test (fast: no app, no UI); FILTER=<regex> for some suites
 	rm -rf .build/renders
-	$(SWIFT_TEST)
+	$(SWIFT_TEST) $(if $(FILTER),--filter '$(FILTER)')
 
 # UI tests drive the real mouse and keyboard on this Mac, so they stay out of
 # `make test` and `make ci`; GitHub CI runs them. The result bundle holds the failure
