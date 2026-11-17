@@ -17,7 +17,7 @@ done <App/Configs/Identity.xcconfig
 export RELEASES_URL="https://github.com/$GITHUB_REPOSITORY/releases"
 
 DERIVED_DATA=.build/xcode
-VERSION=$(tr -d '[:space:]' < version.txt)
+VERSION=$(tr -d '[:space:]' <version.txt)
 BUILD_NUMBER=$(git rev-list --count HEAD)
 DEBUG_APP="$DERIVED_DATA/Build/Products/Debug/$APP_NAME.app"
 ARCHIVE="$DERIVED_DATA/$APP_NAME.xcarchive"

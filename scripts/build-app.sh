@@ -17,16 +17,16 @@ xcodebuild_args=(
 )
 
 case ${1:-} in
-    debug)
-        log "xcodebuild Debug ($VERSION build $BUILD_NUMBER)"
-        xcodebuild build "${xcodebuild_args[@]}" -configuration Debug \
-            -destination "platform=macOS,arch=$(uname -m)"
-        codesign --verify --deep --strict "$DEBUG_APP"
-        echo "$DEBUG_APP"
-        exit 0
-        ;;
-    release) ;;
-    *) die "usage: build-app.sh debug|release" ;;
+debug)
+    log "xcodebuild Debug ($VERSION build $BUILD_NUMBER)"
+    xcodebuild build "${xcodebuild_args[@]}" -configuration Debug \
+        -destination "platform=macOS,arch=$(uname -m)"
+    codesign --verify --deep --strict "$DEBUG_APP"
+    echo "$DEBUG_APP"
+    exit 0
+    ;;
+release) ;;
+*) die "usage: build-app.sh debug|release" ;;
 esac
 
 public_key=$(sparkle_public_key)

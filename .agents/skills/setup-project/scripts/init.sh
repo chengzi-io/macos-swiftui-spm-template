@@ -81,22 +81,30 @@ identity() {
 parse_inputs() {
     while [[ $# -gt 0 ]]; do
         case $1 in
-            --skip-xcode) skip_xcode=1; shift; continue ;;
-            --dry-run) dry_run=1; shift; continue ;;
-            -h | --help) usage 0 ;;
+        --skip-xcode)
+            skip_xcode=1
+            shift
+            continue
+            ;;
+        --dry-run)
+            dry_run=1
+            shift
+            continue
+            ;;
+        -h | --help) usage 0 ;;
         esac
         [[ $# -ge 2 ]] || usage 1
         case $1 in
-            --name) name=$2 ;;
-            --about) about=$2 ;;
-            --display-name) display_name=$2 ;;
-            --bundle-id) bundle_id=$2 ;;
-            --category) category=$2 ;;
-            --repo) repo=$2 ;;
-            --codeowner) codeowner=$2 ;;
-            --copyright) holder=$2 ;;
-            --locales) locales=$2 ;;
-            *) usage 1 ;;
+        --name) name=$2 ;;
+        --about) about=$2 ;;
+        --display-name) display_name=$2 ;;
+        --bundle-id) bundle_id=$2 ;;
+        --category) category=$2 ;;
+        --repo) repo=$2 ;;
+        --codeowner) codeowner=$2 ;;
+        --copyright) holder=$2 ;;
+        --locales) locales=$2 ;;
+        *) usage 1 ;;
         esac
         shift 2
     done
@@ -316,18 +324,18 @@ edit() {
         seds+=(-e "$expr")
         shift 2
         case $expr in
-            s?*)
-                # s<delim>LHS<delim>...: the LHS sits between the first two delimiters.
-                delim=${expr:1:1}
-                target=${expr#s"$delim"}
-                target=${target%%"$delim"*}
-                ;;
-            /*)
-                # /RE/...: the RE sits between the first two slashes.
-                target=${expr#/}
-                target=${target%%/*}
-                ;;
-            *) target="" ;;
+        s?*)
+            # s<delim>LHS<delim>...: the LHS sits between the first two delimiters.
+            delim=${expr:1:1}
+            target=${expr#s"$delim"}
+            target=${target%%"$delim"*}
+            ;;
+        /*)
+            # /RE/...: the RE sits between the first two slashes.
+            target=${expr#/}
+            target=${target%%/*}
+            ;;
+        *) target="" ;;
         esac
         if [[ -n $target ]] && ! grep -qE -- "$target" "$file"; then
             die "edit $file: '$expr' matches nothing; the template changed under it"
@@ -346,7 +354,10 @@ set_identity() {
         fi
         sed -E -e "s|^$1[[:space:]]*=.*|$1 = $2|" -e 's/[[:space:]]+$//' "$IDENTITY" >"$TMP/identity"
     else
-        { cat "$IDENTITY"; echo "$1 = $2"; } >"$TMP/identity"
+        {
+            cat "$IDENTITY"
+            echo "$1 = $2"
+        } >"$TMP/identity"
     fi
     if ((dry_run == 1)); then
         echo "   would set: $1 = $2 ($IDENTITY)" >&2
