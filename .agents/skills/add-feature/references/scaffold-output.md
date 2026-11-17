@@ -1,6 +1,6 @@
 # What the scaffold makes, and what fails later
 
-The files `scaffold.sh` writes for `<Name>`, and the checks that fail after it.
+The files `make feature` writes for `<Name>`, and the checks that fail after it.
 
 | File | Holds |
 | --- | --- |

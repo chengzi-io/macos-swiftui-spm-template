@@ -51,7 +51,6 @@ id; both are permanent after the first release.
 | `setup` | `make setup` | git hooks on this Mac | none | `lefthook uninstall` |
 | `repo` | `git push origin main`, then `make github-settings` | GitHub settings: `main` only takes pull requests, admins included | consent; `gh` signed in as an admin | on GitHub, any time |
 | `icon` | the `design-app-icon` skill | `App/Application/AppIcon.icon` | pick or approve a concept | yes |
-| `demo` | the `add-feature` skill | the first feature replaces the Notes demo | say what the feature does | yes, by git |
 | `dmg` | the `design-dmg-window` skill | `App/Configs/DMG` | approve the window | yes |
 | `releases` | the `setup-releases` skill | the release pipeline, the GitHub App, the Sparkle key | two clicks in the browser; export and back up the key | the Sparkle key never: without it, installed copies cannot update |
 | `signing` | the `setup-developer-id` skill | `TEAM_ID` and five secrets | an Apple Developer account; the certificate and key | yes |

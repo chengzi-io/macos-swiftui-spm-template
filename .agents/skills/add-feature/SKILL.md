@@ -5,130 +5,90 @@ description: Add a feature to this app - a new area the user works in, as a <Nam
 
 # Add feature
 
-Adds one `<Name>Feature` target end to end, and ends with `make ci` green.
-`scripts/scaffold.sh` writes the files, declares the targets in `Package.swift` through
-`swift package add-target` and lists the test target in the scheme; the wiring is printed
-for you to do, so it stays a reviewed edit.
-`<skill>` is `.agents/skills/add-feature`; its scripts run from anywhere inside the
-project. `<App>` is `APP_NAME` in `App/Configs/Identity.xcconfig`.
-
-## Status
-
-Moves the `make status` demo line from `todo demo` to `ok demo`. The first feature takes
-the Notes demo's place: `scripts/remove-demo.sh` removes it. A later feature leaves the
-line as it is.
-
-## Before you start
-
-- `make status`: the setup and project lines are `ok`.
-- `xmllint` is installed; it ships with macOS.
+Adds one `<Name>Feature` target end to end, and ends with `make ci` green. `make feature`
+writes the files and declares them in `Package.swift` and the scheme; the two lines that
+wire it and the translation are yours, and `make lint` fails until they are done.
+`<App>` is `APP_NAME` in `App/Configs/Identity.xcconfig`.
 
 ## Plan
 
 Say what will change and wait for the user's go-ahead.
 
 A feature is an area the user works in, with its own data (a library, an inspector).
-Another screen of an area that exists (a detail view of Notes) goes in that feature's
-folder and model, with no new target. Work outside the process is a service (step 5).
-Something every Mac app has (updates, login item) belongs in `Platform`.
+Another screen of an area that exists (a detail view of the readings) goes in that
+feature's folder and model, with no new target. Work outside the process is a service
+([recipe: networking](../add-capability/references/networking.md)). Something every Mac
+app has (updates, login item) belongs in `Platform`.
 
-A feature never depends on another feature; only `AppRoot` puts features together.
-`Sources/Features/Notes/` is the pattern to copy while the demo is still there.
+`<Name>` is the area, capitalized, without `Feature` (`Library` makes `LibraryFeature`).
+Where the screen goes decides the view line of step 4: an existing window, a new `Window`
+or `WindowGroup`, or `Settings`.
 
 ## Steps
 
 ### 1. Name it
 
-`<Name>` is the area, capitalized, without `Feature` (`Library` makes `LibraryFeature`).
-Agree on it with the user if the request does not say.
+Agree on `<Name>` with the user if the request does not name the area.
 
-### 2. Scaffold
+### 2. Remove the demo (first feature only)
 
-`<skill>/scripts/scaffold.sh <Name> [Core...]`, the Cores being the targets the feature's
-code uses (`Notes`, `Platform`). It refuses a name in use, a lowercase one and one whose
-logger would be a Swift keyword; pick another name, do not create the files by hand. It
-writes the files, adds both targets to `Package.swift` and the test target to the scheme,
-and prints the wiring left ([what it makes](references/scaffold-output.md)).
+`Sources/Features/Notes` is the template's, not the app's. If the request **is** a notes
+area, keep it and go on: the demo is the feature. Otherwise:
 
-### 3. Replace the Notes demo (first feature only)
+- `git rm -r Sources/Domains/Notes Sources/Domains/NotesLive Sources/Features/Notes
+  Tests/Domains/NotesTests Tests/Features/NotesTests App/UITests/NotesUITests.swift`
+- `Package.swift`: the five targets `Notes`, `NotesLive`, `NotesFeature`, `NotesTests`,
+  `NotesFeatureTests`, and their names in the `AppModules` product and `AppRoot`'s
+  `dependencies`.
+- `App/<App>.xcodeproj/xcshareddata/xcschemes/<App>.xcscheme`: the two
+  `<TestableReference>` blocks naming `NotesTests` and `NotesFeatureTests`.
+- `AppModel`, `AppScenes`, `MainApp`: every line naming Notes — the model property and its
+  `init` parameter, the view, the `NoteService` and the `noteService:` argument.
+- Check: `git grep -n Notes -- '*.swift' Package.swift` names nothing,
+  `swift package dump-package | grep -c Notes` prints 0, `make test` passes.
 
-While `Sources/Features/Notes` exists, the demo goes: it is the template's, not the app's.
+Until step 4 wires the new view, `AppScenes` shows
+`Color.clear.frame(minWidth: 480, minHeight: 320)`.
 
-1. `<skill>/scripts/remove-demo.sh --dry-run`; show the user its `would …` lines.
-2. Run it without `--dry-run`. It removes the Notes domain, feature, tests and UI test,
-   their targets in `Package.swift` and the scheme, and rewrites `AppModel`,
-   `AppScenes` and `MainApp.swift` to an empty window. It says `done already` for a step
-   whose result is in place.
-3. It fails while `Package.swift` still names Notes: fix the lines it prints, then run it
-   again.
+### 3. Scaffold
 
-The new feature is wired where the demo was, in step 6.
+`make feature NAME=<Name> CORES="<Core …>"`, the Cores being the targets the feature's code
+uses (`Notes`, `Platform`). It refuses a name in use, a lowercase one and one whose logger
+would be a Swift keyword: pick another name, do not write the files by hand. It writes the
+files, declares both targets through `swift package add-target`, adds the test target to
+the scheme, and prints the two lines that wire the feature in
+([what it makes](references/scaffold-output.md)). A Core the feature needs later joins with
+`swift package add-target-dependency <Core> <Name>Feature`.
 
-### 4. Check `Package.swift`
+`add-target` appends the blocks after the test targets, and SwiftPM reads no order into the
+list: leave them there or move them beside the other features.
 
-The scaffold declares it, through `swift package add-target`: `<Name>Feature` with
-`resources`, `swiftSettings: ui` and the Cores; `<Name>FeatureTests` depending on the
-feature, `RenderSupport` and those Cores; `"<Name>Feature"` in `AppRoot`. A Core the feature
-needs later joins with `swift package add-target-dependency <Core> <Name>Feature`.
+### 4. Fill it in
 
-`git diff Package.swift` shows it. `add-target` appends after the test targets, and SwiftPM
-reads no order into the list, so leave it there or move it beside the other features.
-`make lint` fails while the scheme and `Package.swift` disagree on test targets, and
-`swift test` fails on an import of a target that is not declared.
+Add the printed lines, each file importing `<Name>Feature`: the model in `AppModel`, the
+view in `AppScenes`. Then model logic in the model, layout in the view, every user-facing
+string in `Text("…", bundle: .module)` and the feature's `Localizable.xcstrings`.
 
-### 5. Services
+A feature never depends on another feature, and never on a `Live`: a service's protocol and
+mock live in a Core, its live implementation in the matching `Live`, which
+`App/Application/MainApp.swift` builds and hands to `AppModel`.
 
-Work outside the process gets a service: the protocol and its mock in
-`Domains/Platform/` or a domain's folder, the live implementation in the matching
-`Domains/<Name>Live/` ([recipe: networking](../add-capability/references/networking.md)).
-`App/Application/MainApp.swift` builds the live one, and the mock under `UI_TESTING=1`,
-and passes it through `AppModel`. A new domain's two targets join the `AppModules`
-product in `Package.swift`; the Xcode project does not change.
-
-### 6. Wire it
-
-`AppModel` owns `<Name>Model`; `AppScenes` shows `<Name>View` (in an existing window, a
-new `Window` or `WindowGroup`, or `Settings`). A new screen later changes the feature's
-model, not `AppModel`.
-
-### 7. Build the feature
-
-Model logic in the model, layout in the view. Every user-facing string goes in
-`Text("…", bundle: .module)` and the feature's `Localizable.xcstrings`.
-
-### 8. Translate
+### 5. Translate and verify
 
 For each locale in `REQUIRED_LOCALES` (`App/Configs/Identity.xcconfig`) except `en`, give
-every string a value and set its `state` to `translated`. `make lint` fails on a `new` or
-missing one.
-
-### 9. Test
-
-In `Tests/Features/<Name>Tests/`: the model's logic with the Cores' mocks passed through
-`init`, and a render test per state worth seeing. Look at the PNGs in
-`.build/renders/<Name>ViewRenderTests/`. A flow worth guarding end to end gets an
-XCUITest in `App/UITests/`.
-
-### 10. Capabilities
-
-Network, files, camera and the like: add the entitlement to `App/Configs/App.entitlements`
-and its usage description as `INFOPLIST_KEY_NS…UsageDescription` in
-`App/Configs/App.xcconfig`.
-
-### 11. Verify
-
-`make ci`. Show the user the renders of the new view. A failing check and its fix:
+every string a value and set its `state` to `translated`. Then `make ci`, and show the user
+the renders in `.build/renders/<Name>ViewRenderTests/`. A failing check and its fix:
 [scaffold output and fixes](references/scaffold-output.md).
 
 ## Changes
 
 | File | Change |
 | --- | --- |
-| `Sources/Features/<Name>/`, `Tests/Features/<Name>Tests/` | created by the scaffold |
-| `App/<App>.xcodeproj/xcshareddata/xcschemes/<App>.xcscheme` | `<Name>FeatureTests` added to the Test action |
-| `Package.swift` | the feature and test targets and `AppRoot`'s dependency, written by `swift package add-target` |
-| `AppRoot/AppModel.swift`, `AppRoot/AppScenes.swift` | the model and the view wired in; `remove-demo.sh` rewrites both, first feature only |
-| `App/Configs/App.entitlements`, `App/Configs/App.xcconfig` | only for a capability (step 10) |
+| `Sources/Features/<Name>/`, `Tests/Features/<Name>Tests/` | created by `make feature` |
+| `Package.swift`, the scheme | both targets and `AppRoot`'s dependency |
+| `AppRoot/AppModel.swift`, `AppRoot/AppScenes.swift` | the two printed lines |
+| `Sources/Features/Notes/` and its tests | removed, first feature only |
+| `App/Configs/App.entitlements`, `App/Configs/App.xcconfig` | only for a capability ([recipe](../add-capability/SKILL.md)) |
 
 ## The user's part
 
@@ -137,14 +97,11 @@ and its usage description as `INFOPLIST_KEY_NS…UsageDescription` in
 
 ## Done when
 
-- `make test` passes, then `make ci` exits 0; the user has seen the renders.
-- `make status` shows `ok demo`.
+- `make ci` exits 0, and the user has seen the renders.
 
 ## Never
 
 - Add files or settings to `App/<App>.xcodeproj` for a feature: the package carries it.
 - Make one feature depend on another, or a feature depend on a `Live` target.
 - Pass a model through `.environment`: pass it through `init`.
-- Leave a scaffolded string untranslated or delete it from the catalog to pass lint.
-- Run `remove-demo.sh` without `--dry-run` first, or after wiring the new feature into
-  `AppModel` and `AppScenes`: it rewrites both files.
+- Leave a scaffolded string untranslated, or delete it from the catalog, to pass lint.

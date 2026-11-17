@@ -69,12 +69,6 @@ else
     line ok icon "the app's own AppIcon.icon"
 fi
 
-if [[ -d Sources/Features/Notes ]]; then
-    line todo demo "Notes, the template's demo, is still there" "add-feature: build the first feature"
-else
-    line ok demo "the Notes demo is gone"
-fi
-
 if [[ -d App/Configs/DMG ]]; then
     line ok dmg "a designed window (App/Configs/DMG)"
 else
