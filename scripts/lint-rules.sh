@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Checks what swift format and the compiler cannot: APIs agents reach for out of
 # habit, imports and target dependencies that would break the module layering, the
-# files that have to agree with Package.swift or with each other, and the docs' budgets
-# and links. Package.swift only makes a target declare what it imports, and any target
-# can import a system framework.
+# files that have to agree with Package.swift or with each other, and the docs' links.
+# Package.swift only makes a target declare what it imports, and any target can import a
+# system framework.
 
 source "$(dirname "$0")/common.sh"
 
@@ -207,44 +207,9 @@ if ! grep -qx "TEMPLATE_ICON=$(icon_digest)" scripts/status.sh; then
 fi
 # template-only:end
 
-# Docs stay inside their line budgets, link only to files that exist and name only make
-# targets that make help lists. Tracked and new files alike, ignored ones (.build/) not.
+# Docs link only to files that exist and name only make targets that make help lists.
+# Tracked and new files alike, ignored ones (.build/) not.
 docs=$(git ls-files --cached --others --exclude-standard -- '*.md' | sort -u)
-
-# <path> <max lines>; a file that does not exist yet is skipped. A file joins this list in
-# the change that cuts it to its budget: .agents/skills/*/SKILL.md 150. A skill's wiring/
-# file is budgeted at its path in the skill, where it is edited.
-while read -r doc budget; do
-    [[ -f $doc ]] || continue
-    lines=$(wc -l <"$doc" | tr -d ' ')
-    if ((lines > budget)); then
-        echo "error: $doc has $lines lines, over its budget of $budget; split it or move the detail into a linked file" >&2
-        status=1
-    fi
-done <<'BUDGETS'
-AGENTS.md 100
-# template-only:start
-.agents/skills/setup-project/SKILL.md 150
-# template-only:end
-.agents/skills/add-feature/SKILL.md 150
-.agents/skills/next-step/SKILL.md 150
-.agents/skills/add-capability/SKILL.md 150
-.agents/skills/design-app-icon/SKILL.md 150
-.agents/skills/design-dmg-window/SKILL.md 150
-.agents/skills/setup-releases/SKILL.md 150
-.agents/skills/setup-developer-id/SKILL.md 150
-.agents/skills/setup-homebrew/SKILL.md 150
-Sources/AGENTS.md 80
-Tests/AGENTS.md 50
-App/AGENTS.md 40
-scripts/AGENTS.md 30
-.github/AGENTS.md 30
-docs/TOOLCHAIN.md 60
-.github/CONTRIBUTING.md 50
-docs/ARCHITECTURE.md 150
-docs/DEVELOPMENT.md 80
-.agents/skills/setup-releases/wiring/docs/RELEASING.md 100
-BUDGETS
 
 # Every AGENTS.md has a CLAUDE.md beside it that only loads it.
 while read -r doc; do

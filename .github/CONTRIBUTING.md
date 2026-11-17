@@ -41,9 +41,9 @@ it, release-please turns `feat` and `fix` commits into a release PR; merging it 
 
 ## Docs style
 
-1. The first line says what the file is for and who reads it; past its line budget, split it.
+1. The first line says what the file is for and who reads it; a file that outgrows one reader splits.
 2. Tables for mappings and options, numbered lists for steps; no paragraph over 4 lines.
 3. Each fact lives in one place; elsewhere, link to it. Commands go in code blocks.
 4. Rules read "Do X" or "Don't Y, because Z", with a one-sentence reason.
 5. Agent files (`AGENTS.md`) hold no background for people; people's docs hold no agent orders.
-6. Shipped docs are in English. `make lint` checks budgets, links and `AGENTS.md`/`CLAUDE.md` pairs.
+6. Shipped docs are in English. `make lint` checks links and `AGENTS.md`/`CLAUDE.md` pairs.
