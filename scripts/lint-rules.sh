@@ -208,8 +208,9 @@ fi
 # template-only:end
 
 # Docs link only to files that exist and name only make targets that make help lists.
-# Tracked and new files alike, ignored ones (.build/) not.
-docs=$(git ls-files --cached --others --exclude-standard -- '*.md' | sort -u)
+# Tracked and new files alike, ignored ones (.build/) not. A skill's docs are its own
+# business: the template checks the files it ships and the ones it owns.
+docs=$(git ls-files --cached --others --exclude-standard -- '*.md' ':(exclude).agents/**' | sort -u)
 
 # Every AGENTS.md has a CLAUDE.md beside it that only loads it.
 while read -r doc; do
@@ -221,21 +222,13 @@ while read -r doc; do
     fi
 done <<<"$docs"
 
-# Relative links resolve; the #fragment is not checked. A skill copies its wiring/ files
-# elsewhere, so their links point from where they land.
-landing() {
-    case $1 in
-    .agents/skills/*/wiring/*) printf '%s\n' "${1#*/wiring/}" ;;
-    *) printf '%s\n' "$1" ;;
-    esac
-}
+# Relative links resolve; the #fragment is not checked.
 while read -r doc; do
     [[ -n $doc ]] || continue
-    landed=$(landing "$doc")
     while IFS=: read -r line target; do
         target=${target%%#*}
         [[ -n $target ]] || continue
-        if [[ ! -e "$(dirname "$landed")/$target" ]]; then
+        if [[ ! -e "$(dirname "$doc")/$target" ]]; then
             echo "error: $doc:$line links to $target, which does not exist" >&2
             status=1
         fi
@@ -243,17 +236,10 @@ while read -r doc; do
 done <<<"$docs"
 
 # A make target named in the docs is one make help lists: `make x` in text, or a line of a
-# ``` block starting with make. A skill's wiring/*.mk adds targets to the Makefile it lands
-# in, so a target it defines counts as listed; other skill files are left out.
+# ``` block starting with make.
 targets=$(make --no-print-directory -s help | awk '/^  [a-z]/ { print $1 }')
-for mk in .agents/skills/*/wiring/*.mk; do
-    [[ -f $mk ]] || continue
-    targets="$targets
-$(sed -nE 's/^([a-z][a-z-]*):.*/\1/p' "$mk")"
-done
 while read -r doc; do
     [[ -n $doc ]] || continue
-    [[ $doc != .agents/* || $doc == .agents/skills/*/wiring/* ]] || continue
     while IFS=: read -r line target; do
         if ! grep -qxF -- "$target" <<<"$targets"; then
             echo "error: $doc:$line names make $target, which make help does not list" >&2
