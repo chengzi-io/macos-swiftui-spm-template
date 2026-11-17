@@ -5,18 +5,19 @@
 #   todo  still to do; the first one is next
 #   --    optional, not started
 #   ?     could not tell; the line says why
-# The last line is `next: <skill or command>`. The repo line needs gh signed in.
+# The last line is `next: <what to do next>`. The repo line needs gh signed in.
 #
 #   status.sh
 
 source "$(dirname "$0")/common.sh"
 
-# icon_digest of the template's App/Application/AppIcon.icon. lint-rules.sh fails while the
-# template's init skill is here and this no longer matches the icon.
+# icon_digest of the template's App/Application/AppIcon.icon, and the app name the template
+# ships with. init.sh replaces both; until it has, this repo is still the template.
 TEMPLATE_ICON=4cdc776211ae4d78f4c25e8ae5086825364effbd8e668a8138c41b22d7e3c720
+TEMPLATE_NAME=Pomelo
 
 next=""
-# line state step detail [what to run]
+# line state step detail [what to do about it]
 line() {
     printf '  %-5s %-9s %s%s\n' "$1" "$2" "$3" "${4:+ → $4}"
     if [[ $1 == todo && -z $next ]]; then
@@ -37,8 +38,8 @@ else
 fi
 
 # template-only:start
-if [[ -d .agents/skills/setup-project ]]; then
-    line todo project "still the template" setup-project
+if [[ $APP_NAME == "$TEMPLATE_NAME" ]]; then
+    line todo project "still the template" "set the app's name and bundle id"
 else
     # template-only:end
     line ok project "$APP_DISPLAY_NAME, $BUNDLE_ID"
@@ -64,7 +65,7 @@ else
 fi
 
 if [[ $(icon_digest) == "$TEMPLATE_ICON" ]]; then
-    line todo icon "App/Application/AppIcon.icon is the template's" design-app-icon
+    line todo icon "App/Application/AppIcon.icon is the template's" "design the app's icon"
 else
     line ok icon "the app's own AppIcon.icon"
 fi
@@ -72,16 +73,16 @@ fi
 if [[ -d App/Configs/DMG ]]; then
     line ok dmg "a designed window (App/Configs/DMG)"
 else
-    line -- dmg "the plain window (optional)" design-dmg-window
+    line -- dmg "the plain window (optional)" "design the window"
 fi
 
-# setup-releases installs scripts/release-status.sh: one ok or todo line per step on stdout.
+# The release pipeline installs scripts/release-status.sh: one ok or todo line per step.
 if [[ ! -f scripts/release-status.sh ]]; then
-    line -- releases "not set up (optional until you ship)" setup-releases
+    line -- releases "not set up (optional until you ship)" "set up the release pipeline"
 elif ! report=$(scripts/release-status.sh 2>&1); then
     line "?" releases "scripts/release-status.sh: $(tail -n 1 <<<"$report")"
 elif todo=$(grep -m 1 '^todo' <<<"$report"); then
-    line todo releases "${todo#todo  }" setup-releases
+    line todo releases "${todo#todo  }" "finish the release setup"
 else
     line ok releases "set up: merging a release PR publishes it"
 fi
@@ -89,13 +90,13 @@ fi
 if [[ -n ${TEAM_ID:-} ]]; then
     line ok signing "Developer ID, team $TEAM_ID"
 else
-    line -- signing "ad-hoc (optional)" setup-developer-id
+    line -- signing "ad-hoc (optional)" "get a Developer ID"
 fi
 
 if [[ -f scripts/update-cask.sh ]]; then
     line ok homebrew "every release updates the own tap"
 else
-    line -- homebrew "not set up (optional, after the first release)" setup-homebrew
+    line -- homebrew "not set up (optional, after the first release)" "publish a cask"
 fi
 
-echo "next: ${next:-nothing required; build the app with add-feature}"
+echo "next: ${next:-nothing required}"

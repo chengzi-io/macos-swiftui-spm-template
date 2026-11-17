@@ -205,6 +205,10 @@ if ! grep -qx "TEMPLATE_ICON=$(icon_digest)" scripts/status.sh; then
     echo "error: TEMPLATE_ICON in scripts/status.sh is not the digest of App/Application/AppIcon.icon; set it to $(icon_digest)" >&2
     status=1
 fi
+if ! grep -qx "TEMPLATE_NAME=$APP_NAME" scripts/status.sh; then
+    echo "error: TEMPLATE_NAME in scripts/status.sh is not APP_NAME ($APP_NAME); the project line reads it" >&2
+    status=1
+fi
 # template-only:end
 
 # Docs link only to files that exist and name only make targets that make help lists.
