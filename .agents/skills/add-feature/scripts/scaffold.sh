@@ -211,17 +211,16 @@ Sources/Features/$name/
   Log.swift  ${name}Model.swift  ${name}View.swift  Resources/Localizable.xcstrings
 Tests/Features/${name}Tests/
   ${name}ViewRenderTests.swift
+Package.swift and the scheme: written.
 
-Package.swift and $scheme already name them: ${name}Feature, ${name}FeatureTests and
-AppRoot's dependency, written by swift package add-target. git diff shows what it wrote;
-add the Cores the feature uses with
-    swift package add-target-dependency <Core> ${name}Feature
-and make test fails until one is declared ('no such module').
+Wire it, each file also importing ${name}Feature:
+  AppRoot/AppModel.swift, beside the other feature models
+      public let ${logger} = ${name}Model()
+  AppRoot/AppScenes.swift, in the scene that shows it
+      ${name}View(model: model.${logger})
 
-Then AppModel owns ${name}Model and AppScenes shows ${name}View.
+A Core it needs later: swift package add-target-dependency <Core> ${name}Feature
 
-Translate "${name}" in Resources/Localizable.xcstrings for ${REQUIRED_LOCALES:-en} and mark each
-translated; make lint fails while one is new.
-
-make test then draws the view, light and dark, into .build/renders/${name}ViewRenderTests/.
+Translate "${name}" in Resources/Localizable.xcstrings for ${REQUIRED_LOCALES:-en}: make lint
+fails while one is new. make test then draws the view into .build/renders/.
 EOF

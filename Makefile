@@ -69,6 +69,14 @@ test\:ui: ## Run the UI tests; they take over the mouse and keyboard while they 
 fmt: ## Format Swift sources in place
 	swift format format --in-place --recursive --parallel $(SWIFT_PATHS)
 
+# Scaffolding a feature is how a person adds one: the script writes the files, declares
+# the targets and the scheme entry, and prints the two lines that wire it. NAME is the
+# area (Library), CORES the targets its code uses ("Notes Platform").
+.PHONY: feature
+feature: ## Add a <Name>Feature target; NAME=<Area> CORES="<Core> ..."
+	@[[ -n "$(strip $(NAME))" ]] || { echo 'usage: make feature NAME=<Area> [CORES="<Core> ..."]' >&2; exit 1; }
+	.agents/skills/add-feature/scripts/scaffold.sh $(strip $(NAME)) $(strip $(CORES))
+
 .PHONY: lint
 lint: ## Check formatting and scripts/lint-rules.sh (fails on any finding)
 	swift format lint --strict --recursive --parallel $(SWIFT_PATHS)
