@@ -75,7 +75,7 @@ fmt: ## Format Swift sources in place
 .PHONY: feature
 feature: ## Add a <Name>Feature target; NAME=<Area> CORES="<Core> ..."
 	@[[ -n "$(strip $(NAME))" ]] || { echo 'usage: make feature NAME=<Area> [CORES="<Core> ..."]' >&2; exit 1; }
-	.agents/skills/add-feature/scripts/scaffold.sh $(strip $(NAME)) $(strip $(CORES))
+	scripts/feature.sh $(strip $(NAME)) $(strip $(CORES))
 
 .PHONY: lint
 lint: ## Check formatting and scripts/lint-rules.sh (fails on any finding)
@@ -119,5 +119,5 @@ ci: versions lint test assets app smoke ## The definition of done; CI runs this,
 clean: ## Remove build output
 	rm -rf .build dist
 
-# The release targets live in release.mk, which the setup-releases skill adds.
+# The release targets live in release.mk, once the release pipeline is installed.
 -include release.mk

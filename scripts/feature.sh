@@ -5,16 +5,16 @@
 # parses the Swift, not this script; the wiring stays a reviewed edit. Run from anywhere
 # inside the project.
 #
-#   scaffold.sh <Name> [Core...]    <Name> is the area's name: Library makes LibraryFeature;
+#   feature.sh <Name> [Core...]    <Name> is the area's name: Library makes LibraryFeature;
 #                                  each Core is a target its code uses, such as Notes
 
-# shellcheck source=../../../../scripts/common.sh
-source "$(dirname "$0")/../../../../scripts/common.sh"
+# shellcheck source=common.sh
+source "$(dirname "$0")/common.sh"
 
 name=${1:-}
 cores=("${@:2}")
 logger=$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')
-[[ -n $name ]] || die "usage: .agents/skills/add-feature/scripts/scaffold.sh <Name> [Core...], such as Library Notes"
+[[ -n $name ]] || die "usage: scripts/feature.sh <Name> [Core...], such as Library Notes"
 [[ $name =~ ^[A-Z][A-Za-z0-9]*$ ]] ||
     die "<Name> is the area's name and names its types: a capital letter, then letters and digits"
 [[ $name != *Feature ]] || die "<Name> is the area's name, without Feature: ${name%Feature} makes the target $name"
