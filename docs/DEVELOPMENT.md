@@ -21,8 +21,8 @@ flowchart LR
    of the views you changed.
 3. `make ci` before you open a PR. It is the definition of done.
 4. Open the PR with a Conventional Commit title
-   ([CONTRIBUTING](../.github/CONTRIBUTING.md)); it is squash-merged, and
-   [released](../.agents/skills/setup-releases/SKILL.md) once that skill has run.
+   ([CONTRIBUTING](../.github/CONTRIBUTING.md)); it is squash-merged, and released once
+   the release pipeline is installed.
 
 CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 `gh run download <run id> -n renders`.
@@ -65,5 +65,6 @@ CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 ## Where code goes
 
 Where a file belongs and which way dependencies point: [Sources/AGENTS.md](../Sources/AGENTS.md);
-why: [ARCHITECTURE.md](ARCHITECTURE.md). To add a feature, ask your agent: its add-feature
-skill scaffolds the feature and its tests.
+why: [ARCHITECTURE.md](ARCHITECTURE.md). To add a feature, run `make feature
+NAME=<Area>`: it writes the feature, its tests and the targets, then prints the two lines
+that wire it.
