@@ -78,6 +78,8 @@ check "fix the isolation instead of silencing the compiler: an actor, a Sendable
     '@unchecked\s+Sendable\b|nonisolated\(unsafe\)' "${swift_paths[@]}"
 check "pass models through initializers, not the environment: a missing argument fails the build, a missing environment object crashes at run time" \
     '\.environment\(\s*[A-Za-z_]|@Environment\([A-Z]\w*\.self\)' "${swift_paths[@]}"
+check "store a preference through PreferencesStore with a PreferenceKey, not @AppStorage: the model owns the value and a test swaps the store" \
+    '@AppStorage\b' "${swift_paths[@]}"
 check "pass a service in through an initializer, not a static shared instance: a test cannot swap a singleton" \
     '\bstatic\s+(?:let|var)\s+shared\b' "${swift_paths[@]}"
 check "take the time from an injected Clock; only Live reads the system clock" \

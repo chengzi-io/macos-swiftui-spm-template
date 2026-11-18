@@ -84,9 +84,9 @@ public final class LiveLaunchAtLoginService: LaunchAtLoginService {
 }
 ```
 
-The switch goes in a General pane in `Features/Settings`: a `GeneralSettingsView` tab
-before Updates in `SettingsView`. Its model catches and logs a failed change, so the
-feature gets a `Log.swift`, as every module that logs has:
+The switch goes in the General pane in `Features/Settings`: a row in
+`GeneralSettingsView`'s `Form`, before the Updates section. Its model catches and logs a
+failed change, so the feature gets a `Log.swift`, as every module that logs has:
 
 ```swift
 import Foundation
@@ -189,8 +189,8 @@ Swift 6.2.3 compiler. Add `Launch at login`, `Turned off in System Settings.`,
 `Open Login Items…` and `The login item could not be changed.` to
 `Features/Settings/Resources/Localizable.xcstrings` in every locale of `REQUIRED_LOCALES`.
 `App/Application/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under
-`UI_TESTING=1`) and passes it to `AppModel`, which owns a
-`LaunchAtLoginModel(service:)`; `AppScenes` hands that to `SettingsView`. Test the model
+`UI_TESTING=1`) and passes it through `AppModel` to `SettingsModel`, which owns a
+`LaunchAtLoginModel(service:)` for `GeneralSettingsView`. Test the model
 in `Tests/Features/SettingsTests/` with the mock:
 
 ```swift

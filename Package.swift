@@ -81,6 +81,12 @@ let package = Package(
             swiftSettings: common
         ),
         .testTarget(
+            name: "PlatformTests",
+            dependencies: ["Platform", "PlatformLive"],
+            path: "Tests/Domains/PlatformTests",
+            swiftSettings: common
+        ),
+        .testTarget(
             name: "NotesFeatureTests",
             dependencies: [
                 "NotesFeature",

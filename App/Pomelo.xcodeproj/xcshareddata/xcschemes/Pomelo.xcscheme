@@ -48,6 +48,17 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "PlatformTests"
+               BuildableName = "PlatformTests"
+               BlueprintName = "PlatformTests"
+               ReferencedContainer = "container:..">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "NotesFeatureTests"
                BuildableName = "NotesFeatureTests"
                BlueprintName = "NotesFeatureTests"

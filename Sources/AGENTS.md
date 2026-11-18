@@ -43,6 +43,7 @@ this way: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 - Mark UI-bound services and a domain's models `@MainActor`, background work `@concurrent`; a plain `nonisolated async` function runs on its caller's actor.
 - In MainActor targets `Bundle.module` is MainActor-isolated: resolve user-facing text in views or models; values decoded off the main actor need `nonisolated struct …: Codable, Sendable`.
 - Anything outside the process (system API, network, files, UserDefaults, Keychain, the clock) is a service: protocol and mock in a Core, live implementation in the matching Live, passed in through an initializer. No DI container.
+- Preferences the app only stores and reads back go through `PreferencesStore` (`Platform`): declare a `PreferenceKey` next to the setting's owner and read and write `preferences[.key]` in the model. A setting whose change calls a system API or has another side effect also gets its own service, which the model calls after writing the preference (`AppearanceService`). No `@AppStorage`.
 - Pure logic (formatting, parsing, state machines) is a plain type the model calls directly, with no protocol.
 - No service for a package that owns the access, storage and control alike (KeyboardShortcuts), or for SwiftData: a view reads with `@Query`, the model writes through a `ModelContext`, tests use an in-memory store.
 - Time: take `any Clock<Duration>` through the initializer; only a Live reads the system clock. Write a `ManualClock` for tests when the first feature needs one.
@@ -68,6 +69,7 @@ this way: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 | `import AppKit`, `IOKit`, `Network`, `Sparkle` in a Core | system frameworks belong in a Live |
 | `@unchecked Sendable`, `nonisolated(unsafe)` | an actor, a `Sendable` value, or `OSAllocatedUnfairLock` |
 | `.environment(model)`, `@Environment(Model.self)` | pass the model through `init` |
+| `@AppStorage` | a `PreferenceKey` in `PreferencesStore`, written by the model |
 | a string literal in a control or modifier (`Button("Save")`, `.help("…")`), `Text("Save")` without `bundle:` | `Text("Save", bundle: .module)`, in a `label:` closure for a control |
 | `static let shared` | pass the service through `init` |
 | `Date()`, `Date.now` outside a Live | an injected `Clock` |

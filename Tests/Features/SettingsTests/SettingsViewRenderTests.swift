@@ -9,15 +9,25 @@ import Testing
 /// an off-screen render has none of.
 @MainActor
 struct SettingsViewRenderTests {
-    @Test func updates() throws {
-        try render(updatesPane())
+    @Test func general() throws {
+        try render(settings())
     }
 
-    @Test func updatesDark() throws {
-        try render(updatesPane(), appearance: .darkAqua)
+    @Test func generalDark() throws {
+        try render(settings(), appearance: .darkAqua)
     }
 
-    private func updatesPane() -> UpdatesSettingsView {
-        UpdatesSettingsView(updater: MockUpdaterService(), version: "1.2.0 (345)")
+    @Test func generalChinese() throws {
+        try render(settings(languageIdentifier: "zh-Hans"))
+    }
+
+    private func settings(languageIdentifier: String = "en") -> GeneralSettingsView {
+        let model = SettingsModel(
+            updater: MockUpdaterService(),
+            preferences: MockPreferencesStore(),
+            appearance: MockAppearanceService(),
+            languageIdentifier: languageIdentifier
+        )
+        return GeneralSettingsView(model: model, version: "1.2.0 (345)")
     }
 }
