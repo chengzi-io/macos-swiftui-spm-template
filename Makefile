@@ -11,9 +11,6 @@ SHELL := /bin/bash
 # A recipe that needs the app identity, the Xcode project or the Swift paths sources
 # scripts/common.sh, which reads them and fails clearly when the project is missing.
 COMMON := source scripts/common.sh
-# Fails on an import of a module the target does not declare, as Package.swift's
-# dependencies would otherwise be enforced only by build order.
-SWIFT_TEST := swift test --explicit-target-dependency-import-check error
 
 .PHONY: help
 help: ## List targets
@@ -42,21 +39,23 @@ github-settings: ## Set the GitHub repository's merge, branch protection and sec
 # The view render tests write .build/renders/; clear the last run's, so a removed test
 # leaves no image behind. FILTER narrows the run to the suites its regex matches
 # (`make test FILTER=Notes`); the images go either way, so none survives a run that did
-# not draw it.
+# not draw it. The import check fails on an import of a module the target does not
+# declare, as Package.swift's dependencies would otherwise be enforced only by build order.
 .PHONY: test
 test: ## Run the package unit tests with swift test (fast: no app, no UI); FILTER=<regex> for some suites
 	rm -rf .build/renders
-	$(SWIFT_TEST) $(if $(FILTER),--filter '$(FILTER)')
+	swift test --explicit-target-dependency-import-check error $(if $(FILTER),--filter '$(FILTER)')
 
 # UI tests drive the real mouse and keyboard on this Mac, so they stay out of
 # `make test` and `make ci`; GitHub CI runs them. The result bundle holds the failure
 # screenshots; xcodebuild refuses to overwrite one, so the last run's goes first.
 UI_TEST_RESULTS := .build/UITests.xcresult
-.PHONY: test\:ui
+# No .PHONY for test:ui and lint:assets: make 3.81, the one macOS ships, would declare the
+# name with its backslash. They run all the same, unless a file of that name appears.
 test\:ui: ## Run the UI tests; they take over the mouse and keyboard while they run
 	rm -rf $(UI_TEST_RESULTS)
 	$(COMMON) && xcodebuild test -quiet -project "$$XCODE_PROJECT" -scheme "$$APP_NAME" \
-		-derivedDataPath .build/xcode -destination "platform=macOS,arch=$$(uname -m)" \
+		-derivedDataPath "$$DERIVED_DATA" -destination "platform=macOS,arch=$$(uname -m)" \
 		-resultBundlePath $(UI_TEST_RESULTS) \
 		-only-testing:AppUITests
 
@@ -77,7 +76,6 @@ lint: ## Check formatting and the rules in scripts/lint-rules.sh (fails on any f
 	scripts/lint-rules.sh
 
 # actool runs through a long-lived ibtoold, too slow and flaky for the lint loop.
-.PHONY: lint\:assets
 lint\:assets: ## Compile the asset catalog and AppIcon.icon with actool (fails on any warning)
 	scripts/lint-assets.sh
 

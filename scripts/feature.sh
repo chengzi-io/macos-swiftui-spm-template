@@ -37,10 +37,9 @@ done
 if grep -q "name: \"${name}Feature\"" Package.swift; then
     die "Package.swift already declares ${name}Feature"
 fi
-scheme=$XCODE_SCHEME
-[[ -f $scheme ]] || die "no $scheme"
-if grep -q "BlueprintIdentifier = \"${name}FeatureTests\"" "$scheme"; then
-    die "$scheme already lists ${name}FeatureTests"
+[[ -f $XCODE_SCHEME ]] || die "no $XCODE_SCHEME"
+if grep -q "BlueprintIdentifier = \"${name}FeatureTests\"" "$XCODE_SCHEME"; then
+    die "$XCODE_SCHEME already lists ${name}FeatureTests"
 fi
 command -v xmllint >/dev/null || die "xmllint missing; it ships with macOS"
 
@@ -194,16 +193,16 @@ cat >"$tmp/block" <<EOF
             </BuildableReference>
          </TestableReference>
 EOF
-line=$(grep -n '^      </Testables>$' "$scheme" | cut -d: -f1)
-[[ -n $line ]] || die "$scheme has no </Testables> line; add the TestableReference by hand"
+line=$(grep -n '^      </Testables>$' "$XCODE_SCHEME" | cut -d: -f1)
+[[ -n $line ]] || die "$XCODE_SCHEME has no </Testables> line; add the TestableReference by hand"
 {
-    head -n $((line - 1)) "$scheme"
+    head -n $((line - 1)) "$XCODE_SCHEME"
     cat "$tmp/block"
-    tail -n +"$line" "$scheme"
+    tail -n +"$line" "$XCODE_SCHEME"
 } >"$tmp/scheme"
-xmllint --noout "$tmp/scheme" || die "$scheme would stop being well-formed XML; left it alone"
-mv "$tmp/scheme" "$scheme"
-log "add ${name}FeatureTests to $scheme"
+xmllint --noout "$tmp/scheme" || die "$XCODE_SCHEME would stop being well-formed XML; left it alone"
+mv "$tmp/scheme" "$XCODE_SCHEME"
+log "add ${name}FeatureTests to $XCODE_SCHEME"
 
 cat <<EOF
 
