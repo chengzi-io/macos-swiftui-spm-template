@@ -80,19 +80,6 @@ as skipped until release setup is done.
 Tell the user to run `make status` whenever they want to go on: the first `todo` line is
 the next step, and the last line says how to start it.
 
-The icon, a designed DMG window, Developer ID signing and a Homebrew cask are not
-skills in this repository. They live in the [chengzi-io/skills](https://github.com/chengzi-io/skills)
-**macos** plugin: `macos-app-icon`, `macos-dmg-window`,
-`macos-developer-id` and `macos-homebrew`. If that plugin is not installed
-in this project, tell the user how to add it before those steps:
-
-```bash
-claude plugin marketplace add chengzi-io/skills
-claude plugin install macos@chengzi-skills -s project
-# also: grok plugin install macos --trust
-#        codex plugin add macos@chengzi-skills
-```
-
 ## Changes
 
 - `App/<Name>.xcodeproj` and its scheme, renamed from the template's; the targets inside

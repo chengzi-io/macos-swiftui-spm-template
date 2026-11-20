@@ -45,7 +45,7 @@ Why each layer exists: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | every screen rendered light and dark by a render test | CI uploads the images; a broken layout is seen, not guessed |
 | Swift 6 language mode, warnings as errors, lefthook, pinned toolchain | what compiles is clean; `make ci` is the same gate CI runs |
 | release-please and Sparkle, added when you set up the release pipeline | merging a release PR ships a DMG, appcast and changelog |
-| skills that ship with the repository for setup, features, capabilities and releases; the icon, the DMG window, Developer ID signing and Homebrew live in the [chengzi-io/skills](https://github.com/chengzi-io/skills) **macos** plugin | install `macos@chengzi-skills` (and `swift@chengzi-skills`) at project scope so the agent can run those steps |
+| skills that ship with the repository for the big moves | the agent knows them in order: setup, features, capabilities, releases |
 | string catalogs enforced per `REQUIRED_LOCALES`, sandbox, privacy manifest, Icon Composer icon | the parts every App Store review asks for, done |
 
 ## Start
@@ -71,6 +71,26 @@ The first feature takes the demo's place. `make help` lists every command; `make
 starts the app.
 
 Day-to-day commands and editors: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
+## Optional skills
+
+The icon, a designed DMG window, Developer ID signing and a Homebrew cask are skills in
+the [chengzi-io/skills](https://github.com/chengzi-io/skills) **macos** plugin, not in
+this repository. You start each one yourself:
+
+| Skill | What it does |
+| --- | --- |
+| `macos-app-icon` | an Icon Composer `.icon` from a logo, drawn layers or an image prompt |
+| `macos-dmg-window` | a designed DMG window, and switches `scripts/make-dmg.sh` to dmgbuild |
+| `macos-developer-id` | the Developer ID certificate, notary key and signing secrets |
+| `macos-homebrew` | the official `homebrew/cask`, or your own tap updated by each release |
+
+```bash
+claude plugin marketplace add chengzi-io/skills
+claude plugin install macos@chengzi-skills -s project
+# also: grok plugin install macos --trust
+#        codex plugin add macos@chengzi-skills
+```
 
 ## Prerequisites
 

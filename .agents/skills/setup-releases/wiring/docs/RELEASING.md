@@ -85,14 +85,6 @@ asset upload in `scripts/publish-github.sh` and rely on the private workflow art
 atos -o <App>.app.dSYM/Contents/Resources/DWARF/<App> -arch arm64 -l <load address> <address>
 ```
 
-## Homebrew cask (optional)
-
-The `macos-homebrew` skill in the chengzi-io/skills macos plugin puts the app on
-Homebrew. The official `homebrew/cask` takes apps with a Developer ID from notable
-repositories and updates the cask by itself; your own tap takes any build, and every
-release updates it. Only you start it, after installing the macos plugin:
-`/macos-homebrew` in Claude Code, `$macos-homebrew` in Codex.
-
 ## Beta channel (optional)
 
 Not wired by default; publish betas on a separate appcast channel as
