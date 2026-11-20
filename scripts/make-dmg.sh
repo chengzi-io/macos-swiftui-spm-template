@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Creates an unsigned DMG of an .app with an /Applications link, in a plain Finder
 # window. package-dmg.sh signs and notarizes it.
 #   make-dmg.sh <app> <dmg>
