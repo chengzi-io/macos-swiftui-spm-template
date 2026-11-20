@@ -76,6 +76,6 @@ if [[ -z ${TEAM_ID:-} ]]; then
     echo "info  5 Developer ID: none (TEAM_ID empty), releases are ad-hoc signed"
 else
     for secret in DEVELOPER_ID_P12_BASE64 DEVELOPER_ID_P12_PASSWORD NOTARY_API_KEY_P8_BASE64 NOTARY_API_KEY_ID NOTARY_API_ISSUER_ID; do
-        report "5 Developer ID: secret $secret" "$(has "$secret" "$secrets")" "the setup-developer-id skill"
+        report "5 Developer ID: secret $secret" "$(has "$secret" "$secrets")" "the macos-developer-id skill (macos plugin)"
     done
 fi

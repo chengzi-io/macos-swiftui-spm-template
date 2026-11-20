@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
 # Creates an unsigned DMG of an .app with an /Applications link, in a plain Finder
-# window. package-dmg.sh signs and notarizes it; a replacement for a designed window
-# (the dmg skill's) takes the same arguments.
+# window. package-dmg.sh signs and notarizes it. A designed window uses the same
+# arguments; that wiring is done by the macos-dmg-window skill in the
+# chengzi-io/skills macos plugin, not by this repository.
 #   make-dmg.sh <app> <dmg>
 
 source "$(dirname "$0")/common.sh"

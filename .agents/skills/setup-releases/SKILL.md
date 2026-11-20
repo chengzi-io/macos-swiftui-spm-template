@@ -24,7 +24,7 @@ left, then to `ok`. Once step 1 is done, `scripts/release-status.sh` prints one 
 - `gh auth status` shows a login with admin rights on the repository that
   `GITHUB_REPOSITORY` in `App/Configs/Identity.xcconfig` names.
 - Ask whether releases will be ad-hoc (default, free) or Developer ID signed (Apple
-  Developer Program); the `setup-developer-id` skill explains what users get with each.
+  Developer Program); the `macos-developer-id` skill in the chengzi-io/skills macos plugin explains what users get with each.
 
 ## Plan
 
@@ -103,7 +103,7 @@ update again. Commit the `Info.plist` change on a branch and open a PR.
 
 - **Ad-hoc (default):** leave `TEAM_ID` empty. The publish job adds a first-launch note
   to each release, and `README.md` has one.
-- **Developer ID:** the `setup-developer-id` skill, after this one.
+- **Developer ID:** the `macos-developer-id` skill in the chengzi-io/skills macos plugin, after this one.
 
 ### 6. First release
 

@@ -108,7 +108,7 @@ After the install (SKILL.md steps):
   2. release environment: $skill/scripts/release-environment.sh
   3. GitHub App for release-please: xcrun swift $skill/scripts/create-app.swift
   4. Sparkle key: $skill/scripts/sparkle-keys.sh create (or restore FILE)
-  5. signing: ad-hoc by default, or the setup-developer-id skill
+  5. signing: ad-hoc by default, or the macos-developer-id skill (chengzi-io/skills macos plugin)
   6. first release: merge a feat: or fix: PR, then merge release-please's PR
 scripts/release-status.sh, or make status, reports what is still todo.
 EOF
