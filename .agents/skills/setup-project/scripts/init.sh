@@ -433,8 +433,8 @@ readme() {
     local min_macos
     local -a seds=()
     log "4/7 README.md: the page for $display_name's users"
-    min_macos=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' App/Configs/Project.xcconfig)
-    [[ -n $min_macos ]] || die "no MACOSX_DEPLOYMENT_TARGET in App/Configs/Project.xcconfig"
+    min_macos=$(deployment_target)
+    min_macos=${min_macos%%.*}
     seds=(-e "s|{{NAME}}|$name|g" -e "s|{{DISPLAY_NAME}}|$display_name|g" -e "s|{{REPO}}|$repo|g"
         -e "s|{{MIN_MACOS}}|$min_macos|g")
     if [[ -n $about ]]; then

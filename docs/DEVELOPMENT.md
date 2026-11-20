@@ -41,9 +41,9 @@ CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 | `make run` | builds and launches the debug app, logs in the terminal | to try a change |
 | `make fmt` | formats Swift sources in place | before committing |
 | `make lint` | formatting and `scripts/lint-rules.sh` | part of `make ci` |
-| `make ci` | versions, lint, test, assets, app, smoke | before a PR |
+| `make build` | builds the debug .app, ad-hoc signed | to check the app target builds |
+| `make ci` | lint, test, assets, build, smoke | before a PR |
 | `make test:ui` | XCUITests; they take over the mouse and keyboard | when asked; CI runs them on every PR |
-| `make logs` | streams the app's unified logs | while debugging |
 | `make clean` | removes build output | after a toolchain change |
 
 | Task | Command |

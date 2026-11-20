@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
-# Checks what swift format and the compiler cannot: APIs agents reach for out of
-# habit, imports and target dependencies that would break the module layering, the
-# files that have to agree with Package.swift or with each other, the docs' links, and
-# the rule that nothing here reads a skill. Package.swift only makes a target declare what
-# it imports, and any target can import a system framework.
+# Runs swift format lint, then checks what swift format and the compiler cannot: APIs
+# agents reach for out of habit, imports and target dependencies that would break the
+# module layering, the files that have to agree with Package.swift or with each other, the
+# docs' links, and the rule that nothing here reads a skill. Package.swift only makes a
+# target declare what it imports, and any target can import a system framework.
 
 source "$(dirname "$0")/common.sh"
 
-# All of App/: an extension's target gets its own folder there.
-swift_paths=(App Sources Tests)
 # The manifest itself says where every target lives, so the checks below read it instead
 # of guessing from directory shapes.
 package=$(swift package dump-package)
@@ -33,6 +31,8 @@ test_paths=(Tests App/UITests)
 import='^(?:[@\w]+[ \t]+)*import[ \t]+(?:(?:typealias|struct|class|enum|protocol|let|var|func)[ \t]+)?'
 status=0
 
+swift format lint --strict --recursive --parallel "${SWIFT_PATHS[@]}" || status=1
+
 # check <message> <perl regex> <paths...>: reports every match in the .swift files under
 # paths. Lines that start with // are blanked first, so a comment that names an API is not
 # a use of it. The regex sees the whole file (^ is a line start, \s matches a line break
@@ -41,7 +41,7 @@ check() {
     local message=$1 pattern=$2 path hits paths=()
     shift 2
     for path in "$@"; do
-        [[ -d $path ]] || die "lint-rules.sh: no directory $path"
+        [[ -e $path ]] || die "lint-rules.sh: no $path"
         paths+=("$path")
     done
     ((${#paths[@]} > 0)) || return 0
@@ -65,31 +65,31 @@ check() {
 }
 
 check "use an @Observable model, not ObservableObject or @Published" \
-    '\bObservableObject\b|@Published\b' "${swift_paths[@]}"
+    '\bObservableObject\b|@Published\b' "${SWIFT_PATHS[@]}"
 check "use NavigationStack or NavigationSplitView, not NavigationView" \
-    '\bNavigationView\b' "${swift_paths[@]}"
+    '\bNavigationView\b' "${SWIFT_PATHS[@]}"
 check "use foregroundStyle(_:), not foregroundColor(_:)" \
-    '\.foregroundColor\(' "${swift_paths[@]}"
+    '\.foregroundColor\(' "${SWIFT_PATHS[@]}"
 check "Core and Live hold no views; UI belongs in a feature" \
     "${import}SwiftUI\\b" ${core_paths[@]+"${core_paths[@]}"} ${live_paths[@]+"${live_paths[@]}"}
 check "Core holds protocols, types, logic and mocks; system frameworks belong in Live" \
     "${import}(?:AppKit|IOKit|Network|Sparkle)\\b" ${core_paths[@]+"${core_paths[@]}"}
 check "fix the isolation instead of silencing the compiler: an actor, a Sendable value, or state behind OSAllocatedUnfairLock" \
-    '@unchecked\s+Sendable\b|nonisolated\(unsafe\)' "${swift_paths[@]}"
+    '@unchecked\s+Sendable\b|nonisolated\(unsafe\)' "${SWIFT_PATHS[@]}"
 check "pass models through initializers, not the environment: a missing argument fails the build, a missing environment object crashes at run time" \
-    '\.environment\(\s*[A-Za-z_]|@Environment\([A-Z]\w*\.self\)' "${swift_paths[@]}"
+    '\.environment\(\s*[A-Za-z_]|@Environment\([A-Z]\w*\.self\)' "${SWIFT_PATHS[@]}"
 check "store a preference through PreferencesStore with a PreferenceKey, not @AppStorage: the model owns the value and a test swaps the store" \
-    '@AppStorage\b' "${swift_paths[@]}"
+    '@AppStorage\b' "${SWIFT_PATHS[@]}"
 check "pass a service in through an initializer, not a static shared instance: a test cannot swap a singleton" \
-    '\bstatic\s+(?:let|var)\s+shared\b' "${swift_paths[@]}"
+    '\bstatic\s+(?:let|var)\s+shared\b' "${SWIFT_PATHS[@]}"
 check "take the time from an injected Clock; only Live reads the system clock" \
     '\bDate\(\)|\bDate\.now\b' "${non_live_paths[@]}"
 check "wait on what the test checks (await, confirmation, a mock clock), not Task.sleep: a sleep is slow and flaky" \
     '\bTask\.sleep\b' "${test_paths[@]}"
 check "log with the module's Logger (Log.swift), not print: print reaches no log and ships in release builds" \
-    '(?<![.\w])(?:print|debugPrint)\(' "${swift_paths[@]}"
+    '(?<![.\w])(?:print|debugPrint)\(' "${SWIFT_PATHS[@]}"
 check "handle or throw the error instead of try!; in a test, use try #require or let the test throw" \
-    '\btry!' "${swift_paths[@]}"
+    '\btry!' "${SWIFT_PATHS[@]}"
 # A control or modifier given a string literal looks it up in the app's bundle, not in the
 # target's own catalog, so it shows the key in every language and nothing fails to compile.
 check "a string literal here never translates: pass Text(\"…\", bundle: .module), in a label: closure for a control, or Text(verbatim:) for text that is not translated" \
@@ -162,7 +162,7 @@ pins() {
     jq -S '.pins | sort_by(.identity)' "$1"
 }
 if ! diff -u <(pins Package.resolved) <(pins "$xcode_resolved") >&2; then
-    echo "error: Package.resolved and $xcode_resolved pin different versions; swift test and dependabot write the first, Xcode the second: copy the one with the versions you want over the other, then make test app" >&2
+    echo "error: Package.resolved and $xcode_resolved pin different versions; swift test and dependabot write the first, Xcode the second: copy the one with the versions you want over the other, then make test build" >&2
     status=1
 fi
 
@@ -176,18 +176,15 @@ if [[ -z $package_macos ]]; then
     echo "error: Package.swift lists no .macOS platform" >&2
     status=1
 fi
-grep -q '^MACOSX_DEPLOYMENT_TARGET' App/Configs/Project.xcconfig || {
-    echo "error: App/Configs/Project.xcconfig sets no MACOSX_DEPLOYMENT_TARGET" >&2
-    status=1
-}
-while IFS=: read -r xcconfig value; do
+# Project.xcconfig has to set it; another xcconfig may, and then has to agree.
+(deployment_target >/dev/null) || status=1
+while read -r xcconfig; do
+    value=$(deployment_target "$xcconfig" 2>/dev/null) || continue
     if [[ $(major_minor "$value") != "$(major_minor "$package_macos")" ]]; then
         echo "error: $xcconfig sets MACOSX_DEPLOYMENT_TARGET = $value, Package.swift .macOS $package_macos; change them together" >&2
         status=1
     fi
-done < <(find App -name '*.xcconfig' | sort | while read -r xcconfig; do
-    sed -nE "s|^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*([^[:space:]]+).*|$xcconfig:\\1|p" "$xcconfig"
-done)
+done < <(find App -name '*.xcconfig' | sort)
 
 # Build settings live in App/Configs/*.xcconfig. Xcode writes one into project.pbxproj when
 # it is set in the Build Settings or Signing panel, and there it wins over the xcconfig.

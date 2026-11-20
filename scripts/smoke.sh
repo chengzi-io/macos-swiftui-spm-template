@@ -7,7 +7,7 @@
 source "$(dirname "$0")/common.sh"
 
 app=${1:-$DEBUG_APP}
-[[ -d $app ]] || die "no app at $app; run make app first"
+[[ -d $app ]] || die "no app at $app; run make build first"
 
 codesign --verify --deep --strict "$app"
 plutil -lint -s "$app/Contents/Info.plist"

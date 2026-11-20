@@ -5,8 +5,7 @@
 
 source "$(dirname "$0")/common.sh"
 
-min_macos=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*//p' App/Configs/Project.xcconfig)
-[[ -n $min_macos ]] || die "no MACOSX_DEPLOYMENT_TARGET in App/Configs/Project.xcconfig"
+min_macos=$(deployment_target)
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT

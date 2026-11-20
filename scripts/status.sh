@@ -19,22 +19,19 @@ TEMPLATE_NAME=Pomelo
 next=""
 # line state step detail [what to do about it]
 line() {
-    printf '  %-5s %-9s %s%s\n' "$1" "$2" "$3" "${4:+ → $4}"
+    say "$1" "$(printf '%-9s %s%s' "$2" "$3" "${4:+ → $4}")"
     if [[ $1 == todo && -z $next ]]; then
         next=$4
     fi
 }
 
-pinned=$(tr -d '[:space:]' <.xcode-version)
-hooks=$(git rev-parse --git-path hooks/pre-commit)
-if ! xcode=$(xcodebuild -version 2>/dev/null | awk 'NR == 1 { print $2 }') || [[ -z $xcode ]]; then
-    line todo setup "xcodebuild does not run; install Xcode $pinned" "make setup"
-elif ! grep -qs lefthook "$hooks"; then
+# make doctor checks the toolchain in detail; this line only says whether setup has run.
+if ! xcodebuild -version >/dev/null 2>&1; then
+    line todo setup "xcodebuild does not run; install Xcode $(tr -d '[:space:]' <.xcode-version)" "make setup"
+elif ! grep -qs lefthook "$(git rev-parse --git-path hooks/pre-commit)"; then
     line todo setup "the git hooks are not installed" "make setup"
-elif [[ $xcode != "$pinned" ]]; then
-    line ok setup "Xcode $xcode, while .xcode-version and CI use $pinned (make doctor)"
 else
-    line ok setup "Xcode $xcode, git hooks installed"
+    line ok setup "git hooks installed; make doctor checks the toolchain"
 fi
 
 # template-only:start
@@ -70,12 +67,6 @@ else
     line ok icon "the app's own AppIcon.icon"
 fi
 
-if [[ -d App/Configs/DMG ]]; then
-    line ok dmg "a designed window (App/Configs/DMG)"
-else
-    line -- dmg "the plain window (optional)" "design the window"
-fi
-
 # The release pipeline installs scripts/release-status.sh: one ok or todo line per step.
 if [[ ! -f scripts/release-status.sh ]]; then
     line -- releases "not set up (optional until you ship)" "set up the release pipeline"
@@ -91,12 +82,6 @@ if [[ -n ${TEAM_ID:-} ]]; then
     line ok signing "Developer ID, team $TEAM_ID"
 else
     line -- signing "ad-hoc (optional)" "get a Developer ID"
-fi
-
-if [[ -f scripts/update-cask.sh ]]; then
-    line ok homebrew "every release updates the own tap"
-else
-    line -- homebrew "not set up (optional, after the first release)" "publish a cask"
 fi
 
 echo "next: ${next:-nothing required}"

@@ -15,8 +15,8 @@ them. For people and agents.
 | Warnings | errors | `.treatAllWarnings(as: .error)` in `Package.swift`; `SWIFT_TREAT_WARNINGS_AS_ERRORS` in `Project.xcconfig` |
 
 "Swift 6.2" names the compiler and the manifest format; the code is written in the
-Swift 6 language mode. `make versions` prints the macOS, the selected Xcode and
-`.xcode-version`; `make doctor` warns when the local Xcode differs (in CI it fails).
+Swift 6 language mode. `make doctor` prints the macOS and the selected Xcode, and warns
+when that Xcode differs from `.xcode-version` (in CI it fails).
 `make lint` fails when the two deployment targets disagree.
 
 ## Rules

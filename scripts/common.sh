@@ -23,6 +23,9 @@ DEBUG_APP="$DERIVED_DATA/Build/Products/Debug/$APP_NAME.app"
 ARCHIVE="$DERIVED_DATA/$APP_NAME.xcarchive"
 RELEASE_APP="dist/$APP_NAME.app"
 SPARKLE_BIN=.build/artifacts/sparkle/Sparkle/bin
+# Every Swift source: swift format formats and lints these, lint-rules.sh checks them. All
+# of App/: an extension's target gets its own folder there.
+SWIFT_PATHS=(Package.swift App Sources Tests)
 
 die() {
     echo "error: $*" >&2
@@ -31,6 +34,22 @@ die() {
 
 log() {
     echo "==> $*" >&2
+}
+
+# say <state> <text>: one checklist line, as doctor.sh, status.sh and release-status.sh
+# print them: the state (ok, todo, info, warn, --, ?) padded to five columns, then the
+# text. status.sh finds release-status.sh's steps by the leading "todo  ".
+say() {
+    printf '%-5s %s\n' "$1" "$2"
+}
+
+# deployment_target [xcconfig]: prints the MACOSX_DEPLOYMENT_TARGET the xcconfig sets
+# (default App/Configs/Project.xcconfig), such as 14.0; dies when it sets none.
+deployment_target() {
+    local xcconfig=${1:-App/Configs/Project.xcconfig} value
+    value=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*([^[:space:]]+).*/\1/p' "$xcconfig")
+    [[ -n $value ]] || die "no MACOSX_DEPLOYMENT_TARGET in $xcconfig"
+    echo "$value"
 }
 
 # The Xcode project and its scheme carry APP_NAME; the targets inside are always App and

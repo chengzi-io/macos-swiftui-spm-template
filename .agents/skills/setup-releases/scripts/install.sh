@@ -69,8 +69,8 @@ fragment() {
     for placeholder in '{{DISPLAY_NAME}}' '{{REPO}}' '{{MIN_MACOS}}'; do
         grep -qF -- "$placeholder" "$file" || die "$file has no $placeholder; the skill changed under this script"
     done
-    min_macos=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' App/Configs/Project.xcconfig)
-    [[ -n $min_macos ]] || die "no MACOSX_DEPLOYMENT_TARGET in App/Configs/Project.xcconfig"
+    min_macos=$(deployment_target)
+    min_macos=${min_macos%%.*}
     sed -E -e "s|\{\{DISPLAY_NAME\}\}|$APP_DISPLAY_NAME|g" \
         -e "s|\{\{REPO\}\}|$GITHUB_REPOSITORY|g" \
         -e "s|\{\{MIN_MACOS\}\}|$min_macos|g" "$file" >"$TMP/fragment"

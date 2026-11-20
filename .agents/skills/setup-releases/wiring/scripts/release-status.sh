@@ -16,7 +16,7 @@ repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
     log "gh points at $repo, App/Configs/Identity.xcconfig at $GITHUB_REPOSITORY"
 
 report() {
-    if [[ $2 == ok ]]; then echo "ok    $1"; else echo "todo  $1: $3"; fi
+    if [[ $2 == ok ]]; then say ok "$1"; else say todo "$1: $3"; fi
 }
 
 has() {
@@ -73,7 +73,7 @@ fi
 report "4 Sparkle: secret SPARKLE_ED_PRIVATE_KEY" "$(has SPARKLE_ED_PRIVATE_KEY "$secrets")" "SKILL.md step 4"
 
 if [[ -z ${TEAM_ID:-} ]]; then
-    echo "info  5 Developer ID: none (TEAM_ID empty), releases are ad-hoc signed"
+    say info "5 Developer ID: none (TEAM_ID empty), releases are ad-hoc signed"
 else
     for secret in DEVELOPER_ID_P12_BASE64 DEVELOPER_ID_P12_PASSWORD NOTARY_API_KEY_P8_BASE64 NOTARY_API_KEY_ID NOTARY_API_ISSUER_ID; do
         report "5 Developer ID: secret $secret" "$(has "$secret" "$secrets")" "store it in the release environment"
