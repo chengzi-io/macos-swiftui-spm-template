@@ -5,13 +5,13 @@
 # get a note on how to open an app Gatekeeper cannot verify.
 # Needs GH_TOKEN with contents:write.
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/release-common.sh"
 
 tag=${1:?usage: publish-github.sh <tag>}
 [[ $tag == "v$VERSION" ]] || die "tag $tag does not match version.txt ($VERSION)"
 
 gh release upload "$tag" \
-    "dist/$APP_NAME-$VERSION.dmg" \
+    "$RELEASE_DMG" \
     "dist/$APP_NAME-$VERSION.dSYM.zip" \
     dist/appcast.xml \
     dist/SHA256SUMS \

@@ -2,12 +2,12 @@
 # Full release build into dist/: universal .app (signed, notarized when TEAM_ID is
 # set), DMG, dSYM zip, appcast and SHA256SUMS. Same path locally and in CI.
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/release-common.sh"
 
 rm -rf dist
 mkdir -p dist
 
-app=$(scripts/build.sh release)
+app=$(scripts/build-release.sh)
 scripts/smoke.sh "$app"
 scripts/notarize.sh "$app"
 dmg=$(scripts/package-dmg.sh)

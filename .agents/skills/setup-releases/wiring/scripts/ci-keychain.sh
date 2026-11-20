@@ -6,7 +6,7 @@
 #   cleanup  deletes both
 # With TEAM_ID empty the release is ad-hoc signed and there is nothing to import.
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/release-common.sh"
 
 [[ -n ${RUNNER_TEMP:-} ]] || die "ci-keychain.sh runs in GitHub Actions only"
 keychain="$RUNNER_TEMP/signing.keychain-db"

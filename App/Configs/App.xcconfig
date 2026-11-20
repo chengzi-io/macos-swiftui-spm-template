@@ -2,8 +2,8 @@
 
 PRODUCT_NAME = $(APP_NAME)
 PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID)
-// Placeholders for Xcode builds; scripts/build.sh passes version.txt and the
-// commit count.
+// Placeholders for Xcode builds; scripts/build.sh and the release build pass
+// version.txt and the commit count.
 MARKETING_VERSION = 0.0.0
 CURRENT_PROJECT_VERSION = 1
 

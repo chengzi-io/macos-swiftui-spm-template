@@ -121,7 +121,7 @@ update again. Commit the `Info.plist` change on a branch and open a PR.
 
 - Files: `.github/workflows/release.yml`, `.github/release-please-config.json`,
   `.release-please-manifest.json`, `release.mk`, `docs/RELEASING.md`,
-  `scripts/{release,release-status,package-dmg,notarize,appcast,verify-dmg,publish-github,ci-keychain}.sh`,
+  `scripts/{release,release-common,build-release,release-status,package-dmg,notarize,appcast,verify-dmg,publish-github,ci-keychain}.sh`,
   `scripts/verify-appcast.swift`, the Install and Update sections of `README.md`, and
   `SUPublicEDKey` in `App/Configs/Info.plist`.
 - GitHub: the `release` environment and its branch policy, the GitHub App, the variable

@@ -24,8 +24,9 @@ git add -A
 git -c user.name=ci -c user.email=ci@example.invalid commit -q -m "the template"
 # An app's README.md has the "## Feedback" section install.sh puts Install before.
 printf '# App\n\n## Feedback\n\nOpen an issue.\n' >README.md
-# A release build refuses to run while SUPublicEDKey is empty; this one signs nothing.
-set_sparkle_public_key "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+# A release build refuses to run while SUPublicEDKey is empty; this one signs nothing,
+# and the copy's formatting does not matter.
+plutil -replace SUPublicEDKey -string "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" App/Configs/Info.plist
 
 log "install the release pipeline"
 .agents/skills/setup-releases/scripts/install.sh

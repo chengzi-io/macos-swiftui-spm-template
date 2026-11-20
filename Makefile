@@ -81,7 +81,7 @@ lint\:assets: ## Compile the asset catalog and AppIcon.icon with actool (fails o
 
 .PHONY: build
 build: ## Build the debug .app with xcodebuild (ad-hoc signed)
-	scripts/build.sh debug
+	scripts/build.sh
 
 .PHONY: run
 run: ## Build and run the debug .app, logs in this terminal; pass ARGS="..."

@@ -18,7 +18,7 @@ Supplements the root [AGENTS.md](../AGENTS.md).
 |---|---|
 | `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID` | the app; change only before the first release, since updates match the bundle id |
 | `APP_CATEGORY`, `COPYRIGHT` | Info.plist |
-| `TEAM_ID` | release signing and notarization only (`scripts/build.sh`); local builds stay ad-hoc |
+| `TEAM_ID` | release signing and notarization only (the release pipeline); local builds stay ad-hoc |
 | `GITHUB_REPOSITORY`, `REQUIRED_LOCALES` | release and appcast URLs; the translations `make lint` requires |
 
 Setup writes every key; change them here only. `scripts/common.sh` reads them too, so keep

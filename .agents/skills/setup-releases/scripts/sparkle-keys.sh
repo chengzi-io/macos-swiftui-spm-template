@@ -19,7 +19,7 @@ usage() {
 
 [[ $# -ge 1 ]] || usage 1
 swift package resolve >&2
-sparkle_bin=$SPARKLE_BIN
+sparkle_bin=.build/artifacts/sparkle/Sparkle/bin
 [[ -x $sparkle_bin/generate_keys ]] || die "Sparkle tools missing at $sparkle_bin"
 
 case $1 in
@@ -36,7 +36,10 @@ esac
 public_key=$("$sparkle_bin/generate_keys" --account "$BUNDLE_ID" -p)
 [[ -n $public_key ]] || die "generate_keys printed no public key"
 
-set_sparkle_public_key "$public_key"
+# In place, keeping the file's formatting (plutil and PlistBuddy rewrite it with tabs).
+sed -i '' -e '/<key>SUPublicEDKey<\/key>/{' -e 'n' -e "s|<string>.*</string>|<string>$public_key</string>|" -e '}' App/Configs/Info.plist
+[[ $(plutil -extract SUPublicEDKey raw App/Configs/Info.plist) == "$public_key" ]] ||
+    die "could not set SUPublicEDKey in App/Configs/Info.plist"
 log "SUPublicEDKey written to App/Configs/Info.plist; commit it"
 
 cat >&2 <<EOF
