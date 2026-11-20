@@ -36,8 +36,6 @@ jobs:
           echo "XCODE_VERSION=$xcode_version" >>"$GITHUB_ENV"
           echo "DEVELOPER_DIR=$developer_dir" >>"$GITHUB_ENV"
           sudo DEVELOPER_DIR="$developer_dir" xcodebuild -runFirstLaunch
-          sw_vers
-          DEVELOPER_DIR="$developer_dir" xcodebuild -version
       - run: make doctor
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
