@@ -5,7 +5,7 @@ import SwiftUI
 /// The General tab: appearance, language, and the Updates section.
 struct GeneralSettingsView: View {
     @Bindable var model: SettingsModel
-    /// `CFBundleShortVersionString (CFBundleVersion)`, which scripts/build-app.sh writes.
+    /// `CFBundleShortVersionString (CFBundleVersion)`, which scripts/build.sh writes.
     let version: String
     @Environment(\.openURL) private var openURL
 

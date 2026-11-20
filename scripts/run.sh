@@ -6,7 +6,7 @@
 
 source "$(dirname "$0")/common.sh"
 
-app=$(scripts/build-app.sh debug)
+app=$(scripts/build.sh debug)
 if ! output=$(tty); then
     output="$ROOT/.build/run.log"
     : >"$output"

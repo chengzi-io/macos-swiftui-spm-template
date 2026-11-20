@@ -8,7 +8,7 @@
 # release-app: dist/<App>.app, universal, hardened runtime, signed.
 .PHONY: release-app
 release-app:
-	scripts/build-app.sh release
+	scripts/build.sh release
 
 # release-dmg: dist/<App>.app into a DMG, signed and notarized.
 .PHONY: release-dmg

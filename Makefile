@@ -4,8 +4,8 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -euo pipefail -c
 .DEFAULT_GOAL := help
-# Targets list their steps in order (ci: lint test assets build smoke); make -j would run smoke
-# against the previous build's app.
+# Steps run in the order they are listed (make ci); make -j would run smoke against the
+# previous build's app.
 .NOTPARALLEL:
 
 # A recipe that needs the app identity, the Xcode project or the Swift paths sources
@@ -77,13 +77,13 @@ lint: ## Check formatting and the rules in scripts/lint-rules.sh (fails on any f
 	scripts/lint-rules.sh
 
 # actool runs through a long-lived ibtoold, too slow and flaky for the lint loop.
-.PHONY: assets
-assets: ## Compile the asset catalog and AppIcon.icon with actool (fails on any warning)
+.PHONY: lint\:assets
+lint\:assets: ## Compile the asset catalog and AppIcon.icon with actool (fails on any warning)
 	scripts/lint-assets.sh
 
 .PHONY: build
 build: ## Build the debug .app with xcodebuild (ad-hoc signed)
-	scripts/build-app.sh debug
+	scripts/build.sh debug
 
 .PHONY: run
 run: ## Build and run the debug .app, logs in this terminal; pass ARGS="..."
@@ -95,9 +95,12 @@ smoke: ## Smoke-test the debug .app (or APP=path)
 
 ##@ Verify
 
-# CI runs make doctor before it, so the log says which toolchain the run used.
+# CI runs make doctor before it, so the log says which toolchain the run used. The steps
+# are goals of one sub-make, not prerequisites: make 3.81, the one macOS ships, keeps the
+# backslash of lint\:assets in a prerequisite and never finds the target.
 .PHONY: ci
-ci: lint test assets build smoke ## The definition of done; CI runs make doctor, this, then make test:ui
+ci: ## The definition of done; CI runs make doctor, this, then make test:ui
+	@$(MAKE) --no-print-directory lint test lint:assets build smoke
 
 .PHONY: clean
 clean: ## Remove build output

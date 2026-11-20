@@ -26,7 +26,7 @@ debug)
     exit 0
     ;;
 release) ;;
-*) die "usage: build-app.sh debug|release" ;;
+*) die "usage: build.sh debug|release" ;;
 esac
 
 public_key=$(sparkle_public_key)

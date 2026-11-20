@@ -19,7 +19,7 @@ flowchart LR
 | --- | --- |
 | All code in one Swift package | `swift test` builds it without the app, so the test loop takes seconds; editors other than Xcode understand it |
 | A thin Xcode project | only Xcode signs, embeds frameworks and compiles the icon; settings live in `App/Configs/*.xcconfig`, not the project |
-| `scripts/build-app.sh` | adds the version from `version.txt` and, for releases, a universal archive signed with the Developer ID |
+| `scripts/build.sh` | adds the version from `version.txt` and, for releases, a universal archive signed with the Developer ID |
 
 ## Layers
 

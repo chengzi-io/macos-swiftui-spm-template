@@ -7,7 +7,7 @@ source "$(dirname "$0")/common.sh"
 rm -rf dist
 mkdir -p dist
 
-app=$(scripts/build-app.sh release)
+app=$(scripts/build.sh release)
 scripts/smoke.sh "$app"
 scripts/notarize.sh "$app"
 dmg=$(scripts/package-dmg.sh)
