@@ -9,8 +9,8 @@
 Ship a native macOS app with the boring parts done and the structure enforced: `swift
 test` runs unit and render tests in seconds without building the app; a new feature or
 domain needs zero Xcode project edits; a feature cannot import a live service, so tests
-and previews run on mocks; once you ship, merging a release PR publishes a DMG that
-updates your users through Sparkle. One entry point — `make` — shared by people and agents.
+and previews run on mocks; and once you ship, a DMG you test and publish keeps your
+users up to date through Sparkle. One entry point — `make` — shared by people and agents.
 
 ## How it is organized
 
@@ -44,8 +44,8 @@ Why each layer exists: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | `make lint` enforces the layering: services come in through `init`, mocks in tests | an agent cannot quietly wire a screen to the real system |
 | every screen rendered light and dark by a render test | CI uploads the images; a broken layout is seen, not guessed |
 | Swift 6 language mode, warnings as errors, lefthook, pinned toolchain | what compiles is clean; `make ci` is the same gate CI runs |
-| release-please and Sparkle, added when you set up the release pipeline | merging a release PR ships a DMG, appcast and changelog |
-| skills that ship with the repository for the big moves | the agent knows them in order: setup, features, capabilities, releases |
+| a `Release` workflow and Sparkle | one **Run workflow** builds, signs and drafts a DMG; you test it, **Publish release** ships it, and installed apps update themselves |
+| skills that ship with the repository for the big moves | the agent knows them in order: setup, features, capabilities |
 | string catalogs enforced per `REQUIRED_LOCALES`, sandbox, privacy manifest, Icon Composer icon | the parts every App Store review asks for, done |
 
 ## Start
@@ -61,9 +61,9 @@ The route it walks; the dashed steps are optional:
 flowchart LR
     project["name, bundle id"] --> repo["push main<br/>make github-settings"]
     repo --> dev["everyday development<br/>make feature"]
-    dev --> releases["release pipeline<br/>GitHub App, Sparkle key"]
-    releases -.-> signing["Developer ID<br/>signing, notarization"]
-    releases --> ship["each release<br/>merge the release PR"]
+    dev --> first["first release<br/>make sparkle-key"]
+    first -.-> signing["Developer ID<br/>signing, notarization"]
+    first --> ship["each release<br/>Run workflow, accept the draft, Publish"]
     ship -.-> brew["Homebrew cask"]
 ```
 

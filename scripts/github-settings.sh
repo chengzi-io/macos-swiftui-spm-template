@@ -2,17 +2,20 @@
 # Sets the GitHub repository's settings, then prints them read back. Needs gh signed in
 # with admin rights on the repository. Safe to run again: run it after the first push of
 # main, and again when a second person gets push access.
-#   - squash merge only, the PR title as the commit title (release-please reads it);
-#     merged branches are deleted
+#   - squash merge only, the PR title as the commit title (git-cliff reads it); merged
+#     branches are deleted
 #   - main protected, admins included: every change arrives by PR, with "Validate PR
 #     title", "Lint, test, build" and "Lint scripts and workflows" passed; no force push
 #     or deletion; an approving review once two or more people can push
+#   - the `release` environment, holding the release secrets, reachable from protected
+#     branches only
 #   - the default workflow token read-only
 #   - Dependabot alerts and security updates
 #   - private vulnerability reporting, secret scanning and push protection
 # A private repository gets no private vulnerability reporting (GitHub offers it on public
-# ones only), and its plan may lack branch protection (GitHub Free) or secret scanning:
-# each is reported as skipped, with the reason. Any other failure stops the script.
+# ones only), and its plan may lack branch protection (GitHub Free), environments or
+# secret scanning: each is reported as skipped, with the reason. Any other failure stops
+# the script.
 #
 #   github-settings.sh
 
@@ -73,6 +76,16 @@ plan_limited "branch protection" --method PUT "repos/$repo/branches/main/protect
 }
 JSON
 
+# The Release workflow runs from main only; the environment holds its secrets.
+plan_limited "release environment" --method PUT "repos/$repo/environments/release" --input - <<'JSON'
+{
+  "deployment_branch_policy": {
+    "protected_branches": true,
+    "custom_branch_policies": false
+  }
+}
+JSON
+
 gh api --method PUT "repos/$repo/actions/permissions/workflow" --input - >/dev/null <<'JSON'
 { "default_workflow_permissions": "read", "can_approve_pull_request_reviews": false }
 JSON
@@ -97,6 +110,9 @@ JSON
 gh api "repos/$repo" --jq '"merge:       squash \(.allow_squash_merge), merge commit \(.allow_merge_commit), rebase \(.allow_rebase_merge), title \(.squash_merge_commit_title), delete branch \(.delete_branch_on_merge)"'
 if [[ $skipped != *"branch protection:"* ]]; then
     gh api "repos/$repo/branches/main/protection" --jq '"main:        checks \([.required_status_checks.checks[] | "\(.context) (app \(.app_id))"] | join(", ")); admins included \(.enforce_admins.enabled); reviews \(.required_pull_request_reviews.required_approving_review_count)"'
+fi
+if [[ $skipped != *"release environment:"* ]]; then
+    gh api "repos/$repo/environments/release" --jq '"environment: \(.name), deployment branches \(if .deployment_branch_policy.protected_branches then "protected only" else "any" end)"'
 fi
 echo "pushers:     $pushers"
 gh api "repos/$repo/actions/permissions/workflow" --jq '"workflow:    token \(.default_workflow_permissions)"'

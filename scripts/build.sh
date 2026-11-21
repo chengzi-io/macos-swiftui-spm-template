@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the debug .app, $DEBUG_APP: ad-hoc signed, the debugger can attach. Prints its
-# path on stdout. version.txt and the commit count become the version; Xcode's own
-# builds keep the placeholders in App/Configs/App.xcconfig.
+# path on stdout. $VERSION (scripts/common.sh) and the commit count become the version;
+# Xcode's own builds keep the placeholders in App/Configs/App.xcconfig.
 
 source "$(dirname "$0")/common.sh"
 

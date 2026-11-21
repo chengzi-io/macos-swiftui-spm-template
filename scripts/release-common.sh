@@ -9,7 +9,7 @@ RELEASE_APP="dist/$APP_NAME.app"
 RELEASE_DMG="dist/$APP_NAME-$VERSION.dmg"
 
 # Prints SUPublicEDKey from App/Configs/Info.plist, the key installed copies check
-# updates against; empty until sparkle-keys.sh writes it.
+# updates against; empty until scripts/sparkle-key.sh writes it.
 sparkle_public_key() {
     local key
     key=$(plutil -extract SUPublicEDKey raw App/Configs/Info.plist) ||

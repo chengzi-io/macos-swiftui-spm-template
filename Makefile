@@ -97,11 +97,31 @@ doctor: ## Check Xcode, tools and signing identity
 clean: ## Remove build output
 	rm -rf .build dist
 
-##@ Repository
+##@ Repository and release
 
 .PHONY: github-settings
 github-settings: ## Merge rules, branch protection and security settings
 	scripts/github-settings.sh
 
-# The release targets live in release.mk, once the release pipeline is installed.
--include release.mk
+.PHONY: sparkle-key
+sparkle-key: ## Create or restore the update-signing key (once per app); RESTORE=<file>
+	scripts/sparkle-key.sh $(if $(strip $(RESTORE)),restore '$(strip $(RESTORE))',create)
+
+.PHONY: release
+release: ## Full release build into dist/ (the Release workflow runs it)
+	scripts/release.sh
+
+# The steps of make release, for rerunning one by hand; make help leaves them out.
+# The Release workflow runs the whole thing, and .github/workflows/release.yml uploads
+# dist/ as a draft release afterwards.
+.PHONY: release-app
+release-app:
+	scripts/build-release.sh
+
+.PHONY: release-dmg
+release-dmg:
+	scripts/package-dmg.sh
+
+.PHONY: appcast
+appcast:
+	scripts/appcast.sh

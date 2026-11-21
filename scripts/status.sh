@@ -70,15 +70,35 @@ else
     line ok icon "the app's own AppIcon.icon"
 fi
 
-# The release pipeline installs scripts/release-status.sh: one ok or todo line per step.
-if [[ ! -f scripts/release-status.sh ]]; then
-    line -- releases "not set up (optional until you ship)" "set up the release pipeline"
-elif ! report=$(scripts/release-status.sh 2>&1); then
-    line "?" releases "scripts/release-status.sh: $(tail -n 1 <<<"$report")"
-elif todo=$(grep -m 1 '^todo' <<<"$report"); then
-    line todo releases "${todo#todo  }" "finish the release setup"
+# The release pipeline ships with the repository: these are its one-time settings. Read
+# the secret names only, never their values.
+if [[ -z $(plutil -extract SUPublicEDKey raw App/Configs/Info.plist 2>/dev/null) ]]; then
+    line todo releases "no update-signing key yet" "make sparkle-key"
+elif ! environment=$(gh api "repos/{owner}/{repo}/environments/release" 2>&1 >/dev/null); then
+    if [[ $environment == *"Not Found"* ]]; then
+        line todo releases "no release environment on ${repo:-this repository} yet" "make github-settings"
+    else
+        line "?" releases "cannot read the release environment: ${environment#gh: }"
+    fi
+elif ! secrets=$(gh secret list --env release --json name --jq '.[].name' 2>&1); then
+    line "?" releases "cannot list the release environment's secrets: ${secrets#gh: }"
 else
-    line ok releases "set up: merging a release PR publishes it"
+    secret_list=(SPARKLE_ED_PRIVATE_KEY)
+    if [[ -n ${TEAM_ID:-} ]]; then
+        secret_list+=(DEVELOPER_ID_P12_BASE64 DEVELOPER_ID_P12_PASSWORD NOTARY_API_KEY_P8_BASE64 NOTARY_API_KEY_ID NOTARY_API_ISSUER_ID)
+    fi
+    missing=""
+    for secret in "${secret_list[@]}"; do
+        if ! grep -qxF "$secret" <<<"$secrets"; then
+            missing=$secret
+            break
+        fi
+    done
+    if [[ -n $missing ]]; then
+        line todo releases "secret $missing is not in the release environment" "docs/RELEASING.md, before the first release"
+    else
+        line ok releases "ready: Actions → Release → Run workflow"
+    fi
 fi
 
 if [[ -n ${TEAM_ID:-} ]]; then

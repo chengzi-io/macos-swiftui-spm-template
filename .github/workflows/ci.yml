@@ -14,11 +14,6 @@ concurrency:
 jobs:
   quality:
     name: Lint, test, build
-    # release-please PRs only touch version.txt, CHANGELOG.md and the manifest. A skipped
-    # job still satisfies the required check, so only release-please's own PRs skip: its
-    # App opens them as a Bot, while a person's or an agent's token opens them as a User,
-    # and the same-repo guard keeps forks out.
-    if: ${{ !(startsWith(github.head_ref, 'release-please--') && github.event.pull_request.user.type == 'Bot' && github.event.pull_request.head.repo.full_name == github.repository) }}
     # Not macos-15: GitHub's macos-15 image (15.7.9) crashes in Xcode 26 compiling the Icon
     # Composer icon (AppIcon.icon). macOS 15.7.2 with Xcode 26.2 compiles it fine locally.
     runs-on: macos-26
@@ -61,6 +56,13 @@ jobs:
           name: ui-tests-xcresult
           path: .build/UITests.xcresult
           if-no-files-found: warn
+      # The release build without secrets, so a broken release script fails this PR rather
+      # than release day. A release build refuses an empty SUPublicEDKey; the dummy key is
+      # what building ad-hoc needs, not a secret.
+      - name: Build the release ad-hoc
+        run: |
+          plutil -replace SUPublicEDKey -string AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= App/Configs/Info.plist
+          make release-app release-dmg
 
   scripts:
     name: Lint scripts and workflows

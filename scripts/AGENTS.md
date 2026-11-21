@@ -11,7 +11,7 @@ Conventions for the bash scripts behind the Makefile, CI and releases. Supplemen
 - Write for BSD tools, not GNU: `sed -i ''`, `/usr/bin/grep` without `-P` (use `perl` for PCRE).
 - Errors go through `die "<what failed>; <how to fix it>"` to stderr; progress through `log`; stdout carries only the result a caller reads.
 - Quote every expansion; pass lists as arrays (`"${args[@]}"`), not strings.
-- A script a person runs gets an entry point: a Makefile target with a `##` help line in its section. A step of `make ci` gets a target without the `##` line, under a comment saying it is a step that `make help` leaves out.
+- A script a person runs gets an entry point: a Makefile target with a `##` help line in its section. A step of `make ci` or `make release` (`release-app`, `release-dmg`, `appcast`) gets a target without the `##` line, under a comment saying it is a step that `make help` leaves out.
 
 ## Check
 

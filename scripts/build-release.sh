@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Builds the release .app: $RELEASE_APP, universal, signed with the Developer ID of
 # TEAM_ID and the hardened runtime, or ad-hoc without one. Prints the .app path on
-# stdout. version.txt and the commit count become the version.
+# stdout. $VERSION (scripts/common.sh) and the commit count become the version.
 
 source "$(dirname "$0")/release-common.sh"
 
 public_key=$(sparkle_public_key)
 [[ -n ${GITHUB_REPOSITORY:-} && -n $public_key ]] ||
-    die "release builds need GITHUB_REPOSITORY in App/Configs/Identity.xcconfig and SUPublicEDKey in App/Configs/Info.plist (set up the release pipeline first)"
+    die "release builds need GITHUB_REPOSITORY in App/Configs/Identity.xcconfig and SUPublicEDKey in App/Configs/Info.plist; run make sparkle-key and commit App/Configs/Info.plist"
 
 # The build number counts commits, and a shallow clone has only the last few: the
 # release would get a lower number than the one before, and Sparkle would not offer it.

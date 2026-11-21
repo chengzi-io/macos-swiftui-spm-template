@@ -119,7 +119,7 @@ fail() {
 
 # preflight: the tools and repository state init needs. Reports every problem.
 preflight() {
-    local version wanted
+    local version wanted tag
     command -v git >/dev/null || fail "git missing"
     if ((skip_xcode == 0)); then
         if ! version=$(xcodebuild -version 2>/dev/null | sed -n 1p); then
@@ -137,8 +137,10 @@ preflight() {
     fi
     git remote get-url origin >/dev/null 2>&1 || [[ -n $repo ]] ||
         fail "no origin remote; add one or pass --repo owner/repo"
-    [[ $VERSION == 0.0.0 ]] || fail "version.txt is $VERSION: this app has shipped, and a new name would make it a different app"
-    [[ -z $(git tag -l 'v*') ]] || fail "release tags exist: this app has shipped"
+    # A vX.Y.Z tag means the app has shipped: a new name or bundle id would make it a
+    # different app to macOS, Sparkle and Homebrew.
+    tag=$(git tag --sort=-v:refname -l 'v[0-9]*.[0-9]*.[0-9]*' | head -1)
+    [[ -z $tag ]] || fail "release tag $tag exists: this app has shipped, and a new name would make it a different app"
     # A clean tree keeps the init diff reviewable and undoable. A run that stopped
     # halfway may resume: the identity, and with it the project, carries the new name.
     if [[ -n $(git status --porcelain) ]] && ! resuming; then

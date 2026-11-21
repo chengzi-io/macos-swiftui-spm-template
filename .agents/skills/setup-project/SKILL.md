@@ -18,7 +18,7 @@ this file says when to run it and what to show the user. The last step deletes t
 ## When not to use
 
 - The user is changing the template itself (its scripts, docs or skills).
-- The app has shipped (`version.txt` is not `0.0.0`): a new name or bundle id would make a
+- The app has shipped (a `vX.Y.Z` tag exists): a new name or bundle id would make a
   different app to macOS, Sparkle and Homebrew.
 
 ## Before you start
@@ -28,7 +28,7 @@ Run `init.sh` with no arguments, from the repository root:
     .agents/skills/setup-project/scripts/init.sh
 
 It is read-only. It checks the tools and the repository (Xcode matches `.xcode-version`,
-`gh` signed in unless `--codeowner` is given, `origin`, version `0.0.0`, a clean tree) and
+`gh` signed in unless `--codeowner` is given, `origin`, no `vX.Y.Z` tag, a clean tree) and
 prints every default it can work out, one per line. Fix what it reports, or ask the user to, and keep that list.
 
 ## Ask once
@@ -72,8 +72,7 @@ deletion are staged), then
 
 Ask before `git push origin main`. Then ask before `make github-settings`, and say what it
 changes: from then on `main` only takes pull requests, admins included. It needs `gh`
-signed in with admin rights on the repository. Tell the user the first Release run shows
-as skipped until release setup is done.
+signed in with admin rights on the repository.
 
 ## Next
 
@@ -87,7 +86,8 @@ the next step, and the last line says how to start it.
 - `App/Configs/Identity.xcconfig`: `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID`,
   `APP_CATEGORY`, `COPYRIGHT`, `GITHUB_REPOSITORY`, `REQUIRED_LOCALES`;
 - `LICENSE`, `.github/CODEOWNERS`, `.github/ISSUE_TEMPLATE/config.yml`;
-- `README.md`, from `wiring/README.md`;
+- `README.md`, from `wiring/README.md`: the app's page, with its Install and Update
+  sections;
 - the template-only blocks in `scripts/status.sh`, `scripts/lint-rules.sh` and
   `.github/workflows/ci.yml`;
 - this skill and `.claude/skills/setup-project`.
@@ -97,7 +97,7 @@ the next step, and the last line says how to start it.
 - edit by hand a file the script owns (the project, schemes, Identity, Package.swift,
   LICENSE, CODEOWNERS, README) or edit the script to get past a check
 - roll back (`git reset --hard`, `git clean`) without the user's consent
-- set up the GitHub App, secrets or Apple accounts for the user
+- set up the secrets or Apple accounts for the user
 - push, or create the GitHub repository, without the user's consent
 - run this skill on the template repository itself
 

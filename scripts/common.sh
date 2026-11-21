@@ -16,7 +16,16 @@ while IFS= read -r line; do
 done <App/Configs/Identity.xcconfig
 
 DERIVED_DATA=.build/xcode
-VERSION=$(tr -d '[:space:]' <version.txt)
+# RELEASE_VERSION (CI, and `make release RELEASE_VERSION=x`), else the newest vX.Y.Z tag
+# reachable from HEAD without the v, else 0.0.0 before the first release. git-cliff
+# computes a release's version; scripts/release-prepare.sh passes it on.
+VERSION=${RELEASE_VERSION:-}
+if [[ -z $VERSION ]]; then
+    # vX.Y.Z only: a tag in another shape, such as v1 or a beta, must not set the version.
+    VERSION=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' --exclude '*-*' 2>/dev/null || true)
+    VERSION=${VERSION#v}
+    [[ -n $VERSION ]] || VERSION=0.0.0
+fi
 BUILD_NUMBER=$(git rev-list --count HEAD)
 DEBUG_APP="$DERIVED_DATA/Build/Products/Debug/$APP_NAME.app"
 # Every Swift source: swift format formats and lints these, lint-rules.sh checks them. All
@@ -32,9 +41,8 @@ log() {
     echo "==> $*" >&2
 }
 
-# say <state> <text>: one checklist line, as doctor.sh, status.sh and release-status.sh
-# print them: the state (ok, todo, info, warn, --, ?) padded to five columns, then the
-# text. status.sh finds release-status.sh's steps by the leading "todo  ".
+# say <state> <text>: one checklist line, as doctor.sh and status.sh print them: the
+# state (ok, todo, info, warn, --, ?) padded to five columns, then the text.
 say() {
     printf '%-5s %s\n' "$1" "$2"
 }

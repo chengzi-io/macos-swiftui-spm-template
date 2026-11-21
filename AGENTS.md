@@ -37,7 +37,7 @@ target, warnings as errors. Never raise `swift-tools-version` or use Swift 6.3+ 
 - Don't push, merge, tag or release without the user's go-ahead, because others see it at once.
 - Don't skip the git hooks (`--no-verify`, `LEFTHOOK=0`), because CI runs the same checks; fix what they report.
 - Don't commit certificates, `.p12`/`.p8` files or the Sparkle private key, because the repository may be public.
-- Don't edit `version.txt`, `.release-please-manifest.json` or `CHANGELOG.md`, because release-please owns them.
+- Don't generate a new Sparkle key for an app that has shipped, because installed copies would reject every update; restore the backup instead.
 
 ## Before editing, read
 
@@ -59,7 +59,7 @@ the root (Codex) load only this file, not the nested ones.
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | why the app is layered this way | people; agents when needed |
 | [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) | pinned versions, upgrades, mcpbridge, the CI runner | people and agents |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | the daily loop, editor setup, commands | people |
-| `docs/RELEASING.md` | running a release, recovery, crash symbolication; arrives with the release pipeline | people |
+| [docs/RELEASING.md](docs/RELEASING.md) | running a release, recovery, crash symbolication | people |
 | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) | commit and PR titles, the PR flow | people and agents |
 
 ## Commits

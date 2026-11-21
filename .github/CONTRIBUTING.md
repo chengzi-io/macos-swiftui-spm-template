@@ -35,9 +35,8 @@ The checks stop mistakes, not someone set on getting past them. With two or more
 `main` also needs an approving review, and nobody approves their own PR. A token that can
 push can merge, so give an agent no write access, or a GitHub account of its own.
 
-Once the release pipeline is installed, release-please turns `feat` and `fix` commits into
-a release PR; merging it tags `vX.Y.Z`, and the release workflow attaches the DMG, dSYM
-and appcast.
+A merge to `main` ships nothing by itself: run the Release workflow when you want a
+version out, and publish the draft it leaves ([docs/RELEASING.md](../docs/RELEASING.md)).
 
 ## Docs style
 
