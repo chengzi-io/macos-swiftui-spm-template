@@ -53,6 +53,7 @@ elif ! gh auth status >/dev/null 2>&1; then
     line "?" repo "gh is not signed in: gh auth login"
 elif ! repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>&1); then
     line "?" repo "no GitHub repository for this clone: $repo"
+    repo=""
 # gh api prints the response on stdout and its one-line error on stderr; only the error is read.
 elif error=$(gh api "repos/$repo/branches/main/protection" 2>&1 >/dev/null); then
     line ok repo "$repo: main is protected"
@@ -74,13 +75,15 @@ fi
 # the secret names only, never their values.
 if [[ -z $(plutil -extract SUPublicEDKey raw App/Configs/Info.plist 2>/dev/null) ]]; then
     line todo releases "no update-signing key yet" "make sparkle-key"
-elif ! environment=$(gh api "repos/{owner}/{repo}/environments/release" 2>&1 >/dev/null); then
+elif [[ -z ${repo:-} ]]; then
+    line "?" releases "the release settings live on GitHub; see the repo line"
+elif ! environment=$(gh api "repos/$repo/environments/release" 2>&1 >/dev/null); then
     if [[ $environment == *"Not Found"* ]]; then
-        line todo releases "no release environment on ${repo:-this repository} yet" "make github-settings"
+        line todo releases "no release environment on $repo yet" "make github-settings"
     else
         line "?" releases "cannot read the release environment: ${environment#gh: }"
     fi
-elif ! secrets=$(gh secret list --env release --json name --jq '.[].name' 2>&1); then
+elif ! secrets=$(gh secret list --repo "$repo" --env release --json name --jq '.[].name' 2>&1); then
     line "?" releases "cannot list the release environment's secrets: ${secrets#gh: }"
 else
     secret_list=(SPARKLE_ED_PRIVATE_KEY)
