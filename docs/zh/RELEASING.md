@@ -11,7 +11,7 @@
 
 | 步骤 | 谁 | 做什么 | 检查什么 |
 | --- | --- | --- | --- |
-| 1 | 你或者你的 agent | 写 PR 标题，`feat: …` 或 `fix: …` | 你懂这个标题，因为用户会把它当发版说明的一行读；它遵循 Conventional Commits（[CONTRIBUTING](../../.github/CONTRIBUTING.md)），其他类型什么都不发 |
+| 1 | 你或者你的 agent | 写 PR 标题，比如 `feat: …` 或 `fix: …` | 你懂这个标题，因为用户会把它当发版说明的一行读；它遵循 Conventional Commits（[CONTRIBUTING](../../.github/CONTRIBUTING.md)），它的类型决定是否发版（[版本号](#版本号)） |
 | 2 | 你 | 合并 PR；它的标题变成 `main` 上的 commit | CI 是绿的 |
 | 3 | 你 | Actions → **Release** → **Run workflow**，分支选 `main`，`version` 留空 | 或者在终端里：`gh workflow run release.yml` |
 | 4 | CI | 构建、签名并检查应用，然后留下一个草稿，里面有 DMG、dSYM zip、`appcast.xml` 和 `SHA256SUMS` | 这次运行是绿的，它的 summary 里有草稿的链接 |
@@ -22,9 +22,9 @@
 解决：新的运行会删掉草稿，用同一个版本号重新构建，再留下一个新草稿。草稿没有 tag，所以没有
 任何东西挡着它。
 
-如果自上一个版本以来只有 `chore:`、`docs:`、`ci:` 这类 commit，运行会在第一步失败，报
-"nothing to release since vX.Y.Z"。这不是出了问题：这些 commit 什么都不发，等 `main` 上有了
-`feat` 或 `fix` 再跑。
+如果自上一个版本以来只有 `refactor:`、`chore:`、`docs:`、`ci:` 这类 commit，运行会在第一步
+失败，报 "nothing to release since vX.Y.Z"。这不是出了问题：这些 commit 什么都不发，等
+`main` 上有了 `feat`、`fix` 或 `perf` 再跑。
 
 ## 版本号
 
@@ -33,9 +33,9 @@
 | 自上一个版本以来的 commit | 版本 |
 | --- | --- |
 | 有一个 `feat` | 次版本号：1.4.2 → 1.5.0 |
-| 有一个 `fix` | 修订号：1.4.2 → 1.4.3 |
+| 有一个 `fix` 或 `perf` | 修订号：1.4.2 → 1.4.3 |
 | 1.0 之前的破坏性变更 | 次版本号：0.4.2 → 0.5.0 |
-| 只有 `docs`、`chore`、`ci`、`refactor`、`test` … | 什么都不发；运行就此停下 |
+| 只有 `refactor`、`docs`、`chore`、`ci`、`test` … | 什么都不发；运行就此停下 |
 | 还没有，第一次发版 | `0.1.0` |
 
 第 3 步的 `version` 输入接受你手写的 `X.Y.Z`，并覆盖那个数字：除非你要发一个特定版本，否则
@@ -45,6 +45,9 @@
 副本总能看见更新的构建。Dependabot 以 `fix(deps)` 提安全更新，它们随下一次发版出去。
 
 Releases 页面就是 changelog：每个 Release 的说明就是它那一节，没有 `CHANGELOG.md` 要编辑。
+说明里的标题归在 Breaking Changes、Features、Fixes、Performance 和 Refactoring 下面。
+`refactor` 自己什么都不发，但它的标题会留到下一次发版的说明里，所以草稿会写清哪里的代码
+重组过、该重试什么；其他类型不进说明。
 
 ## 首次发版之前
 
@@ -105,7 +108,8 @@ Ad-hoc 构建免费，也是默认：第一次启动时 macOS 会拒绝这个应
 2. 把应用拷到一个干净的地方，`/Applications` 或者一个新文件夹，再启动它。ad-hoc 构建第一次
    需要点 **Open Anyway**（系统设置 → 隐私与安全性）。
 3. 打开应用的 Settings：窗口打开，里面的 **Check for Updates…** 有回应。
-4. 逐条走一遍发版说明：每处改动都像它说的那样工作。
+4. 逐条走一遍发版说明：每处改动都像它说的那样工作，Refactoring 那行碰过的地方也还是照旧
+   能用。
 5. 退出，再启动一次；没有东西被第二次询问。
 6. 点 **Publish release**：它在构建时的那个 commit 上创建 tag `vX.Y.Z`，这个 Release 成为
    最新的一个。
