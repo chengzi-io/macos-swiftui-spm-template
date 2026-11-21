@@ -21,14 +21,17 @@ conventional_commits = true
 filter_unconventional = true
 # vX.Y.Z only: a tag in another shape must not set the version.
 tag_pattern = "v[0-9]+.[0-9]+.[0-9]+"
-# The first match wins. A breaking change of any type, marked by `!` or a BREAKING CHANGE:
-# footer, gets its own group, which sorts first by name; feat and fix follow, and every
-# other type stays out of the notes. Matching the field, not a `!` in the title, keeps
-# a title such as `chore: tidy up!` out.
+# The first match wins, and the groups print in name order. A breaking change of any type,
+# marked by `!` or a BREAKING CHANGE: footer, gets its own group; matching the field, not
+# a `!` in the title, keeps a title such as `chore: tidy up!` out. feat, fix and perf
+# ship; a refactor ships nothing by itself (scripts/release/prepare.sh) but is listed, so
+# the notes say where the code was restructured. Every other type stays out.
 commit_parsers = [
     { field = "breaking", pattern = "true", group = "Breaking Changes" },
     { message = "^feat", group = "Features" },
     { message = "^fix", group = "Fixes" },
+    { message = "^perf", group = "Performance" },
+    { message = "^refactor", group = "Refactoring" },
     { message = ".*", skip = true },
 ]
 

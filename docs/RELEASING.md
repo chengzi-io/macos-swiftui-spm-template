@@ -12,7 +12,7 @@ until you publish it.
 
 | Step | Who | Does what | What to check |
 | --- | --- | --- | --- |
-| 1 | you or your agent | writes the PR title, `feat: …` or `fix: …` | you understand the title, since users read it as a line of the notes; it follows Conventional Commits ([CONTRIBUTING](../.github/CONTRIBUTING.md)), and other types ship nothing |
+| 1 | you or your agent | writes the PR title, such as `feat: …` or `fix: …` | you understand the title, since users read it as a line of the notes; it follows Conventional Commits ([CONTRIBUTING](../.github/CONTRIBUTING.md)), and its type decides whether it ships ([Versions](#versions)) |
 | 2 | you | merges the PR; its title becomes the commit on `main` | CI is green |
 | 3 | you | Actions → **Release** → **Run workflow**, branch `main`, `version` empty | or from a terminal: `gh workflow run release.yml` |
 | 4 | CI | builds, signs and checks the app, then leaves a draft with the DMG, the dSYM zip, `appcast.xml` and `SHA256SUMS` | the run is green, and its summary links the draft |
@@ -23,9 +23,9 @@ A **rejected draft** — a bug found in step 5, or notes you would rather not sh
 fixed by a `fix:` PR and another run: the new run deletes the draft, builds the same
 version number again and leaves a new draft. A draft has no tag, so nothing blocks it.
 
-A run with only `chore:`, `docs:`, `ci:` and similar commits since the last release fails
-in its first step with "nothing to release since vX.Y.Z". Nothing is wrong: those commits
-ship nothing, so wait until a `feat` or `fix` is on `main`.
+A run with only `refactor:`, `chore:`, `docs:`, `ci:` and similar commits since the last
+release fails in its first step with "nothing to release since vX.Y.Z". Nothing is wrong:
+those commits ship nothing, so wait until a `feat`, `fix` or `perf` is on `main`.
 
 ## Versions
 
@@ -34,9 +34,9 @@ The next version comes from the Conventional Commit titles since the last releas
 | Commits since the last release | Version |
 | --- | --- |
 | a `feat` | minor: 1.4.2 → 1.5.0 |
-| a `fix` | patch: 1.4.2 → 1.4.3 |
+| a `fix` or a `perf` | patch: 1.4.2 → 1.4.3 |
 | a breaking change, below 1.0 | minor: 0.4.2 → 0.5.0 |
-| only `docs`, `chore`, `ci`, `refactor`, `test`, … | nothing; the run stops |
+| only `refactor`, `docs`, `chore`, `ci`, `test`, … | nothing; the run stops |
 | none yet, the first release | `0.1.0` |
 
 The `version` input in step 3 takes an `X.Y.Z` you type and overrides that number: leave
@@ -48,7 +48,10 @@ it only grows, so an installed copy always sees a newer build. Dependabot opens 
 updates as `fix(deps)`, which ship with the next release.
 
 The Releases page is the changelog: each release's notes are its section, and there is no
-`CHANGELOG.md` to edit.
+`CHANGELOG.md` to edit. The notes list the titles under Breaking Changes, Features, Fixes,
+Performance and Refactoring. A `refactor` ships nothing by itself, but its title waits for
+the next release's notes, so the draft says where the code was restructured and what to
+try again; the other types stay out.
 
 ## Before the first release
 
@@ -116,7 +119,8 @@ Do this on the draft, before you publish: publishing ships it to everyone.
    ad-hoc build needs **Open Anyway** the first time (System Settings → Privacy &
    Security).
 3. Open the app's Settings: the window opens, and **Check for Updates…** in it answers.
-4. Walk every line of the release notes: each change works as it says it does.
+4. Walk every line of the release notes: each change works as it says it does, and what
+   a Refactoring line touched still works as before.
 5. Quit and launch it once more; nothing is asked a second time.
 6. Click **Publish release**: it creates the tag `vX.Y.Z` at the built commit, and the
    release becomes the latest one.

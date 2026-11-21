@@ -72,16 +72,18 @@ if [[ -n $actions ]]; then
     done
 fi
 
-# 4. Something to release: a feat, a fix or a breaking change since the last tag, which
-# the checks below need too. It runs before the version, because a history without one
-# leaves git-cliff's version at the last tag, whose "not newer" would hide the cause. An
-# explicit VERSION does not lift this, since that release would ship no change.
+# 4. Something to release: a feat, a fix, a perf or a breaking change since the last tag
+# (cliff.toml's groups), which the checks below need too. A refactor is listed in the
+# notes but changes nothing a user sees, so it does not count. This runs before the
+# version, because a history without one leaves git-cliff's version at the last tag, whose
+# "not newer" would hide the cause. An explicit VERSION does not lift this, since that
+# release would ship no change.
 last_tag=$(newest_tag)
 releasable=$(git cliff --unreleased --context |
-    jq '[.[].commits[] | select(.breaking or .group == "Features" or .group == "Fixes")] | length') ||
+    jq '[.[].commits[] | select(.breaking or .group == "Features" or .group == "Fixes" or .group == "Performance")] | length') ||
     die "cannot read the commits since the last release; run: git cliff --unreleased --context"
 [[ $releasable -gt 0 ]] ||
-    die "nothing to release since ${last_tag:-the first commit}: only chore, docs, ci, ... commits"
+    die "nothing to release since ${last_tag:-the first commit}: only refactor, chore, docs, ci, ... commits"
 
 # 5. The version: the argument when given, else git-cliff's bump of those commits. Either
 # must be newer than the last tag, and its tag must not exist yet.

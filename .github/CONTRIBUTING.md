@@ -20,6 +20,10 @@ follows Conventional Commits (CI checks it): `<type>(<scope>): <subject>`.
 - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`,
   `chore`, `revert`. The subject is lowercase, imperative, with no trailing period.
 - A breaking change is `feat(api)!: drop v1 routes` or a `BREAKING CHANGE:` footer.
+- The type decides what ships ([docs/RELEASING.md](../docs/RELEASING.md#versions)):
+  `feat`, `fix`, `perf` and breaking changes do; a `refactor` only appears in the next
+  release's notes; the rest stays out. A change users can see is a `feat` or a `fix`, even
+  when it came out of a restructuring.
 
 ## PR flow
 
