@@ -11,10 +11,13 @@
 
 source "$(dirname "$0")/common.sh"
 
-# icon_digest of the template's App/Application/AppIcon.icon, and the app name the template
-# ships with. init.sh replaces both; until it has, this repo is still the template.
+# icon_digest of the template's App/Application/AppIcon.icon: the icon line says todo until
+# the app has its own. The name the template ships with tells the template from an app
+# made from it; init.sh deletes it, with the marked block it sits in.
 TEMPLATE_ICON=4cdc776211ae4d78f4c25e8ae5086825364effbd8e668a8138c41b22d7e3c720
+# template-only:start
 TEMPLATE_NAME=Pomelo
+# template-only:end
 
 next=""
 # line state step detail [what to do about it]

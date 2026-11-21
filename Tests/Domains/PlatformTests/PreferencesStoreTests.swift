@@ -18,7 +18,7 @@ extension PreferenceKey where Value == Bool {
 }
 
 extension PreferenceKey where Value == String {
-    fileprivate static var name: Self { Self("name", default: "Pomelo") }
+    fileprivate static var name: Self { Self("name", default: "Example") }
 }
 
 extension PreferenceKey where Value == Size {
@@ -36,7 +36,7 @@ extension PreferenceKey where Value == Window {
 @MainActor
 @Suite(.serialized)
 final class PreferencesStoreTests {
-    private let suite = "io.chengzi.Pomelo.PreferencesStoreTests"
+    private let suite = "io.example.PreferencesStoreTests"
     private let defaults: UserDefaults
 
     init() throws {
@@ -55,7 +55,7 @@ final class PreferencesStoreTests {
     func unsetKeysReadTheirDefaults(store: Store) {
         let preferences = make(store)
         #expect(preferences[.flag] == true)
-        #expect(preferences[.name] == "Pomelo")
+        #expect(preferences[.name] == "Example")
         #expect(preferences[.size] == .small)
         #expect(preferences[.window] == Window(width: 400, title: "Default"))
         #expect(preferences[.appearance] == .system)
