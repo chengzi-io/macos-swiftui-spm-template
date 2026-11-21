@@ -67,7 +67,7 @@ flowchart LR
     ship -.-> brew["Homebrew cask"]
 ```
 
-The first feature takes the demo's place. `make help` lists every command; `make run`
+The first feature takes the demo's place. `make help` lists the entry points; `make run`
 starts the app.
 
 Day-to-day commands and editors: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).

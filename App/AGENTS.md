@@ -29,7 +29,7 @@ plain `KEY = value` lines: no quotes, no `$(...)`, no `//`.
 - `Application/` and `UITests/` are buildable folders, and new modules join the `AppModules` product in the root `Package.swift`: neither needs a project edit.
 - `MainApp` builds the Live services, or the mocks under `UI_TESTING=1` in DEBUG builds only, and hands them to `AppModel`.
 - A new capability: its entitlement in `Configs/App.entitlements`, its usage text as `INFOPLIST_KEY_NS…UsageDescription` in `Configs/App.xcconfig`.
-- Edit `AppIcon.icon` only in Icon Composer from Xcode 26; check it with `make lint:assets`.
+- Edit `AppIcon.icon` only in Icon Composer from Xcode 26; check it with `make lint-assets`.
 
 ## Never
 

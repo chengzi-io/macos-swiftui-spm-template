@@ -15,10 +15,10 @@ carry it, while the targets are always `App` and `AppUITests` and the package
 | `make ci` | before calling a task done: the definition of done, same as CI | minutes |
 | `make run` | to launch the debug app; logs go to the terminal | a minute |
 | `make fmt` | to format Swift sources (the pre-commit hook formats staged files) | seconds |
-| `make test:ui` | only when the user asks: it takes over the mouse and keyboard | minutes |
+| `make test-ui` | only when the user asks: it takes over the mouse and keyboard | minutes |
 
-CI also runs `make test:ui`, shellcheck and actionlint on every PR. `make help` lists
-every target.
+CI also runs `make test-ui`, shellcheck and actionlint on every PR. `make help` lists the
+entry points only: the steps `make ci` runs stay off the list.
 
 ## Toolchain
 

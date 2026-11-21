@@ -29,7 +29,9 @@ CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 
 ## Commands
 
-`make help` lists every target; these are the ones you use daily.
+`make help` lists the entry points; these are the ones you use daily. `make build`, `make
+smoke` and `make lint-assets` are steps of `make ci`, so `make help` leaves them out;
+they run on their own too.
 
 | Command | Does | When |
 | --- | --- | --- |
@@ -41,10 +43,10 @@ CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 | `make run` | builds and launches the debug app, logs in the terminal | to try a change |
 | `make fmt` | formats Swift sources in place | before committing |
 | `make lint` | formatting and `scripts/lint-rules.sh` | part of `make ci` |
-| `make lint:assets` | compiles the asset catalog and `AppIcon.icon` with actool, fails on any warning | after an icon change; part of `make ci` |
+| `make lint-assets` | compiles the asset catalog and `AppIcon.icon` with actool, fails on any warning | after an icon change; part of `make ci` |
 | `make build` | builds the debug .app, ad-hoc signed | to check the app target builds |
-| `make ci` | lint, test, lint:assets, build, smoke | before a PR |
-| `make test:ui` | XCUITests; they take over the mouse and keyboard | when asked; CI runs them on every PR |
+| `make ci` | lint, test, lint-assets, build, smoke | before a PR |
+| `make test-ui` | XCUITests; they take over the mouse and keyboard | when asked; CI runs them on every PR |
 | `make clean` | removes build output | after a toolchain change |
 
 | Task | Command |

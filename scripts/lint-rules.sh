@@ -209,7 +209,7 @@ if ! grep -qx "TEMPLATE_NAME=$APP_NAME" scripts/status.sh; then
 fi
 # template-only:end
 
-# Docs link only to files that exist and name only make targets that make help lists.
+# Docs link only to files that exist and name only make targets that the Makefile defines.
 # Tracked and new files alike, ignored ones (.build/) not. A skill's docs are its own
 # business: the template checks the files it ships and the ones it owns.
 docs=$(git ls-files --cached --others --exclude-standard -- '*.md' ':(exclude).agents/**' | sort -u)
@@ -237,14 +237,14 @@ while read -r doc; do
     done < <(perl -ne 'while (/\]\(([^)\s]+)/g) { my $t = $1; print "$.:$t\n" unless $t =~ m{^(?:[a-z]+:|#|<)} }' "$doc")
 done <<<"$docs"
 
-# A make target named in the docs is one make help lists: `make x` in text, or a line of a
-# ``` block starting with make.
-targets=$(make --no-print-directory -s help | awk '/^  [a-z]/ { print $1 }')
+# A make target named in the docs is one the Makefile defines, a step of make ci included:
+# `make x` in text, or a line of a ``` block starting with make.
+targets=$(sed -n 's/^\([a-z][a-z-]*\):.*/\1/p' Makefile | sort -u)
 while read -r doc; do
     [[ -n $doc ]] || continue
     while IFS=: read -r line target; do
         if ! grep -qxF -- "$target" <<<"$targets"; then
-            echo "error: $doc:$line names make $target, which make help does not list" >&2
+            echo "error: $doc:$line names make $target, which the Makefile does not define" >&2
             status=1
         fi
     done < <(perl -ne '$fence = !$fence if /^\s*```/;

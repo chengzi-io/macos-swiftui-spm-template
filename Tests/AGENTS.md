@@ -44,5 +44,5 @@ Reproduce in a loop, find the cause, then fix it; do not retry or skip:
 
 ## UI tests
 
-`make test:ui` takes over the mouse and keyboard: run it only when the user asks. GitHub CI
+`make test-ui` takes over the mouse and keyboard: run it only when the user asks. GitHub CI
 runs it on every PR. The app launches with `UI_TESTING=1` and uses mocks only.

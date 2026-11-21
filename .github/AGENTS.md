@@ -5,7 +5,7 @@ Rules for the workflows, templates and repository settings files. Supplements th
 
 | File | Runs |
 |---|---|
-| `workflows/ci.yml` | every PR: `make ci` and `make test:ui` on `macos-26`; shellcheck and actionlint on Linux |
+| `workflows/ci.yml` | every PR: `make ci` and `make test-ui` on `macos-26`; shellcheck and actionlint on Linux |
 | `workflows/pr-title.yml` | every PR: the title follows Conventional Commits, since it becomes the squash commit |
 | `workflows/release.yml` | added once the release pipeline is installed: every push to `main`, release-please, then the `release` target and the upload when a tag is cut |
 | `dependabot.yml` | security updates for Swift packages; weekly bumps of the pinned actions |

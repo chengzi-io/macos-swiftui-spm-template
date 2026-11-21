@@ -12,27 +12,25 @@ SHELL := /bin/bash
 # scripts/common.sh, which reads them and fails clearly when the project is missing.
 COMMON := source scripts/common.sh
 
+# make help lists the entry points only; help itself stays off the list, which `make`
+# alone still prints.
 .PHONY: help
-help: ## List targets
-	@awk '/^##@/ { printf "\n%s\n", substr($$0, 5) } /^([a-z-]|\\:)+:.*## / { match($$0, /^([a-z-]|\\:)+/); target = substr($$0, 1, RLENGTH); gsub(/\\/, "", target); split($$0, parts, "## "); printf "  %-18s %s\n", target, parts[2] }' $(MAKEFILE_LIST)
+help:
+	@awk '/^##@/ { printf "\n%s\n", substr($$0, 5) } /^([a-z-]+):.*## / { match($$0, /^([a-z-]+)/); target = substr($$0, 1, RLENGTH); split($$0, parts, "## "); printf "  %-18s %s\n", target, parts[2] }' $(MAKEFILE_LIST)
 
-##@ Setup
+##@ Start
 
 .PHONY: setup
-setup: doctor ## Check the toolchain and install git hooks
+setup: doctor ## Check the toolchain and install git hooks (once per clone)
 	lefthook install
 
-.PHONY: doctor
-doctor: ## Check Xcode, tools and signing identity
-	scripts/doctor.sh
-
 .PHONY: status
-status: ## Show where the project stands, from template to release, and what comes next
+status: ## Where the project stands and what comes next
 	scripts/status.sh
 
-.PHONY: github-settings
-github-settings: ## Set the GitHub repository's merge, branch protection and security settings
-	scripts/github-settings.sh
+.PHONY: run
+run: ## Build and run the debug app; ARGS="..."
+	scripts/run.sh $(ARGS)
 
 ##@ Develop
 
@@ -42,67 +40,68 @@ github-settings: ## Set the GitHub repository's merge, branch protection and sec
 # not draw it. The import check fails on an import of a module the target does not
 # declare, as Package.swift's dependencies would otherwise be enforced only by build order.
 .PHONY: test
-test: ## Run the package unit tests with swift test (fast: no app, no UI); FILTER=<regex> for some suites
+test: ## Unit and render tests, in seconds; FILTER=<regex>
 	rm -rf .build/renders
 	swift test --explicit-target-dependency-import-check error $(if $(FILTER),--filter '$(FILTER)')
+
+.PHONY: fmt
+fmt: ## Format Swift sources
+	$(COMMON) && swift format format --in-place --recursive --parallel "$${SWIFT_PATHS[@]}"
+
+.PHONY: lint
+lint: ## Formatting and the project's rules
+	scripts/lint-rules.sh
+
+# Scaffolding a feature is how a person adds one: the script writes the files, declares
+# the targets and the scheme entry, and prints the two lines that wire it. NAME is the
+# area (Library), CORES the targets its code uses ("Notes Platform").
+.PHONY: feature
+feature: ## Add a <Name>Feature target; NAME=<Area> CORES="..."
+	@[[ -n "$(strip $(NAME))" ]] || { echo 'usage: make feature NAME=<Area> [CORES="<Core> ..."]' >&2; exit 1; }
+	scripts/feature.sh $(strip $(NAME)) $(strip $(CORES))
+
+.PHONY: ci
+ci: lint test lint-assets build smoke ## The definition of done: lint, test, assets, build, smoke
+
+# Steps of make ci, kept for rerunning one by hand; make help leaves them out.
+# actool runs through a long-lived ibtoold, too slow and flaky for the lint loop.
+.PHONY: lint-assets
+lint-assets:
+	scripts/lint-assets.sh
+
+.PHONY: build
+build:
+	scripts/build.sh
+
+.PHONY: smoke
+smoke:
+	scripts/smoke.sh $(APP)
 
 # UI tests drive the real mouse and keyboard on this Mac, so they stay out of
 # `make test` and `make ci`; GitHub CI runs them. The result bundle holds the failure
 # screenshots; xcodebuild refuses to overwrite one, so the last run's goes first.
 UI_TEST_RESULTS := .build/UITests.xcresult
-# No .PHONY for test:ui and lint:assets: make 3.81, the one macOS ships, would declare the
-# name with its backslash. They run all the same, unless a file of that name appears.
-test\:ui: ## Run the UI tests; they take over the mouse and keyboard while they run
+.PHONY: test-ui
+test-ui: ## UI tests; they take over the mouse and keyboard
 	rm -rf $(UI_TEST_RESULTS)
 	$(COMMON) && xcodebuild test -quiet -project "$$XCODE_PROJECT" -scheme "$$APP_NAME" \
 		-derivedDataPath "$$DERIVED_DATA" -destination "platform=macOS,arch=$$(uname -m)" \
 		-resultBundlePath $(UI_TEST_RESULTS) \
 		-only-testing:AppUITests
 
-.PHONY: fmt
-fmt: ## Format Swift sources in place
-	$(COMMON) && swift format format --in-place --recursive --parallel "$${SWIFT_PATHS[@]}"
-
-# Scaffolding a feature is how a person adds one: the script writes the files, declares
-# the targets and the scheme entry, and prints the two lines that wire it. NAME is the
-# area (Library), CORES the targets its code uses ("Notes Platform").
-.PHONY: feature
-feature: ## Add a <Name>Feature target; NAME=<Area> CORES="<Core> ..."
-	@[[ -n "$(strip $(NAME))" ]] || { echo 'usage: make feature NAME=<Area> [CORES="<Core> ..."]' >&2; exit 1; }
-	scripts/feature.sh $(strip $(NAME)) $(strip $(CORES))
-
-.PHONY: lint
-lint: ## Check formatting and the rules in scripts/lint-rules.sh (fails on any finding)
-	scripts/lint-rules.sh
-
-# actool runs through a long-lived ibtoold, too slow and flaky for the lint loop.
-lint\:assets: ## Compile the asset catalog and AppIcon.icon with actool (fails on any warning)
-	scripts/lint-assets.sh
-
-.PHONY: build
-build: ## Build the debug .app with xcodebuild (ad-hoc signed)
-	scripts/build.sh
-
-.PHONY: run
-run: ## Build and run the debug .app, logs in this terminal; pass ARGS="..."
-	scripts/run.sh $(ARGS)
-
-.PHONY: smoke
-smoke: ## Smoke-test the debug .app (or APP=path)
-	scripts/smoke.sh $(APP)
-
-##@ Verify
-
-# CI runs make doctor before it, so the log says which toolchain the run used. The steps
-# are goals of one sub-make, not prerequisites: make 3.81, the one macOS ships, keeps the
-# backslash of lint\:assets in a prerequisite and never finds the target.
-.PHONY: ci
-ci: ## The definition of done; CI runs make doctor, this, then make test:ui
-	@$(MAKE) --no-print-directory lint test lint:assets build smoke
+.PHONY: doctor
+doctor: ## Check Xcode, tools and signing identity
+	scripts/doctor.sh
 
 .PHONY: clean
 clean: ## Remove build output
 	rm -rf .build dist
+
+##@ Repository
+
+.PHONY: github-settings
+github-settings: ## Merge rules, branch protection and security settings
+	scripts/github-settings.sh
 
 # The release targets live in release.mk, once the release pipeline is installed.
 -include release.mk

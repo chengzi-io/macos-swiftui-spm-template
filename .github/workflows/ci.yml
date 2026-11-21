@@ -53,8 +53,8 @@ jobs:
       # UI tests drive the mouse and keyboard; macOS asks for an admin password the
       # first time unless automation mode is enabled up front.
       - run: sudo automationmodetool enable-automationmode-without-authentication
-      - run: make test:ui
-      # make test:ui writes its result bundle here: screenshots and logs of a failing test.
+      - run: make test-ui
+      # make test-ui writes its result bundle here: screenshots and logs of a failing test.
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
