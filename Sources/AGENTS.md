@@ -58,7 +58,7 @@ this way: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 - Logging: a module that logs has an internal `Log` enum (`Log.swift`) of `os.Logger`s (subsystem: the bundle id) with its own category; dynamic values stay private unless marked `privacy: .public`. Never log tokens or personal data.
 - Warnings are errors. Fix them, do not silence them. `MemberImportVisibility` is on: import every module whose members a file uses.
 
-## Forbidden (`make lint`, [scripts/lint-rules.sh](../scripts/lint-rules.sh))
+## Forbidden (`make lint`, [scripts/dev/lint-rules.sh](../scripts/dev/lint-rules.sh))
 
 | Do not | Do instead |
 |---|---|

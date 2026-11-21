@@ -4,13 +4,13 @@
 # the Releases page's latest/download/appcast.xml (no delta updates).
 #
 # EdDSA private key: SPARKLE_ED_PRIVATE_KEY (CI) or the keychain entry created by
-# scripts/sparkle-key.sh (account = BUNDLE_ID).
+# scripts/setup/sparkle-key.sh (account = BUNDLE_ID).
 
-source "$(dirname "$0")/release-common.sh"
+source "$(dirname "$0")/../common.sh"
 
 releases_url="https://github.com/$GITHUB_REPOSITORY/releases"
 dmg=$RELEASE_DMG
-[[ -f $dmg ]] || die "no DMG at $dmg; run make release-dmg first"
+[[ -f $dmg ]] || die "no DMG at $dmg; run scripts/release/dmg.sh first"
 public_key=$(sparkle_public_key)
 
 swift package resolve >&2
@@ -34,6 +34,6 @@ if [[ -n ${SPARKLE_ED_PRIVATE_KEY:-} ]]; then
 else
     "$sparkle_bin/generate_appcast" --account "$BUNDLE_ID" "${args[@]}" "$tmp/updates"
 fi
-xcrun swift scripts/verify-appcast.swift dist/appcast.xml "$dmg" \
+xcrun swift scripts/release/verify-appcast.swift dist/appcast.xml "$dmg" \
     "$releases_url/download/v$VERSION/$(basename "$dmg")" "$public_key"
 echo "dist/appcast.xml"

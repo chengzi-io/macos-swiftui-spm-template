@@ -26,11 +26,11 @@ setup: doctor ## Check the toolchain and install git hooks (once per clone)
 
 .PHONY: status
 status: ## Where the project stands and what comes next
-	scripts/status.sh
+	scripts/setup/status.sh
 
 .PHONY: run
 run: ## Build and run the debug app; ARGS="..."
-	scripts/run.sh $(ARGS)
+	scripts/dev/run.sh $(ARGS)
 
 ##@ Develop
 
@@ -50,7 +50,7 @@ fmt: ## Format Swift sources
 
 .PHONY: lint
 lint: ## Formatting and the project's rules
-	scripts/lint-rules.sh
+	scripts/dev/lint-rules.sh
 
 # Scaffolding a feature is how a person adds one: the script writes the files, declares
 # the targets and the scheme entry, and prints the two lines that wire it. NAME is the
@@ -58,7 +58,7 @@ lint: ## Formatting and the project's rules
 .PHONY: feature
 feature: ## Add a <Name>Feature target; NAME=<Area> CORES="..."
 	@[[ -n "$(strip $(NAME))" ]] || { echo 'usage: make feature NAME=<Area> [CORES="<Core> ..."]' >&2; exit 1; }
-	scripts/feature.sh $(strip $(NAME)) $(strip $(CORES))
+	scripts/dev/feature.sh $(strip $(NAME)) $(strip $(CORES))
 
 .PHONY: ci
 ci: lint test lint-assets build smoke ## The definition of done: lint, test, assets, build, smoke
@@ -67,15 +67,15 @@ ci: lint test lint-assets build smoke ## The definition of done: lint, test, ass
 # actool runs through a long-lived ibtoold, too slow and flaky for the lint loop.
 .PHONY: lint-assets
 lint-assets:
-	scripts/lint-assets.sh
+	scripts/dev/lint-assets.sh
 
 .PHONY: build
 build:
-	scripts/build.sh
+	scripts/dev/build.sh
 
 .PHONY: smoke
 smoke:
-	scripts/smoke.sh $(APP)
+	scripts/dev/smoke.sh $(APP)
 
 # UI tests drive the real mouse and keyboard on this Mac, so they stay out of
 # `make test` and `make ci`; GitHub CI runs them. The result bundle holds the failure
@@ -91,7 +91,7 @@ test-ui: ## UI tests; they take over the mouse and keyboard
 
 .PHONY: doctor
 doctor: ## Check Xcode, tools and signing identity
-	scripts/doctor.sh
+	scripts/setup/doctor.sh
 
 .PHONY: clean
 clean: ## Remove build output
@@ -101,27 +101,12 @@ clean: ## Remove build output
 
 .PHONY: github-settings
 github-settings: ## Merge rules, branch protection and security settings
-	scripts/github-settings.sh
+	scripts/setup/github-settings.sh
 
 .PHONY: sparkle-key
 sparkle-key: ## Create or restore the update-signing key (once per app); RESTORE=<file>
-	scripts/sparkle-key.sh $(if $(strip $(RESTORE)),restore '$(strip $(RESTORE))',create)
+	scripts/setup/sparkle-key.sh $(if $(strip $(RESTORE)),restore '$(strip $(RESTORE))',create)
 
 .PHONY: release
 release: ## Full release build into dist/ (the Release workflow runs it)
-	scripts/release.sh
-
-# The steps of make release, for rerunning one by hand; make help leaves them out.
-# The Release workflow runs the whole thing, and .github/workflows/release.yml uploads
-# dist/ as a draft release afterwards.
-.PHONY: release-app
-release-app:
-	scripts/build-release.sh
-
-.PHONY: release-dmg
-release-dmg:
-	scripts/package-dmg.sh
-
-.PHONY: appcast
-appcast:
-	scripts/appcast.sh
+	scripts/release/build.sh

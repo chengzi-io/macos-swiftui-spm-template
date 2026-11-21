@@ -3,7 +3,7 @@
 # path on stdout. $VERSION (scripts/common.sh) and the commit count become the version;
 # Xcode's own builds keep the placeholders in App/Configs/App.xcconfig.
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/../common.sh"
 
 [[ $# -eq 0 ]] || die "usage: build.sh (takes no arguments)"
 

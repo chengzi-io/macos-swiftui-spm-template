@@ -7,9 +7,9 @@
 #   ?     could not tell; the line says why
 # The last line is `next: <what to do next>`. The repo line needs gh signed in.
 #
-#   status.sh
+#   scripts/setup/status.sh
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/../common.sh"
 
 # icon_digest of the template's App/Application/AppIcon.icon: the icon line says todo until
 # the app has its own. The name the template ships with tells the template from an app

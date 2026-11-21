@@ -88,7 +88,7 @@ the next step, and the last line says how to start it.
 - `LICENSE`, `.github/CODEOWNERS`, `.github/ISSUE_TEMPLATE/config.yml`;
 - `README.md`, from `wiring/README.md`: the app's page, with its Install and Update
   sections;
-- the template-only blocks in `scripts/status.sh`, `scripts/lint-rules.sh` and
+- the template-only blocks in `scripts/setup/status.sh`, `scripts/dev/lint-rules.sh` and
   `.github/workflows/ci.yml`;
 - this skill and `.claude/skills/setup-project`.
 

@@ -150,7 +150,7 @@ atos -o <App>.app.dSYM/Contents/Resources/DWARF/<App> -arch arm64 -l <load addre
 
 `<App>` is the app's name, `APP_NAME` in `App/Configs/Identity.xcconfig`. On an
 open-source repository the dSYM can stay public; for a closed-source app, remove it from
-the assets `scripts/draft-release.sh` uploads and read the artifact instead.
+the assets `scripts/release/draft.sh` uploads and read the artifact instead.
 
 ## Beta channel
 

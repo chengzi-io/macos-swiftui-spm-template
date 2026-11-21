@@ -16,5 +16,5 @@ TEAM_ID =
 GITHUB_REPOSITORY = chengzi-io/macos-swiftui-spm-template
 
 // Locales every string catalog must translate, space separated, such as: en zh-Hans.
-// scripts/lint-rules.sh fails on a missing translation; en is the source language.
+// scripts/dev/lint-rules.sh fails on a missing translation; en is the source language.
 REQUIRED_LOCALES = en zh-Hans

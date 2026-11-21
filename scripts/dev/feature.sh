@@ -8,13 +8,13 @@
 #   feature.sh <Name> [Core...]    <Name> is the area's name: Library makes LibraryFeature;
 #                                  each Core is a target its code uses, such as Notes
 
-# shellcheck source=common.sh
-source "$(dirname "$0")/common.sh"
+# shellcheck source=../common.sh
+source "$(dirname "$0")/../common.sh"
 
 name=${1:-}
 cores=("${@:2}")
 logger=$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')
-[[ -n $name ]] || die "usage: scripts/feature.sh <Name> [Core...], such as Library Notes"
+[[ -n $name ]] || die "usage: scripts/dev/feature.sh <Name> [Core...], such as Library Notes"
 [[ $name =~ ^[A-Z][A-Za-z0-9]*$ ]] ||
     die "<Name> is the area's name and names its types: a capital letter, then letters and digits"
 [[ $name != *Feature ]] || die "<Name> is the area's name, without Feature: ${name%Feature} makes the target $name"

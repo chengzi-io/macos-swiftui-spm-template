@@ -4,7 +4,7 @@
 # after startup.
 # A missing resource bundle crashes the first render through Bundle.module.
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/../common.sh"
 
 app=${1:-$DEBUG_APP}
 [[ -d $app ]] || die "no app at $app; run make build first"

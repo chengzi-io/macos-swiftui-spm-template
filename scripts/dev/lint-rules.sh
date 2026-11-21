@@ -5,7 +5,7 @@
 # docs' links, and the rule that nothing here reads a skill. Package.swift only makes a
 # target declare what it imports, and any target can import a system framework.
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/../common.sh"
 
 # The manifest itself says where every target lives, so the checks below read it instead
 # of guessing from directory shapes.
@@ -199,12 +199,12 @@ fi
 # template-only:start
 # status.sh tells an app made from the template that its icon is still the template's, so
 # its TEMPLATE_ICON follows the icon.
-if ! grep -qx "TEMPLATE_ICON=$(icon_digest)" scripts/status.sh; then
-    echo "error: TEMPLATE_ICON in scripts/status.sh is not the digest of App/Application/AppIcon.icon; set it to $(icon_digest)" >&2
+if ! grep -qx "TEMPLATE_ICON=$(icon_digest)" scripts/setup/status.sh; then
+    echo "error: TEMPLATE_ICON in scripts/setup/status.sh is not the digest of App/Application/AppIcon.icon; set it to $(icon_digest)" >&2
     status=1
 fi
-if ! grep -qx "TEMPLATE_NAME=$APP_NAME" scripts/status.sh; then
-    echo "error: TEMPLATE_NAME in scripts/status.sh is not APP_NAME ($APP_NAME); the project line reads it" >&2
+if ! grep -qx "TEMPLATE_NAME=$APP_NAME" scripts/setup/status.sh; then
+    echo "error: TEMPLATE_NAME in scripts/setup/status.sh is not APP_NAME ($APP_NAME); the project line reads it" >&2
     status=1
 fi
 # template-only:end
@@ -256,7 +256,7 @@ done <<<"$docs"
 # skill, so a moved skill takes nothing here with it and needs nothing here to work. A
 # skill's own docs are the exception, and the .claude/ links into them; so is this file,
 # which spells the pattern out.
-if offenders=$(git ls-files --cached --others --exclude-standard -z -- ':(exclude).agents/**' ':(exclude).claude/**' ':(exclude)scripts/lint-rules.sh' |
+if offenders=$(git ls-files --cached --others --exclude-standard -z -- ':(exclude).agents/**' ':(exclude).claude/**' ':(exclude)scripts/dev/lint-rules.sh' |
     xargs -0 grep -lE '\.agents/skills|\.claude/skills' 2>/dev/null); then
     echo "error: these files reach into a skill, which the template does not read; spell out the file rather than a skill path:" >&2
     echo "$offenders" | sed 's/^/  /' >&2

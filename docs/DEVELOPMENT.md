@@ -42,7 +42,7 @@ they run on their own too.
 | `make test` | package unit tests and renders, no app | after every change |
 | `make run` | builds and launches the debug app, logs in the terminal | to try a change |
 | `make fmt` | formats Swift sources in place | before committing |
-| `make lint` | formatting and `scripts/lint-rules.sh` | part of `make ci` |
+| `make lint` | formatting and `scripts/dev/lint-rules.sh` | part of `make ci` |
 | `make lint-assets` | compiles the asset catalog and `AppIcon.icon` with actool, fails on any warning | after an icon change; part of `make ci` |
 | `make build` | builds the debug .app, ad-hoc signed | to check the app target builds |
 | `make ci` | lint, test, lint-assets, build, smoke | before a PR |

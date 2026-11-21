@@ -1,4 +1,4 @@
-# Sourced by scripts/*.sh. Runs from the repo root with the app identity
+# Sourced by every script under scripts/. Runs from the repo root with the app identity
 # (App/Configs/Identity.xcconfig) exported.
 # macOS ships bash 3.2: no associative arrays, no mapfile, guard empty arrays.
 # shellcheck shell=bash disable=SC2034 # the scripts that source this file read its variables
@@ -18,7 +18,7 @@ done <App/Configs/Identity.xcconfig
 DERIVED_DATA=.build/xcode
 # RELEASE_VERSION (CI, and `make release RELEASE_VERSION=x`), else the newest vX.Y.Z tag
 # reachable from HEAD without the v, else 0.0.0 before the first release. git-cliff
-# computes a release's version; scripts/release-prepare.sh passes it on.
+# computes a release's version; scripts/release/prepare.sh passes it on.
 VERSION=${RELEASE_VERSION:-}
 if [[ -z $VERSION ]]; then
     # vX.Y.Z only: a tag in another shape, such as v1 or a beta, must not set the version.
@@ -41,8 +41,9 @@ log() {
     echo "==> $*" >&2
 }
 
-# say <state> <text>: one checklist line, as doctor.sh and status.sh print them: the
-# state (ok, todo, info, warn, --, ?) padded to five columns, then the text.
+# say <state> <text>: one checklist line, as scripts/setup/doctor.sh and
+# scripts/setup/status.sh print them: the state (ok, todo, info, warn, --, ?) padded to
+# five columns, then the text.
 say() {
     printf '%-5s %s\n' "$1" "$2"
 }
@@ -64,7 +65,7 @@ XCODE_SCHEME=$XCODE_PROJECT/xcshareddata/xcschemes/$APP_NAME.xcscheme
     die "no $XCODE_PROJECT/project.pbxproj; the project is named after APP_NAME in App/Configs/Identity.xcconfig: git mv it and its scheme to match"
 
 # Prints one digest of every file in App/Application/AppIcon.icon and its path, so
-# status.sh can tell the template's icon from the app's own.
+# scripts/setup/status.sh can tell the template's icon from the app's own.
 icon_digest() {
     (cd App/Application && find AppIcon.icon -type f -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256) |
         shasum -a 256 | awk '{ print $1 }'
@@ -76,4 +77,31 @@ find_identity() {
     local pattern=$1
     security find-identity -v -p codesigning |
         awk -v pattern="$pattern" -v team="($TEAM_ID)" '$0 ~ pattern && index($0, team) { print $2; exit }'
+}
+
+# The paths and the signing that only a release needs.
+ARCHIVE="$DERIVED_DATA/$APP_NAME.xcarchive"
+RELEASE_APP="dist/$APP_NAME.app"
+RELEASE_DMG="dist/$APP_NAME-$VERSION.dmg"
+
+# Prints SUPublicEDKey from App/Configs/Info.plist, the key installed copies check
+# updates against; empty until scripts/setup/sparkle-key.sh writes it.
+sparkle_public_key() {
+    local key
+    key=$(plutil -extract SUPublicEDKey raw App/Configs/Info.plist) ||
+        die "no SUPublicEDKey in App/Configs/Info.plist"
+    echo "$key"
+}
+
+# Prints the codesign identity for Developer ID builds: "-" (ad-hoc) when TEAM_ID is
+# empty, otherwise the team's Developer ID Application certificate.
+signing_identity() {
+    if [[ -z ${TEAM_ID:-} ]]; then
+        echo "-"
+        return
+    fi
+    local id
+    id=$(find_identity "Developer ID Application")
+    [[ -n $id ]] || die "no 'Developer ID Application' identity for team $TEAM_ID in the keychain"
+    echo "$id"
 }

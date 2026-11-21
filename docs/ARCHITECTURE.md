@@ -11,7 +11,7 @@ flowchart LR
     pkg["Package.swift, Sources/<br/>all code, string catalogs"] --> xb
     shell["App/: Xcode project,<br/>@main, assets, AppIcon.icon"] --> xb
     cfg["App/Configs/<br/>xcconfig, Info.plist, entitlements"] --> xb
-    xb["xcodebuild<br/>compile, embed Sparkle, sign"] --> app[".app"] --> smoke["scripts/smoke.sh"]
+    xb["xcodebuild<br/>compile, embed Sparkle, sign"] --> app[".app"] --> smoke["scripts/dev/smoke.sh"]
     pkg --> st["swift test<br/>unit and render tests, seconds"]
 ```
 
@@ -19,7 +19,7 @@ flowchart LR
 | --- | --- |
 | All code in one Swift package | `swift test` builds it without the app, so the test loop takes seconds; editors other than Xcode understand it |
 | A thin Xcode project | only Xcode signs, embeds frameworks and compiles the icon; settings live in `App/Configs/*.xcconfig`, not the project |
-| `scripts/build.sh` | adds the version and the commit count; the release build adds a universal archive signed with the Developer ID |
+| `scripts/dev/build.sh` | adds the version and the commit count; the release build adds a universal archive signed with the Developer ID |
 
 ## Layers
 

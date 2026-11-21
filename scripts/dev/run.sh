@@ -4,9 +4,9 @@
 # terminal, or to .build/run.log without one. Ctrl-C quits the app. Extra
 # arguments go to the app.
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/../common.sh"
 
-app=$(scripts/build.sh)
+app=$(scripts/dev/build.sh)
 if ! output=$(tty); then
     output="$ROOT/.build/run.log"
     : >"$output"

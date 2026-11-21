@@ -62,7 +62,8 @@ jobs:
       - name: Build the release ad-hoc
         run: |
           plutil -replace SUPublicEDKey -string AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= App/Configs/Info.plist
-          make release-app release-dmg
+          scripts/release/app.sh
+          scripts/release/dmg.sh
 
   scripts:
     name: Lint scripts and workflows

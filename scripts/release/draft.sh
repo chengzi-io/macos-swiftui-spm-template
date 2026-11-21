@@ -4,13 +4,13 @@
 # While the release is a draft users see nothing, and releases/latest still serves the
 # previous version; publishing creates the tag vX.Y.Z, and with it the update.
 #
-#   draft-release.sh <tag>
+#   scripts/release/draft.sh <tag>
 #
 # Needs GH_TOKEN with contents: write. Prints the draft's HTML URL on stdout.
 
-source "$(dirname "$0")/release-common.sh"
+source "$(dirname "$0")/../common.sh"
 
-tag=${1:?usage: draft-release.sh <tag>}
+tag=${1:?usage: scripts/release/draft.sh <tag>}
 [[ $tag == "v$VERSION" ]] ||
     die "tag $tag does not match version $VERSION (RELEASE_VERSION); run the workflow again"
 

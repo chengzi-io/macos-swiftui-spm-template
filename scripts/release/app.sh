@@ -3,7 +3,7 @@
 # TEAM_ID and the hardened runtime, or ad-hoc without one. Prints the .app path on
 # stdout. $VERSION (scripts/common.sh) and the commit count become the version.
 
-source "$(dirname "$0")/release-common.sh"
+source "$(dirname "$0")/../common.sh"
 
 public_key=$(sparkle_public_key)
 [[ -n ${GITHUB_REPOSITORY:-} && -n $public_key ]] ||

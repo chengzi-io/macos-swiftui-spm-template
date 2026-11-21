@@ -1,6 +1,6 @@
 # git-cliff computes a release from the commits on main: the squash-merged PR titles, in
 # Conventional Commits form. `git cliff --bumped-version` gives the next version and
-# scripts/release-prepare.sh writes its notes to .build/release-notes.md.
+# scripts/release/prepare.sh writes its notes to .build/release-notes.md.
 # https://git-cliff.org/docs/configuration
 
 [changelog]

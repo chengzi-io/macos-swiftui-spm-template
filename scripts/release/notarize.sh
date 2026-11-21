@@ -7,7 +7,7 @@
 #   NOTARY_PROFILE                                       keychain profile from
 #                                                        `xcrun notarytool store-credentials`
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/../common.sh"
 
 target=${1:?usage: notarize.sh <path.app|path.dmg>}
 [[ -e $target ]] || die "no such file: $target"

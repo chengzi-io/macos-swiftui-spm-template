@@ -3,7 +3,7 @@
 # warning. When a layer's image is missing, actool only warns, and Xcode's build
 # passes with the icon from an earlier build still in the app.
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/../common.sh"
 
 min_macos=$(deployment_target)
 

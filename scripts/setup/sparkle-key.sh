@@ -9,7 +9,7 @@
 # The keychain account is the app's bundle identifier, so one Mac can hold the keys of
 # several apps.
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/../common.sh"
 
 usage() {
     awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0" >&2

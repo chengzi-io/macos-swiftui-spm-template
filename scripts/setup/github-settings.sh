@@ -19,7 +19,7 @@
 #
 #   github-settings.sh
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/../common.sh"
 
 command -v gh >/dev/null || die "gh missing; run: brew install gh"
 repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner) ||

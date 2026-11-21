@@ -81,7 +81,7 @@ this repository. You start each one yourself:
 | Skill | What it does |
 | --- | --- |
 | `macos-app-icon` | an Icon Composer `.icon` from a logo, drawn layers or an image prompt |
-| `macos-dmg-window` | a designed DMG window, and switches `scripts/make-dmg.sh` to dmgbuild |
+| `macos-dmg-window` | a designed DMG window, built with dmgbuild |
 | `macos-developer-id` | the Developer ID certificate, notary key and signing secrets |
 | `macos-homebrew` | the official `homebrew/cask`, or your own tap updated by each release |
 

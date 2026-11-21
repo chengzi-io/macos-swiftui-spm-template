@@ -2,7 +2,7 @@
 # Checks the toolchain. Exits non-zero with a fix hint on the first hard gap.
 # .xcode-version is the Xcode CI runs; a different local Xcode is a warning, in CI an error.
 
-source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/../common.sh"
 
 say info "macOS $(sw_vers -productVersion) ($(sw_vers -buildVersion))"
 

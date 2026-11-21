@@ -2,7 +2,7 @@
 # Computes the next release of this app from the commits since the last one, and writes
 # its notes: the first step of the Release workflow (.github/workflows/release.yml).
 #
-#   release-prepare.sh [VERSION]
+#   scripts/release/prepare.sh [VERSION]
 #
 # VERSION: X.Y.Z, optional; empty computes it from the commits since the last release.
 # Prints the version on stdout, one line; everything else goes to stderr.
@@ -14,7 +14,7 @@ actions=${GITHUB_ACTIONS:-}
 ref=${GITHUB_REF:-}
 repository=${GITHUB_REPOSITORY:-}
 
-source "$(dirname "$0")/release-common.sh"
+source "$(dirname "$0")/../common.sh"
 
 command -v git-cliff >/dev/null ||
     die "git-cliff missing; run: brew install git-cliff (CI downloads a pinned copy)"
