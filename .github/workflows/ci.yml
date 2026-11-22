@@ -22,6 +22,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          # Nothing here pushes, and a token left in .git/config can ride into an artifact.
+          persist-credentials: false
       # .xcode-version is the one place the Xcode version is written; release.yml does the same.
       - name: Select Xcode from .xcode-version
         run: |
@@ -76,6 +78,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       # Pinned releases, checked against their published digests, so a new version's
       # findings arrive as a reviewed bump rather than a red PR.
       - name: Install shellcheck and actionlint

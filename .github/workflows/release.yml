@@ -36,6 +36,8 @@ jobs:
         with:
           # git-cliff reads the tags, and the build number counts the whole history.
           fetch-depth: 0
+          # Nothing here pushes, and a token left in .git/config can ride into an artifact.
+          persist-credentials: false
       # .xcode-version is the one place the Xcode version is written; same step as ci.yml.
       - name: Select Xcode from .xcode-version
         run: |
