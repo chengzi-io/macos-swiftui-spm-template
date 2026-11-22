@@ -1,6 +1,6 @@
 ---
 name: setup-project
-description: Turn this template into the user's own macOS app - name, bundle id, category, identity, README, license, locales - then push and protect main, and delete this skill. Use when the user asks to initialize, set up, create or rename the app, or asks for any app work while the app is still named after the template.
+description: Turn this template into the user's own macOS app - name, bundle id, repository, README, license - then push and protect main, and delete this skill. Use when the user asks to initialize, set up, create or rename the app, or asks for any app work while the app is still named after the template.
 ---
 
 # Set up the project
@@ -40,13 +40,12 @@ One message, in two parts:
    Show each default, or `(ask)`, and get an answer for each, even if it is "keep it":
    a default is never a confirmation. A new name changes the default bundle id with it,
    so confirm that one again.
-2. The defaults the user can change at any time: `repo`, `locales`. `en` is always a
-   required language, as the source language; only the listed ones are required in every
-   string catalog. Three values are derived and not asked: the display name follows
-   `name`, the LICENSE holder is the repository owner, and the bundle id follows both.
-   `TEAM_ID` keeps its current value, and `APP_CATEGORY` keeps the template's
-   `developer-tools`: say so, and change it in `App/Configs/Identity.xcconfig` when the
-   app's category is clear.
+2. The default the user can change at any time: `repo`. Three values are derived and not
+   asked: the display name follows `name`, the LICENSE holder is the repository owner, and
+   the bundle id follows both. Two values keep the template's and are only mentioned:
+   `TEAM_ID`, and `APP_CATEGORY` (`developer-tools` until the app's category is clear); the
+   languages in `CFBundleLocalizations` stay `en, zh-Hans` until the app drops one it does
+   not translate into.
 
 ## Plan
 
@@ -84,8 +83,7 @@ the next step, and the last line says how to start it.
 ## Changes
 
 - `App/Configs/Identity.xcconfig`: `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID`,
-  `APP_CATEGORY`, `GITHUB_REPOSITORY`;
-- `App/Configs/Info.plist`: `CFBundleLocalizations`, the app's languages;
+  `GITHUB_REPOSITORY`;
 - `LICENSE`;
 - `README.md`: the template's page becomes the app's stub, a title and the one-sentence
   placeholder;

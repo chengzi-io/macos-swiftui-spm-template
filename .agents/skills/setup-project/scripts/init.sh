@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Turns this template into the user's own app, once: writes App/Configs/Identity.xcconfig,
-# the languages in App/Configs/Info.plist, LICENSE and README.md; fails while any template
-# word remains; then deletes this skill and its .claude/skills link.
+# LICENSE and README.md; fails while any template word remains; then deletes this skill and
+# its .claude/skills link.
 #
 #   init.sh                          read-only preflight; prints the defaults it can work out
 #   init.sh --dry-run --name MyApp   the checks and the plan; changes nothing
@@ -12,7 +12,6 @@
 #   --bundle-id io.github.owner.myapp  BUNDLE_ID; defaults to io.github.<repository owner>.<name>,
 #                           lowercase
 #   --repo owner/repo       GITHUB_REPOSITORY; defaults to the origin remote
-#   --locales "en zh-Hans"  CFBundleLocalizations; en is always included
 #   --skip-xcode            skip the Xcode check (only to test on a machine without Xcode)
 #   --dry-run               print every change as a "would ..." line, then stop
 #   -h, --help              this text
@@ -31,12 +30,11 @@ TEMPLATE_REPO=chengzi-io/macos-swiftui-spm-template
 TEMPLATE_README='built for coding agents'
 LEFTOVERS='setup-project|Pomelo'
 IDENTITY=App/Configs/Identity.xcconfig
-INFO_PLIST=App/Configs/Info.plist
 SKILL=.agents/skills/setup-project
 LINK=.claude/skills/setup-project
 
 name="" bundle_id="" repo=""
-locales="" skip_xcode=0 dry_run=0
+skip_xcode=0 dry_run=0
 errors=0
 
 TMP=$(mktemp -d)
@@ -75,7 +73,6 @@ parse_inputs() {
         --name) name=$2 ;;
         --bundle-id) bundle_id=$2 ;;
         --repo) repo=$2 ;;
-        --locales) locales=$2 ;;
         *) usage 1 ;;
         esac
         shift 2
@@ -157,13 +154,11 @@ resolve_defaults() {
     if [[ -z $bundle_id && -n $repo && -n $name ]]; then
         bundle_id=$(printf 'io.github.%s.%s' "${repo%%/*}" "$name" | tr '[:upper:]' '[:lower:]')
     fi
-    locales=${locales:-en}
-    locales=$(tr ',' ' ' <<<"$locales" | tr -s ' ' | sed -E 's/^ //; s/ $//')
 }
 
 # validate: every rule on the inputs, all reported at once.
 validate() {
-    local value word found=0 locale
+    local value word found=0
     if [[ -z $name ]]; then
         fail "--name is required"
         return
@@ -195,12 +190,6 @@ validate() {
             fail "'$value' contains a template word ($LEFTOVERS); the last step would reject it"
         fi
     done
-    found=0
-    for locale in $locales; do
-        [[ $locale =~ ^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$ ]] || fail "--locales: '$locale' is not a locale like en or zh-Hans"
-        [[ $locale != en ]] || found=1
-    done
-    ((found == 1)) || fail "--locales must include en, the source language"
 }
 
 # print_defaults: every default init can work out, one per line.
@@ -209,7 +198,6 @@ print_defaults() {
 name            ${name:-(ask)}  (permanent after the first release)
 bundle-id       ${bundle_id:-(ask)}  (permanent after the first release)
 repo            ${repo:-(ask)}
-locales         ${locales:-(ask)}
 OUT
 }
 
@@ -303,28 +291,6 @@ set_identity() {
     fi
 }
 
-# set_locales <space separated>: CFBundleLocalizations, the array macOS reads and make lint
-# checks translations against. plutil rewrites the file's indentation only.
-set_locales() {
-    local json current
-    local -a list
-    read -r -a list <<<"$1"
-    json=$(printf '"%s",' "${list[@]+"${list[@]}"}")
-    json="[${json%,}]"
-    current=$(plutil -extract CFBundleLocalizations json -o - "$INFO_PLIST" | tr -d '[:space:]') ||
-        die "$INFO_PLIST has no CFBundleLocalizations array"
-    if [[ $current == "$json" ]]; then
-        echo "   done already: CFBundleLocalizations = $1" >&2
-        return
-    fi
-    if ((dry_run == 1)); then
-        echo "   would set: CFBundleLocalizations = $1 ($INFO_PLIST)" >&2
-    else
-        plutil -replace CFBundleLocalizations -json "$json" "$INFO_PLIST"
-        echo "   set: CFBundleLocalizations = $1 ($INFO_PLIST)" >&2
-    fi
-}
-
 # run description command...: runs it, or with --dry-run says it would.
 run() {
     local description=$1
@@ -345,7 +311,6 @@ identity_step() {
     set_identity APP_DISPLAY_NAME "$name"
     set_identity BUNDLE_ID "$bundle_id"
     set_identity GITHUB_REPOSITORY "$repo"
-    set_locales "$locales"
 }
 
 license() {
