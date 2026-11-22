@@ -85,8 +85,8 @@ the next step, and the last line says how to start it.
   `APP_CATEGORY`, `GITHUB_REPOSITORY`;
 - `App/Configs/Info.plist`: `CFBundleLocalizations`, the app's languages;
 - `LICENSE`;
-- `README.md`, from `wiring/README.md`: the app's page, with its Install and Update
-  sections;
+- `README.md`: the template's page becomes the app's stub, a title and the one-sentence
+  placeholder;
 - this skill and `.claude/skills/setup-project`.
 
 ## Never
@@ -103,4 +103,3 @@ the next step, and the last line says how to start it.
 | File | Does |
 | --- | --- |
 | `scripts/init.sh` | the preflight, the input rules, the plan and the changes; `--help` lists the modes and options |
-| `wiring/README.md` | the app's README, for its users |

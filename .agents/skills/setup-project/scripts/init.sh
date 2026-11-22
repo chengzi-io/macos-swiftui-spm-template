@@ -29,13 +29,15 @@
 # TEAM_ID keeps its current value. Each step skips what is already done, so a run that
 # stopped can run again with the same arguments.
 
-SKILL_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 # shellcheck source=../../../../scripts/common.sh
 source "$(dirname "${BASH_SOURCE[0]}")/../../../../scripts/common.sh"
 
 # What only the template carries. The last step fails while any of these words remain.
 TEMPLATE_NAME=Pomelo
 TEMPLATE_REPO=chengzi-io/macos-swiftui-spm-template
+# A line only the template's own README.md carries: readme() replaces that page, and
+# leaves any other alone.
+TEMPLATE_README='built for coding agents'
 LEFTOVERS='setup-project|Pomelo'
 IDENTITY=App/Configs/Identity.xcconfig
 INFO_PLIST=App/Configs/Info.plist
@@ -385,17 +387,16 @@ license() {
     edit LICENSE -e "s|^Copyright \(c\) .*|Copyright (c) $year ${repo%%/*}|"
 }
 
+# readme: the app's page is its author's to write: the template's page is for people
+# choosing the template, so it becomes a stub. A page that is no longer the template's is
+# left alone, which is what keeps a second run from overwriting it.
 readme() {
-    local min_macos
-    local -a seds=()
-    log "3/5 README.md: the page for $name's users"
-    min_macos=$(deployment_target)
-    min_macos=${min_macos%%.*}
-    seds=(-e "s|{{NAME}}|$name|g" -e "s|{{DISPLAY_NAME}}|$name|g" -e "s|{{REPO}}|$repo|g"
-        -e "s|{{MIN_MACOS}}|$min_macos|g")
-    # The one sentence about what the app does stays a placeholder for its owner.
-    echo "   README placeholder kept: the sentence at the top of README.md is still to write" >&2
-    sed -E "${seds[@]}" "$SKILL_DIR/wiring/README.md" | put README.md
+    log "3/5 README.md"
+    if ! grep -qF "$TEMPLATE_README" README.md; then
+        echo "   left alone: README.md is not the template's page" >&2
+        return
+    fi
+    printf '# %s\n\n_What %s does and for whom, in one sentence._\n' "$name" "$name" | put README.md
 }
 
 delete_skill() {

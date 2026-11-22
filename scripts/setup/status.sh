@@ -41,6 +41,12 @@ else
     line ok project "$APP_DISPLAY_NAME, $BUNDLE_ID"
 fi
 
+# The template's README page is the author's to write; init leaves this placeholder. No ok
+# line when it is gone: the page is nobody's business but its author's.
+if grep -qF 'does and for whom, in one sentence' README.md 2>/dev/null; then
+    line todo readme "README.md is still the placeholder" "write the app's page"
+fi
+
 if ! command -v gh >/dev/null; then
     line "?" repo "gh is not installed: brew install gh"
 elif ! gh auth status >/dev/null 2>&1; then
