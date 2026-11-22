@@ -84,7 +84,7 @@ the next step, and the last line says how to start it.
 - `App/<Name>.xcodeproj` and its scheme, renamed from the template's; the targets inside
   stay `App` and `AppUITests`;
 - `App/Configs/Identity.xcconfig`: `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID`,
-  `APP_CATEGORY`, `COPYRIGHT`, `GITHUB_REPOSITORY`;
+  `APP_CATEGORY`, `GITHUB_REPOSITORY`;
 - `App/Configs/Info.plist`: `CFBundleLocalizations`, the app's languages;
 - `LICENSE`, `.github/CODEOWNERS`, `.github/ISSUE_TEMPLATE/config.yml`;
 - `README.md`, from `wiring/README.md`: the app's page, with its Install and Update

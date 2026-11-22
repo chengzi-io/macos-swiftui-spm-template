@@ -440,7 +440,6 @@ identity_step() {
     set_identity APP_DISPLAY_NAME "$display_name"
     set_identity BUNDLE_ID "$bundle_id"
     set_identity APP_CATEGORY "$category"
-    set_identity COPYRIGHT "Copyright © $(date +%Y) $holder"
     set_identity GITHUB_REPOSITORY "$repo"
     set_locales "$locales"
 }

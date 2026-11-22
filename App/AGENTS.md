@@ -17,7 +17,7 @@ Supplements the root [AGENTS.md](../AGENTS.md).
 | Key | Affects |
 |---|---|
 | `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID` | the app; change only before the first release, since updates match the bundle id |
-| `APP_CATEGORY`, `COPYRIGHT` | Info.plist |
+| `APP_CATEGORY` | Info.plist |
 | `TEAM_ID` | release signing and notarization only (the release pipeline); local builds stay ad-hoc |
 | `GITHUB_REPOSITORY` | release and appcast URLs |
 
