@@ -16,7 +16,7 @@ this way: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 | `Domains/PlatformLive/` | `PlatformLive` | `Live<Name>Service`: system APIs, network, files, Sparkle |
 
 - Create a folder the first time something needs it: a new domain in `Domains/` (`Monitor`, `Sync`), `DesignSystem/` (tokens and shared components, no domain), `Kits/<Name>/` (code that knows nothing of this app).
-- A feature is an area, not a screen: screens that share data and change together share a target, a folder each.
+- A feature is an area, not a screen: screens that share data and change together share a target, a folder each. `make feature NAME=<Name> CORES="<Core …>"` writes the target, the scheme entry and the two lines that wire it in; never create one by hand.
 - A domain groups capabilities that change together, not one per service. Every new library target is declared in `Package.swift`; a domain's two targets join the `AppModules` product.
 - A folder under `Domains/` carries its target's name, files directly in it; a service gets a subfolder when the domain grows a second one.
 - Do not name a module after a SwiftUI type (`Settings`, `App`): it breaks `Settings.SomeType` lookups. Features end in `Feature`.

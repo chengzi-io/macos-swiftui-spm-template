@@ -5,103 +5,63 @@ description: Add a feature to this app - a new area the user works in, as a <Nam
 
 # Add feature
 
-Adds one `<Name>Feature` target end to end, and ends with `make ci` green. `make feature`
-writes the files and declares them in `Package.swift` and the scheme; the two lines that
-wire it and the translation are yours, and `make lint` fails until they are done.
-`<App>` is `APP_NAME` in `App/Configs/Identity.xcconfig`.
+One `<Name>Feature` target end to end, ending with `make ci` green. Say what will change,
+then run the scaffold; `App/App.xcodeproj` needs no edit.
 
-## Plan
+## The scaffold
 
-Say what will change and wait for the user's go-ahead.
+    make feature NAME=<Name> CORES="<Core …>"
 
-A feature is an area the user works in, with its own data (a library, an inspector).
-Another screen of an area that exists (a detail view of the readings) goes in that
-feature's folder and model, with no new target. Work outside the process is a service
-([recipe: networking](../add-capability/references/networking.md)). Something every Mac
-app has (updates, login item) belongs in `Platform`.
+Every argument is checked, so pass the shape it wants on the first call:
 
-`<Name>` is the area, capitalized, without `Feature` (`Library` makes `LibraryFeature`).
-Where the screen goes decides the view line of step 4: an existing window, a new `Window`
-or `WindowGroup`, or `Settings`.
+| Argument | Shape |
+| --- | --- |
+| `<Name>` | the area: a capital letter, then letters or digits, without `Feature` (`Library` makes `LibraryFeature`) |
+| `CORES` | the domain targets the feature's code uses (`Notes`, `Platform`), each the same shape; optional |
 
-## Steps
+It refuses a name whose logger (`Log.<name>`) would be a Swift keyword, and one already in
+`Sources/Features/`, `Package.swift` or the scheme. It writes the files, declares both
+targets and adds the test target to the scheme, then prints the two lines that wire the
+feature in.
 
-### 1. Name it
+## Before the scaffold: which target at all
 
-Agree on `<Name>` with the user if the request does not name the area.
+- A feature is an area the user works in, with data of its own. Another screen of an
+  existing area goes in that area's folder and model, with no new target.
+- Work outside the process is a service: [recipe](../add-capability/references/networking.md).
+  Something every Mac app has (updates, login item) belongs in `Platform`.
+- Where the screen goes — an existing window, a new `Window` or `WindowGroup`, or
+  `Settings` — decides the `AppScenes` line.
 
-### 2. Remove the demo (first feature only)
+## First feature: remove the demo
 
-`Sources/Features/Notes` is the template's, not the app's. If the request **is** a notes
-area, keep it and go on: the demo is the feature. Otherwise:
+`Sources/Features/Notes` is the template's, not the app's. If the request is not a notes
+area:
 
 - `git rm -r Sources/Domains/Notes Sources/Domains/NotesLive Sources/Features/Notes
   Tests/Domains/NotesTests Tests/Features/NotesTests App/UITests/NotesUITests.swift`
 - `Package.swift`: the five targets `Notes`, `NotesLive`, `NotesFeature`, `NotesTests`,
   `NotesFeatureTests`, and their names in the `AppModules` product and `AppRoot`'s
   `dependencies`.
-- `App/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme`: the two
-  `<TestableReference>` blocks naming `NotesTests` and `NotesFeatureTests`.
+- `App/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme`: the two `<TestableReference>`
+  blocks naming `NotesTests` and `NotesFeatureTests`.
 - `AppModel`, `AppScenes`, `MainApp`: every line naming Notes — the model property and its
   `init` parameter, the view, the `NoteService` and the `noteService:` argument.
 - Check: `git grep -n Notes -- '*.swift' Package.swift` names nothing,
-  `swift package dump-package` loads and lists no Notes target, `make test` passes.
+  `swift package dump-package` lists no Notes target, `make test` passes.
 
-Until step 4 wires the new view, `AppScenes` shows
+Until the view is wired, `AppScenes` can show
 `Color.clear.frame(minWidth: 480, minHeight: 320)`.
 
-### 3. Scaffold
+## After the scaffold
 
-`make feature NAME=<Name> CORES="<Core …>"`, the Cores being the targets the feature's code
-uses (`Notes`, `Platform`). It refuses a name in use, a lowercase one and one whose logger
-would be a Swift keyword: pick another name, do not write the files by hand. It writes the
-files, declares both targets through `swift package add-target`, adds the test target to
-the scheme, and prints the two lines that wire the feature in
-([what it makes](references/scaffold-output.md)). A Core the feature needs later joins with
-`swift package add-target-dependency <Core> <Name>Feature`.
-
-`add-target` appends the blocks after the test targets, and SwiftPM reads no order into the
-list: leave them there or move them beside the other features.
-
-### 4. Fill it in
-
-Add the printed lines, each file importing `<Name>Feature`: the model in `AppModel`, the
-view in `AppScenes`. Then model logic in the model, layout in the view, every user-facing
-string in `Text("…", bundle: .module)` and the feature's `Localizable.xcstrings`.
-
-A feature never depends on another feature, and never on a `Live`: a service's protocol and
-mock live in a Core, its live implementation in the matching `Live`, which
-`App/Application/MainApp.swift` builds and hands to `AppModel`.
-
-### 5. Translate and verify
-
-For each language in `CFBundleLocalizations` (`App/Configs/Info.plist`) except `en`, give
-every string a value and set its `state` to `translated`. Then `make ci`, and show the user
-the renders in `.build/renders/<Name>ViewRenderTests/`. A failing check and its fix:
-[scaffold output and fixes](references/scaffold-output.md).
-
-## Changes
-
-| File | Change |
-| --- | --- |
-| `Sources/Features/<Name>/`, `Tests/Features/<Name>Tests/` | created by `make feature` |
-| `Package.swift`, the scheme | both targets and `AppRoot`'s dependency |
-| `AppRoot/AppModel.swift`, `AppRoot/AppScenes.swift` | the two printed lines |
-| `Sources/Features/Notes/` and its tests | removed, first feature only |
-| `App/Configs/App.entitlements`, `App/Configs/App.xcconfig` | only for a capability ([recipe](../add-capability/SKILL.md)) |
-
-## The user's part
-
-- Pick the area's name when the request does not name it.
-- Approve the plan, and look at the renders of the new view before it ships.
-
-## Done when
-
-- `make ci` exits 0, and the user has seen the renders.
+- Add the two printed lines, each file importing `<Name>Feature`: the model in `AppModel`,
+  the view in `AppScenes`.
+- `add-target` appends its blocks after the test targets, and SwiftPM reads no order into
+  the list: leave them there or move them beside the other features.
+- `make ci`, then show the user the renders in `.build/renders/<Name>ViewRenderTests/`.
+  A failing check and its fix: [what fails after the scaffold](references/scaffold-output.md).
 
 ## Never
 
 - Add files or settings to `App/App.xcodeproj` for a feature: the package carries it.
-- Make one feature depend on another, or a feature depend on a `Live` target.
-- Pass a model through `.environment`: pass it through `init`.
-- Leave a scaffolded string untranslated, or delete it from the catalog, to pass lint.
