@@ -165,7 +165,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 0A0000000000000000000040 /* Build configuration list for PBXProject "Pomelo" */;
+			buildConfigurationList = 0A0000000000000000000040 /* Build configuration list for PBXProject "App" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -292,7 +292,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0A0000000000000000000040 /* Build configuration list for PBXProject "Pomelo" */ = {
+		0A0000000000000000000040 /* Build configuration list for PBXProject "App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0A0000000000000000000041 /* Debug */,

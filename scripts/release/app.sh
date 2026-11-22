@@ -16,7 +16,7 @@ public_key=$(sparkle_public_key)
 
 log "xcodebuild archive Release ($VERSION build $BUILD_NUMBER)"
 rm -rf "$ARCHIVE"
-xcodebuild archive -quiet -project "$XCODE_PROJECT" -scheme "$APP_NAME" \
+xcodebuild archive -quiet -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME_NAME" \
     -derivedDataPath "$DERIVED_DATA" -configuration Release \
     -destination 'generic/platform=macOS' -archivePath "$ARCHIVE" \
     MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD_NUMBER"

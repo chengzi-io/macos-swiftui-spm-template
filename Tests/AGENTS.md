@@ -12,7 +12,7 @@ Swift Testing unit tests and render tests for the package. Supplements the root
 | `Tests/RenderSupport/` | not tests: `render` draws views to PNG for the render tests |
 | `App/UITests/` | XCUITest for a few critical flows only |
 
-- Every test target is listed in the `<App>` scheme's Test action; `make lint` fails on one that is missing.
+- Every test target is listed in the `App` scheme's Test action; `make lint` fails on one that is missing.
 
 ## Write
 

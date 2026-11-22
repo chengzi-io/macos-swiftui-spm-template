@@ -40,7 +40,7 @@ area, keep it and go on: the demo is the feature. Otherwise:
 - `Package.swift`: the five targets `Notes`, `NotesLive`, `NotesFeature`, `NotesTests`,
   `NotesFeatureTests`, and their names in the `AppModules` product and `AppRoot`'s
   `dependencies`.
-- `App/<App>.xcodeproj/xcshareddata/xcschemes/<App>.xcscheme`: the two
+- `App/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme`: the two
   `<TestableReference>` blocks naming `NotesTests` and `NotesFeatureTests`.
 - `AppModel`, `AppScenes`, `MainApp`: every line naming Notes — the model property and its
   `init` parameter, the view, the `NoteService` and the `noteService:` argument.
@@ -101,7 +101,7 @@ the renders in `.build/renders/<Name>ViewRenderTests/`. A failing check and its 
 
 ## Never
 
-- Add files or settings to `App/<App>.xcodeproj` for a feature: the package carries it.
+- Add files or settings to `App/App.xcodeproj` for a feature: the package carries it.
 - Make one feature depend on another, or a feature depend on a `Live` target.
 - Pass a model through `.environment`: pass it through `init`.
 - Leave a scaffolded string untranslated, or delete it from the catalog, to pass lint.

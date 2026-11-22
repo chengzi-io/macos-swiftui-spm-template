@@ -84,7 +84,7 @@ UI_TEST_RESULTS := .build/UITests.xcresult
 .PHONY: test-ui
 test-ui: ## UI tests; they take over the mouse and keyboard
 	rm -rf $(UI_TEST_RESULTS)
-	$(COMMON) && xcodebuild test -quiet -project "$$XCODE_PROJECT" -scheme "$$APP_NAME" \
+	$(COMMON) && xcodebuild test -quiet -project "$$XCODE_PROJECT" -scheme "$$XCODE_SCHEME_NAME" \
 		-derivedDataPath "$$DERIVED_DATA" -destination "platform=macOS,arch=$$(uname -m)" \
 		-resultBundlePath $(UI_TEST_RESULTS) \
 		-only-testing:AppUITests

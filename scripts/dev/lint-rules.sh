@@ -126,7 +126,7 @@ done < <(jq -r '.targets[] | select(.type == "regular" or .type == "test")
 # not list is skipped without a word by ⌘U and xcodebuild test; SwiftPM runs it either way,
 # so only this check can say so. A stale entry in the scheme needs no check: xcodebuild
 # fails on it by name.
-[[ -f $XCODE_SCHEME ]] || die "lint-rules.sh: no $XCODE_SCHEME; the scheme is named after APP_NAME in App/Configs/Identity.xcconfig"
+[[ -f $XCODE_SCHEME ]] || die "lint-rules.sh: no $XCODE_SCHEME; App/App.xcodeproj carries the scheme"
 listed=$(grep -B5 'ReferencedContainer = "container:\.\."' "$XCODE_SCHEME" |
     sed -nE 's/.*BlueprintIdentifier = "([^"]+)".*/\1/p' | sort -u)
 declared=$(jq -r '.targets[] | select(.type == "test") | .name' <<<"$package" | sort -u)

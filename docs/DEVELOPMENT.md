@@ -58,7 +58,7 @@ they run on their own too.
 
 | Editor | Setup | Notes |
 | --- | --- | --- |
-| Xcode | `xed App/<App>.xcodeproj` | Run builds the real `.app` with the debugger attached; previews run in the package targets |
+| Xcode | `xed App/App.xcodeproj` | Run builds the real `.app` with the debugger attached; previews run in the package targets |
 | Xcode, package only | `xed .` | the package without the app shell |
 | VS Code, Cursor, Zed | the Swift extension (sourcekit-lsp) | loads the package at the root; `App/` gets no code intelligence, so use `make run` |
 

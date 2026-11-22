@@ -63,8 +63,8 @@ done, so a run that stopped can run again with the same arguments.
 
 ## Verify and commit
 
-`make setup && make ci` must pass. Show the user `git diff HEAD --stat` (renames and the
-deletion are staged), then
+`make setup && make ci` must pass. Show the user `git diff HEAD --stat` (the
+deletions are staged), then
 
     git add -A && git commit -m "chore: initialize <Name> from template"
 
@@ -81,8 +81,6 @@ the next step, and the last line says how to start it.
 
 ## Changes
 
-- `App/<Name>.xcodeproj` and its scheme, renamed from the template's; the targets inside
-  stay `App` and `AppUITests`;
 - `App/Configs/Identity.xcconfig`: `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID`,
   `APP_CATEGORY`, `GITHUB_REPOSITORY`;
 - `App/Configs/Info.plist`: `CFBundleLocalizations`, the app's languages;

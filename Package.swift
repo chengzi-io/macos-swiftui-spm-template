@@ -8,7 +8,7 @@ let common: [SwiftSetting] = [
     .enableUpcomingFeature("InferIsolatedConformances"),
     .enableUpcomingFeature("MemberImportVisibility"),
     // Xcode builds a package added with "Add Local…" (XCLocalSwiftPackageReference)
-    // with -suppress-warnings, which conflicts with this. App/<App>.xcodeproj
+    // with -suppress-warnings, which conflicts with this. App/App.xcodeproj
     // references this folder instead, which Xcode builds with warnings on.
     .treatAllWarnings(as: .error),
 ]

@@ -56,7 +56,7 @@ smoke` 和 `make lint-assets` 是 `make ci` 的步骤，所以 `make help` 里�
 
 | 编辑器 | 怎么配 | 备注 |
 | --- | --- | --- |
-| Xcode | `xed App/<App>.xcodeproj` | Run 构建真正的 `.app`，调试器接着；Preview 在包的 target 里跑 |
+| Xcode | `xed App/App.xcodeproj` | Run 构建真正的 `.app`，调试器接着；Preview 在包的 target 里跑 |
 | Xcode，只开包 | `xed .` | 只有包，不带应用壳 |
 | VS Code、Cursor、Zed | Swift 扩展（sourcekit-lsp） | 在根目录加载包；`App/` 拿不到代码智能，所以用 `make run` |
 

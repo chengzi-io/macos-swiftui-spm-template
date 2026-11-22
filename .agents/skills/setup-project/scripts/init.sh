@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
-# Turns this template into the user's own app, once: renames the Xcode project and its
-# scheme; writes App/Configs/Identity.xcconfig, LICENSE, CODEOWNERS, the issue template
-# link and README.md; strips the template-only blocks; deletes this skill and its
-# .claude/skills link; then fails while any template word remains.
+# Turns this template into the user's own app, once: writes App/Configs/Identity.xcconfig,
+# the languages in App/Configs/Info.plist, LICENSE, CODEOWNERS, the issue template link and
+# README.md; strips the template-only blocks; deletes this skill and its .claude/skills
+# link; then fails while any template word remains.
 #
 #   init.sh                          read-only preflight; prints the defaults it can work out
 #   init.sh --dry-run --name MyApp   the checks and the plan; changes nothing
 #   init.sh --name MyApp [options]   makes the app
 #
 # Options (each default as printed by init.sh without --name):
-#   --name NAME             the app: the .app, the executable, the Xcode project and its
-#                           scheme; a capital letter, then letters and digits
+#   --name NAME             the app: the .app, the executable, and APP_NAME
 #   --about "..."           one sentence on what the app does, for README.md; optional,
 #                           the placeholder line stays when it is not given
 #   --display-name "My App" APP_DISPLAY_NAME; defaults to NAME
@@ -34,8 +33,7 @@
 #   -h, --help              this text
 #
 # TEAM_ID keeps its current value. Each step skips what is already done, so a run that
-# stopped can run again with the same arguments. Close the project in Xcode first: it
-# writes window state back to the old path.
+# stopped can run again with the same arguments.
 
 SKILL_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 # shellcheck source=../../../../scripts/common.sh
@@ -227,8 +225,7 @@ validate() {
         while read -r word; do
             [[ -z $word || $name != "$word" ]] || found=1
         done < <(package_targets)
-        ((found == 0)) || fail "--name $name is reserved: the Xcode project, a package target, SwiftUI or a system module already uses it"
-        [[ ! -e App/$name.xcodeproj ]] || fail "App/$name.xcodeproj already exists"
+        ((found == 0)) || fail "--name $name is reserved: a package target, SwiftUI or a system module already uses it"
     fi
     [[ $bundle_id =~ ^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$ ]] ||
         fail "--bundle-id '$bundle_id' must look like com.example.myapp"
@@ -406,37 +403,9 @@ run() {
 
 # --- Steps --------------------------------------------------------------------------
 
-# rename: the Xcode project and its scheme carry the app's name; the targets inside stay
-# App and AppUITests.
-rename() {
-    local old=$APP_NAME schemes list targets
-    log "1/7 rename the Xcode project and its scheme to $name"
-    if [[ $old == "$name" ]]; then
-        echo "   done already: $XCODE_PROJECT" >&2
-        return
-    fi
-    [[ -f $XCODE_SCHEME ]] || die "no $XCODE_SCHEME"
-    edit "$XCODE_SCHEME" \
-        -e "s/BuildableName = \"$old\.app\"/BuildableName = \"$name.app\"/" \
-        -e "s/container:$old\.xcodeproj/container:$name.xcodeproj/"
-    # The one place the project names itself: a comment Xcode writes when it saves.
-    edit "$XCODE_PROJECT/project.pbxproj" -e "s/PBXProject \"$old\"/PBXProject \"$name\"/g"
-    schemes=$XCODE_PROJECT/xcshareddata/xcschemes
-    run "git mv $XCODE_SCHEME $schemes/$name.xcscheme" git mv "$XCODE_SCHEME" "$schemes/$name.xcscheme"
-    run "git mv $XCODE_PROJECT App/$name.xcodeproj" git mv "$XCODE_PROJECT" "App/$name.xcodeproj"
-    # Right after the move: the scripts find the project through APP_NAME.
-    set_identity APP_NAME "$name"
-    if ((dry_run == 0 && skip_xcode == 0)); then
-        list=$(xcodebuild -list -json -project "App/$name.xcodeproj")
-        targets=$(plutil -extract project.targets json -o - - <<<"$list")
-        schemes=$(plutil -extract project.schemes json -o - - <<<"$list")
-        [[ $targets == *'"App"'* && $targets == *'"AppUITests"'* && $schemes == *"\"$name\""* ]] ||
-            die "App/$name.xcodeproj has targets $targets and schemes $schemes, expected App, AppUITests and $name"
-    fi
-}
-
 identity_step() {
-    log "2/7 identity: $IDENTITY"
+    log "1/6 identity: $IDENTITY"
+    set_identity APP_NAME "$name"
     set_identity APP_DISPLAY_NAME "$display_name"
     set_identity BUNDLE_ID "$bundle_id"
     set_identity APP_CATEGORY "$category"
@@ -447,7 +416,7 @@ identity_step() {
 licenses() {
     local year
     year=$(date +%Y)
-    log "3/7 LICENSE, CODEOWNERS, issue template link"
+    log "2/6 LICENSE, CODEOWNERS, issue template link"
     edit LICENSE -e "s|^Copyright \(c\) .*|Copyright (c) $year $holder|"
     edit .github/CODEOWNERS -e "s|@[A-Za-z0-9_/.-]+|$codeowner|g"
     edit .github/ISSUE_TEMPLATE/config.yml -e "s|github.com/[^/]+/[^/]+/security|github.com/$repo/security|"
@@ -456,7 +425,7 @@ licenses() {
 readme() {
     local min_macos
     local -a seds=()
-    log "4/7 README.md: the page for $display_name's users"
+    log "3/6 README.md: the page for $display_name's users"
     min_macos=$(deployment_target)
     min_macos=${min_macos%%.*}
     seds=(-e "s|{{NAME}}|$name|g" -e "s|{{DISPLAY_NAME}}|$display_name|g" -e "s|{{REPO}}|$repo|g"
@@ -475,7 +444,7 @@ readme() {
 # template-only:end, markers included.
 template_only() {
     local blocks file
-    log "5/7 template-only blocks"
+    log "4/6 template-only blocks"
     blocks=$(git grep -l -I --untracked 'template-only:start' -- . ":(exclude)$SKILL" || true)
     [[ -n $blocks ]] || echo "   done already: no template-only blocks" >&2
     for file in $blocks; do
@@ -490,7 +459,7 @@ template_only() {
 }
 
 delete_skill() {
-    log "6/7 this skill: $SKILL and $LINK"
+    log "5/6 this skill: $SKILL and $LINK"
     if [[ -L $LINK || -e $LINK ]]; then
         run "remove $LINK" rm -f "$LINK"
     else
@@ -506,12 +475,12 @@ delete_skill() {
 
 leftovers() {
     if ((dry_run == 1)); then
-        log "7/7 leftovers: would check git grep -n -E '$LEFTOVERS'"
+        log "6/6 leftovers: would check git grep -n -E '$LEFTOVERS'"
         return
     fi
-    # Stage the deletions, as the renames are staged, so git ls-files stops listing them.
+    # Stage the deletions so git ls-files stops listing them.
     git rm -r -q --cached --ignore-unmatch -- "$LINK" "$SKILL"
-    log "7/7 leftovers: git grep -n -E '$LEFTOVERS' (tracked and untracked files)"
+    log "6/6 leftovers: git grep -n -E '$LEFTOVERS' (tracked and untracked files)"
     if git grep -n -I --untracked -E "$LEFTOVERS"; then
         die "the lines above still carry the template"
     fi
@@ -547,7 +516,6 @@ if ((dry_run == 0)); then
     trap 'status=$?; rm -rf "$TMP"; ((status == 0)) || echo "error: init stopped halfway; with the user'"'"'s consent, undo it with: git reset --hard && git clean -fd" >&2' EXIT
 fi
 
-rename
 identity_step
 licenses
 readme

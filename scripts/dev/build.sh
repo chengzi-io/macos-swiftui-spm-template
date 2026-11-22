@@ -8,7 +8,7 @@ source "$(dirname "$0")/../common.sh"
 [[ $# -eq 0 ]] || die "usage: build.sh (takes no arguments)"
 
 log "xcodebuild Debug ($VERSION build $BUILD_NUMBER)"
-xcodebuild build -quiet -project "$XCODE_PROJECT" -scheme "$APP_NAME" \
+xcodebuild build -quiet -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME_NAME" \
     -derivedDataPath "$DERIVED_DATA" -configuration Debug \
     -destination "platform=macOS,arch=$(uname -m)" \
     MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD_NUMBER"

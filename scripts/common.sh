@@ -57,12 +57,12 @@ deployment_target() {
     echo "$value"
 }
 
-# The Xcode project and its scheme carry APP_NAME; the targets inside are always App and
-# AppUITests, so renaming the app moves the project and the scheme, not what is in them.
-XCODE_PROJECT=App/$APP_NAME.xcodeproj
-XCODE_SCHEME=$XCODE_PROJECT/xcshareddata/xcschemes/$APP_NAME.xcscheme
-[[ -f $XCODE_PROJECT/project.pbxproj ]] ||
-    die "no $XCODE_PROJECT/project.pbxproj; the project is named after APP_NAME in App/Configs/Identity.xcconfig: git mv it and its scheme to match"
+# The Xcode project and its scheme are always App. The app's name reaches the .app
+# through PRODUCT_NAME, so no file moves when it changes.
+XCODE_PROJECT=App/App.xcodeproj
+XCODE_SCHEME_NAME=App
+XCODE_SCHEME=$XCODE_PROJECT/xcshareddata/xcschemes/$XCODE_SCHEME_NAME.xcscheme
+[[ -f $XCODE_PROJECT/project.pbxproj ]] || die "no $XCODE_PROJECT/project.pbxproj"
 
 # Prints one digest of every file in App/Application/AppIcon.icon and its path, so
 # scripts/setup/status.sh can tell the template's icon from the app's own.

@@ -1,11 +1,10 @@
 # AGENTS.md
 
 A macOS SwiftUI app. All code lives in the Swift package at the repository root
-(`Package.swift`, `Sources/`, `Tests/`); `App/<App>.xcodeproj` is a thin Xcode shell that
+(`Package.swift`, `Sources/`, `Tests/`); `App/App.xcodeproj` is a thin Xcode shell that
 builds, signs and packages it, and `scripts/` ships it. `<App>` is the app's name
-(`APP_NAME` in `App/Configs/Identity.xcconfig`): the project, its scheme and the `.app`
-carry it, while the targets are always `App` and `AppUITests` and the package
-`AppPackage`. This file holds what every task needs; the rest is in the files below.
+(`APP_NAME` in `App/Configs/Identity.xcconfig`): the `.app` carries it, while the project,
+its scheme, the targets (`App`, `AppUITests`) and the package (`AppPackage`) never change. This file holds what every task needs; the rest is in the files below.
 
 ## Done means
 
