@@ -12,12 +12,10 @@
 source "$(dirname "$0")/../common.sh"
 
 # icon_digest of the template's App/Application/AppIcon.icon: the icon line says todo until
-# the app has its own. The name the template ships with tells the template from an app
-# made from it; init.sh deletes it, with the marked block it sits in.
+# the app has its own. An app that still carries the template's repository has not been set
+# up, and this repository stays: nothing deletes it.
 TEMPLATE_ICON=4cdc776211ae4d78f4c25e8ae5086825364effbd8e668a8138c41b22d7e3c720
-# template-only:start
-TEMPLATE_NAME=Pomelo
-# template-only:end
+TEMPLATE_REPO=chengzi-io/macos-swiftui-spm-template
 
 next=""
 # line state step detail [what to do about it]
@@ -37,15 +35,11 @@ else
     line ok setup "git hooks installed; make doctor checks the toolchain"
 fi
 
-# template-only:start
-if [[ $APP_NAME == "$TEMPLATE_NAME" ]]; then
+if [[ $GITHUB_REPOSITORY == "$TEMPLATE_REPO" ]]; then
     line todo project "still the template" "set the app's name and bundle id"
 else
-    # template-only:end
     line ok project "$APP_DISPLAY_NAME, $BUNDLE_ID"
-# template-only:start
 fi
-# template-only:end
 
 if ! command -v gh >/dev/null; then
     line "?" repo "gh is not installed: brew install gh"

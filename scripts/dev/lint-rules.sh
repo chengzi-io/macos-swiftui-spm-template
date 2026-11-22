@@ -201,19 +201,6 @@ if [[ -n $hits ]]; then
     status=1
 fi
 
-# template-only:start
-# status.sh tells an app made from the template that its icon is still the template's, so
-# its TEMPLATE_ICON follows the icon.
-if ! grep -qx "TEMPLATE_ICON=$(icon_digest)" scripts/setup/status.sh; then
-    echo "error: TEMPLATE_ICON in scripts/setup/status.sh is not the digest of App/Application/AppIcon.icon; set it to $(icon_digest)" >&2
-    status=1
-fi
-if ! grep -qx "TEMPLATE_NAME=$APP_NAME" scripts/setup/status.sh; then
-    echo "error: TEMPLATE_NAME in scripts/setup/status.sh is not APP_NAME ($APP_NAME); the project line reads it" >&2
-    status=1
-fi
-# template-only:end
-
 # Docs link only to files that exist and name only make targets that the Makefile defines.
 # Tracked and new files alike, ignored ones (.build/) not. A skill's docs are its own
 # business: the template checks the files it ships and the ones it owns.

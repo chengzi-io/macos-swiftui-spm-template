@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Turns this template into the user's own app, once: writes App/Configs/Identity.xcconfig,
 # the languages in App/Configs/Info.plist, LICENSE, CODEOWNERS, the issue template link and
-# README.md; strips the template-only blocks; deletes this skill and its .claude/skills
-# link; then fails while any template word remains.
+# README.md; fails while any template word remains; then deletes this skill and its
+# .claude/skills link.
 #
 #   init.sh                          read-only preflight; prints the defaults it can work out
 #   init.sh --dry-run --name MyApp   the checks and the plan; changes nothing
@@ -42,7 +42,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../../../scripts/common.sh"
 # What only the template carries. The last step fails while any of these words remain.
 TEMPLATE_NAME=Pomelo
 TEMPLATE_REPO=chengzi-io/macos-swiftui-spm-template
-LEFTOVERS='setup-project|template-only|Pomelo'
+LEFTOVERS='setup-project|Pomelo'
 IDENTITY=App/Configs/Identity.xcconfig
 INFO_PLIST=App/Configs/Info.plist
 SKILL=.agents/skills/setup-project
@@ -404,7 +404,7 @@ run() {
 # --- Steps --------------------------------------------------------------------------
 
 identity_step() {
-    log "1/6 identity: $IDENTITY"
+    log "1/5 identity: $IDENTITY"
     set_identity APP_NAME "$name"
     set_identity APP_DISPLAY_NAME "$display_name"
     set_identity BUNDLE_ID "$bundle_id"
@@ -416,7 +416,7 @@ identity_step() {
 licenses() {
     local year
     year=$(date +%Y)
-    log "2/6 LICENSE, CODEOWNERS, issue template link"
+    log "2/5 LICENSE, CODEOWNERS, issue template link"
     edit LICENSE -e "s|^Copyright \(c\) .*|Copyright (c) $year $holder|"
     edit .github/CODEOWNERS -e "s|@[A-Za-z0-9_/.-]+|$codeowner|g"
     edit .github/ISSUE_TEMPLATE/config.yml -e "s|github.com/[^/]+/[^/]+/security|github.com/$repo/security|"
@@ -425,7 +425,7 @@ licenses() {
 readme() {
     local min_macos
     local -a seds=()
-    log "3/6 README.md: the page for $display_name's users"
+    log "3/5 README.md: the page for $display_name's users"
     min_macos=$(deployment_target)
     min_macos=${min_macos%%.*}
     seds=(-e "s|{{NAME}}|$name|g" -e "s|{{DISPLAY_NAME}}|$display_name|g" -e "s|{{REPO}}|$repo|g"
@@ -440,26 +440,8 @@ readme() {
     sed -E "${seds[@]}" "$SKILL_DIR/wiring/README.md" | put README.md
 }
 
-# template_only: the lines from one carrying template-only:start to one carrying
-# template-only:end, markers included.
-template_only() {
-    local blocks file
-    log "4/6 template-only blocks"
-    blocks=$(git grep -l -I --untracked 'template-only:start' -- . ":(exclude)$SKILL" || true)
-    [[ -n $blocks ]] || echo "   done already: no template-only blocks" >&2
-    for file in $blocks; do
-        # Then squeezes the blank lines a dropped block left.
-        sed -E '/template-only:start/,/template-only:end/d' "$file" | cat -s >"$TMP/dropped"
-        put "$file" <"$TMP/dropped"
-    done
-    # Before the skill goes, so a leftover can be fixed and this script run again.
-    if ((dry_run == 0)) && git grep -n -I --untracked -E "$LEFTOVERS" -- . ":(exclude)$SKILL" ":(exclude)$LINK"; then
-        die "the lines above still carry the template; fix them, then run this again"
-    fi
-}
-
 delete_skill() {
-    log "5/6 this skill: $SKILL and $LINK"
+    log "5/5 this skill: $SKILL and $LINK"
     if [[ -L $LINK || -e $LINK ]]; then
         run "remove $LINK" rm -f "$LINK"
     else
@@ -473,22 +455,23 @@ delete_skill() {
     fi
 }
 
+# leftovers: no line of the template is left, which is what lets the skill go: the grep
+# runs first, so a hit can be fixed and this script run again.
 leftovers() {
     if ((dry_run == 1)); then
-        log "6/6 leftovers: would check git grep -n -E '$LEFTOVERS'"
+        log "4/5 leftovers: would check git grep -n -E '$LEFTOVERS'"
         return
     fi
     # Stage the deletions so git ls-files stops listing them.
     git rm -r -q --cached --ignore-unmatch -- "$LINK" "$SKILL"
-    log "6/6 leftovers: git grep -n -E '$LEFTOVERS' (tracked and untracked files)"
-    if git grep -n -I --untracked -E "$LEFTOVERS"; then
-        die "the lines above still carry the template"
+    log "4/5 leftovers: git grep -n -E '$LEFTOVERS' (tracked and untracked files)"
+    if git grep -n -I --untracked -E "$LEFTOVERS" -- . ":(exclude)$SKILL" ":(exclude)$LINK"; then
+        die "the lines above still carry the template; fix them, then run this again"
     fi
     log "no template leftovers"
 }
 
 # --- Main ---------------------------------------------------------------------------
-
 parse_inputs "$@"
 
 # No --name: the read-only preflight and the defaults.
@@ -519,7 +502,6 @@ fi
 identity_step
 licenses
 readme
-template_only
-delete_skill
 leftovers
+delete_skill
 print_after
