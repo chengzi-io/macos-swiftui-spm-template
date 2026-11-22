@@ -60,7 +60,15 @@ Until the view is wired, `AppScenes` can show
 - `add-target` appends its blocks after the test targets, and SwiftPM reads no order into
   the list: leave them there or move them beside the other features.
 - `make ci`, then show the user the renders in `.build/renders/<Name>ViewRenderTests/`.
-  A failing check and its fix: [what fails after the scaffold](references/scaffold-output.md).
+
+What the scaffold cannot know is which check fails next:
+
+| Failure | Fix |
+| --- | --- |
+| `make lint`: `<Name>FeatureTests is not in the Test action` | the scheme lacks the entry: copy another `<X>FeatureTests` `TestableReference` in it and change its three names |
+| `make lint`: `has no <locale> translation` | translate every string in the feature's `Localizable.xcstrings` |
+| `make lint`: `depends on <X>Feature` | a feature imports another; move the shared part into a domain's Core |
+| `swift test`: `no such module` or an explicit-import error | the target's `dependencies` in `Package.swift` lack that module |
 
 ## Never
 
