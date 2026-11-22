@@ -1,0 +1,3 @@
+# Line endings: LF in the repository, the platform's own on checkout. Nothing tracked here
+# has CRLF today, so this only keeps a contributor's Windows setting out of the history.
+* text=auto
