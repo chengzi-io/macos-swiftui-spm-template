@@ -10,9 +10,6 @@
 #
 # Options (each default as printed by init.sh without --name):
 #   --name NAME             the app: the .app, the executable, and APP_NAME
-#   --about "..."           one sentence on what the app does, for README.md; optional,
-#                           the placeholder line stays when it is not given
-#   --display-name "My App" APP_DISPLAY_NAME; defaults to NAME
 #   --bundle-id io.github.owner.myapp  BUNDLE_ID; defaults to io.github.<repository owner>.<name>,
 #                           lowercase
 #   --category VALUE        APP_CATEGORY; defaults to the current one. VALUE is
@@ -26,7 +23,6 @@
 #     video, weather
 #   --repo owner/repo       GITHUB_REPOSITORY; defaults to the origin remote
 #   --codeowner @user       .github/CODEOWNERS; defaults to @<gh login>
-#   --copyright "Jane Doe"  the LICENSE holder; defaults to the repository owner
 #   --locales "en zh-Hans"  CFBundleLocalizations; en is always included
 #   --skip-xcode            skip the Xcode check (only to test on a machine without Xcode)
 #   --dry-run               print every change as a "would ..." line, then stop
@@ -56,7 +52,7 @@ role-playing-games simulation-games sports-games strategy-games trivia-games wor
 graphics-design healthcare-fitness lifestyle medical music news photography productivity
 reference social-networking sports travel utilities video weather"
 
-name="" about="" display_name="" bundle_id="" category="" repo="" codeowner="" holder=""
+name="" bundle_id="" category="" repo="" codeowner=""
 locales="" skip_xcode=0 dry_run=0
 gh_login=""
 errors=0
@@ -95,13 +91,10 @@ parse_inputs() {
         [[ $# -ge 2 ]] || usage 1
         case $1 in
         --name) name=$2 ;;
-        --about) about=$2 ;;
-        --display-name) display_name=$2 ;;
         --bundle-id) bundle_id=$2 ;;
         --category) category=$2 ;;
         --repo) repo=$2 ;;
         --codeowner) codeowner=$2 ;;
-        --copyright) holder=$2 ;;
         --locales) locales=$2 ;;
         *) usage 1 ;;
         esac
@@ -195,8 +188,6 @@ resolve_defaults() {
     if [[ -z $name ]]; then
         name=$(default_name)
     fi
-    display_name=${display_name:-$name}
-    holder=${holder:-${repo%%/*}}
     [[ -n $codeowner || -z $gh_login ]] || codeowner=@$gh_login
     # The repository owner holds <owner>.github.io, so the id is theirs, whoever runs this.
     if [[ -z $bundle_id && -n $repo && -n $name ]]; then
@@ -236,17 +227,10 @@ validate() {
         fail "--codeowner '$codeowner' must be @user or @org/team"
     is_category "$category" ||
         fail "--category '$category' is not an App Store category; the 40 public.app-category.* values are listed in --help"
-    [[ -n $display_name && -n $holder ]] || fail "--display-name and --copyright cannot be empty"
-    for value in "$display_name" "$holder" "$about"; do
-        [[ $value != *[\"\$\\\`\|\&]* ]] || fail "'$value' cannot contain \" \$ \\ \` | or &"
-        # Identity.xcconfig would read the rest of the line as a comment.
-        [[ $value != *//* ]] || fail "'$value' cannot contain //"
-    done
-    [[ $about != *$'\n'* ]] || fail "--about cannot contain a newline"
     if grep -qE "$LEFTOVERS" <<<"$name"; then
         fail "'$name' contains a template word ($LEFTOVERS); the last step would reject it"
     fi
-    for value in "$display_name" "$bundle_id" "$repo" "$codeowner" "$holder" "$about"; do
+    for value in "$bundle_id" "$repo" "$codeowner"; do
         [[ $value != "$name" ]] || continue
         if grep -qE "$LEFTOVERS" <<<"$value"; then
             fail "'$value' contains a template word ($LEFTOVERS); the last step would reject it"
@@ -262,17 +246,12 @@ validate() {
 
 # print_defaults: every default init can work out, one per line.
 print_defaults() {
-    local year
-    year=$(date +%Y)
     cat <<OUT
 name            ${name:-(ask)}  (permanent after the first release)
-about           (optional)
-display-name    ${display_name:-(ask)}
 bundle-id       ${bundle_id:-(ask)}  (permanent after the first release)
 category        ${category:-(ask)}
 repo            ${repo:-(ask)}
 codeowner       ${codeowner:-(ask)}
-copyright       Copyright © $year ${holder:-(ask)}
 locales         ${locales:-(ask)}
 OUT
 }
@@ -406,7 +385,7 @@ run() {
 identity_step() {
     log "1/5 identity: $IDENTITY"
     set_identity APP_NAME "$name"
-    set_identity APP_DISPLAY_NAME "$display_name"
+    set_identity APP_DISPLAY_NAME "$name"
     set_identity BUNDLE_ID "$bundle_id"
     set_identity APP_CATEGORY "$category"
     set_identity GITHUB_REPOSITORY "$repo"
@@ -417,7 +396,7 @@ licenses() {
     local year
     year=$(date +%Y)
     log "2/5 LICENSE, CODEOWNERS, issue template link"
-    edit LICENSE -e "s|^Copyright \(c\) .*|Copyright (c) $year $holder|"
+    edit LICENSE -e "s|^Copyright \(c\) .*|Copyright (c) $year ${repo%%/*}|"
     edit .github/CODEOWNERS -e "s|@[A-Za-z0-9_/.-]+|$codeowner|g"
     edit .github/ISSUE_TEMPLATE/config.yml -e "s|github.com/[^/]+/[^/]+/security|github.com/$repo/security|"
 }
@@ -425,18 +404,13 @@ licenses() {
 readme() {
     local min_macos
     local -a seds=()
-    log "3/5 README.md: the page for $display_name's users"
+    log "3/5 README.md: the page for $name's users"
     min_macos=$(deployment_target)
     min_macos=${min_macos%%.*}
-    seds=(-e "s|{{NAME}}|$name|g" -e "s|{{DISPLAY_NAME}}|$display_name|g" -e "s|{{REPO}}|$repo|g"
+    seds=(-e "s|{{NAME}}|$name|g" -e "s|{{DISPLAY_NAME}}|$name|g" -e "s|{{REPO}}|$repo|g"
         -e "s|{{MIN_MACOS}}|$min_macos|g")
-    if [[ -n $about ]]; then
-        grep -qE '^_What .* does and for whom, in one sentence\._$' "$SKILL_DIR/wiring/README.md" ||
-            die "$SKILL_DIR/wiring/README.md has no 'What ... does' line for --about; the template changed under it"
-        seds+=(-e "s|^_What .* does and for whom, in one sentence\._$|_${about}_|")
-    else
-        echo "   README placeholder kept: the sentence at the top of README.md is still to write" >&2
-    fi
+    # The one sentence about what the app does stays a placeholder for its owner.
+    echo "   README placeholder kept: the sentence at the top of README.md is still to write" >&2
     sed -E "${seds[@]}" "$SKILL_DIR/wiring/README.md" | put README.md
 }
 

@@ -40,11 +40,11 @@ One message, in two parts:
    Show each default, or `(ask)`, and get an answer for each, even if it is "keep it":
    a default is never a confirmation. A new name changes the default bundle id with it,
    so confirm that one again.
-2. One sentence on what the app does (for `--about`; optional, and the README
-   placeholder stays without it), and the defaults the user can change at any time:
-   `display-name`, `category`, `repo`, `codeowner`, `copyright`, `locales`. `en` is always
-   a required locale, as the source language; only the listed locales are required in
-   every string catalog. `TEAM_ID` is not asked: it keeps its current value.
+2. The defaults the user can change at any time: `category`, `repo`, `codeowner`,
+   `locales`. `en` is always a required language, as the source language; only the listed
+   ones are required in every string catalog. Two values are derived and not asked: the
+   display name follows `name`, and the LICENSE holder is the repository owner. `TEAM_ID`
+   keeps its current value.
 
 ## Plan
 
