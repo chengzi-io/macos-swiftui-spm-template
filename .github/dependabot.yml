@@ -1,9 +1,8 @@
 version: 2
 updates:
-  # Security updates only: a routine bump would arrive as fix(deps) and release a patch
-  # with nothing in it. A security advisory still opens a pull request, and this prefix
-  # makes it a release. To take routine bumps again, raise the limit and allow the
-  # packages that ship.
+  # Security updates only: a routine bump would arrive as a fix(deps) line in the next
+  # release's notes for nothing. A security advisory still opens a pull request. To take
+  # routine bumps again, raise the limit and allow the packages that ship.
   - package-ecosystem: swift
     directory: /
     schedule:

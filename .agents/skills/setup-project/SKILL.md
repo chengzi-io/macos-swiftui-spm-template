@@ -1,6 +1,6 @@
 ---
 name: setup-project
-description: Turn this template into the user's own macOS app - name, bundle id, category, identity, README, license, locales - then push and protect main, and delete this skill. Use when the user asks to initialize, set up, create or rename the app, or asks for any app work while the app is still named after the template.
+description: Turn this template into the user's own macOS app - name, bundle id, repository, README, license - then push and protect main, and delete this skill. Use when the user asks to initialize, set up, create or rename the app, or asks for any app work while the app is still named after the template.
 ---
 
 # Set up the project
@@ -18,7 +18,7 @@ this file says when to run it and what to show the user. The last step deletes t
 ## When not to use
 
 - The user is changing the template itself (its scripts, docs or skills).
-- The app has shipped (`version.txt` is not `0.0.0`): a new name or bundle id would make a
+- The app has shipped (a `vX.Y.Z` tag exists): a new name or bundle id would make a
   different app to macOS, Sparkle and Homebrew.
 
 ## Before you start
@@ -28,7 +28,7 @@ Run `init.sh` with no arguments, from the repository root:
     .agents/skills/setup-project/scripts/init.sh
 
 It is read-only. It checks the tools and the repository (Xcode matches `.xcode-version`,
-`gh` signed in unless `--codeowner` is given, `origin`, version `0.0.0`, a clean tree) and
+`origin`, no `vX.Y.Z` tag, a clean tree) and
 prints every default it can work out, one per line. Fix what it reports, or ask the user to, and keep that list.
 
 ## Ask once
@@ -40,11 +40,12 @@ One message, in two parts:
    Show each default, or `(ask)`, and get an answer for each, even if it is "keep it":
    a default is never a confirmation. A new name changes the default bundle id with it,
    so confirm that one again.
-2. One sentence on what the app does (for `--about`; optional, and the README
-   placeholder stays without it), and the defaults the user can change at any time:
-   `display-name`, `category`, `repo`, `codeowner`, `copyright`, `locales`. `en` is always
-   a required locale, as the source language; only the listed locales are required in
-   every string catalog. `TEAM_ID` is not asked: it keeps its current value.
+2. The default the user can change at any time: `repo`. Three values are derived and not
+   asked: the display name follows `name`, the LICENSE holder is the repository owner, and
+   the bundle id follows both. Two values keep the template's and are only mentioned:
+   `TEAM_ID`, and `APP_CATEGORY` (`developer-tools` until the app's category is clear); the
+   languages in `CFBundleLocalizations` stay `en, zh-Hans` until the app drops one it does
+   not translate into.
 
 ## Plan
 
@@ -63,8 +64,8 @@ done, so a run that stopped can run again with the same arguments.
 
 ## Verify and commit
 
-`make setup && make ci` must pass. Show the user `git diff HEAD --stat` (renames and the
-deletion are staged), then
+`make setup && make ci` must pass. Show the user `git diff HEAD --stat` (the
+deletions are staged), then
 
     git add -A && git commit -m "chore: initialize <Name> from template"
 
@@ -72,32 +73,28 @@ deletion are staged), then
 
 Ask before `git push origin main`. Then ask before `make github-settings`, and say what it
 changes: from then on `main` only takes pull requests, admins included. It needs `gh`
-signed in with admin rights on the repository. Tell the user the first Release run shows
-as skipped until release setup is done.
+signed in with admin rights on the repository.
 
 ## Next
 
-Tell the user to say **next step** whenever they want to go on: the `next-step` skill
-reads `make status`, says what comes next and runs it once they agree.
+Tell the user to run `make status` whenever they want to go on: the first `todo` line is
+the next step, and the last line says how to start it.
 
 ## Changes
 
-- `App/<Name>.xcodeproj` and its scheme, renamed from the template's; the targets inside
-  stay `App` and `AppUITests`;
 - `App/Configs/Identity.xcconfig`: `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID`,
-  `APP_CATEGORY`, `COPYRIGHT`, `GITHUB_REPOSITORY`, `REQUIRED_LOCALES`;
-- `LICENSE`, `.github/CODEOWNERS`, `.github/ISSUE_TEMPLATE/config.yml`;
-- `README.md`, from `wiring/README.md`;
-- the template-only blocks in `scripts/status.sh`, `scripts/lint-rules.sh` and
-  `.github/workflows/ci.yml`;
+  `GITHUB_REPOSITORY`;
+- `LICENSE`;
+- `README.md`: the template's page becomes the app's stub, a title and the one-sentence
+  placeholder;
 - this skill and `.claude/skills/setup-project`.
 
 ## Never
 
 - edit by hand a file the script owns (the project, schemes, Identity, Package.swift,
-  LICENSE, CODEOWNERS, README) or edit the script to get past a check
+  LICENSE, README) or edit the script to get past a check
 - roll back (`git reset --hard`, `git clean`) without the user's consent
-- set up the GitHub App, secrets or Apple accounts for the user
+- set up the secrets or Apple accounts for the user
 - push, or create the GitHub repository, without the user's consent
 - run this skill on the template repository itself
 
@@ -106,4 +103,3 @@ reads `make status`, says what comes next and runs it once they agree.
 | File | Does |
 | --- | --- |
 | `scripts/init.sh` | the preflight, the input rules, the plan and the changes; `--help` lists the modes and options |
-| `wiring/README.md` | the app's README, for its users |

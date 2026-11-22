@@ -21,7 +21,7 @@ public struct AppScenes: Scene {
             }
         }
         Settings {
-            SettingsView(updater: model.updater)
+            SettingsView(model: model.settings)
         }
     }
 }

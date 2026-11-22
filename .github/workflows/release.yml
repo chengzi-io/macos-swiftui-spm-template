@@ -1,0 +1,111 @@
+name: Release
+
+# A release starts by hand: Actions → Release → Run workflow. It builds, signs, notarizes
+# and checks the app, and leaves a draft GitHub Release; the developer downloads the DMG,
+# tests it and clicks Publish, which creates the tag vX.Y.Z and ships the update.
+# docs/RELEASING.md has the whole flow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: X.Y.Z; leave empty to compute it from the commits since the last release
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build a draft release
+    # Not macos-15: GitHub's macos-15 image (15.7.9) crashes in Xcode 26 compiling the Icon
+    # Composer icon (AppIcon.icon); ci.yml has the detail.
+    runs-on: macos-26
+    # The secrets the release signs with live in this environment, which only protected
+    # branches reach: make github-settings sets the policy.
+    environment: release
+    permissions:
+      contents: write
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # git-cliff reads the tags, and the build number counts the whole history.
+          fetch-depth: 0
+          # Nothing here pushes, and a token left in .git/config can ride into an artifact.
+          persist-credentials: false
+      # .xcode-version is the one place the Xcode version is written; same step as ci.yml.
+      - name: Select Xcode from .xcode-version
+        run: |
+          xcode_version=$(tr -d '[:space:]' <.xcode-version)
+          developer_dir="/Applications/Xcode_$xcode_version.app/Contents/Developer"
+          [[ -d $developer_dir ]] || { echo "::error::Xcode $xcode_version (.xcode-version) is not installed on this runner"; exit 1; }
+          echo "XCODE_VERSION=$xcode_version" >>"$GITHUB_ENV"
+          echo "DEVELOPER_DIR=$developer_dir" >>"$GITHUB_ENV"
+          sudo DEVELOPER_DIR="$developer_dir" xcodebuild -runFirstLaunch
+      - run: make doctor
+      # Pinned and checked against its published digest, as ci.yml pins shellcheck: the
+      # version and the notes a new git-cliff writes must arrive as a reviewed bump.
+      - name: Install git-cliff
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl -fsSLO https://github.com/orhun/git-cliff/releases/download/v2.14.2/git-cliff-2.14.2-aarch64-apple-darwin.tar.gz
+          shasum -a 256 -c <<'EOF'
+          a0be97e237d440d34c5e508ec21d070b2c85cbb8be48a46a56f9a4e8bd247f05  git-cliff-2.14.2-aarch64-apple-darwin.tar.gz
+          EOF
+          tar -xzf git-cliff-2.14.2-aarch64-apple-darwin.tar.gz
+          echo "$PWD/git-cliff-2.14.2" >>"$GITHUB_PATH"
+      # Its stdout is the version everything below builds.
+      - name: Compute the version and its notes
+        id: prepare
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+          DEVELOPER_ID_P12_BASE64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
+          DEVELOPER_ID_P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+          NOTARY_API_KEY_P8_BASE64: ${{ secrets.NOTARY_API_KEY_P8_BASE64 }}
+          NOTARY_API_KEY_ID: ${{ secrets.NOTARY_API_KEY_ID }}
+          NOTARY_API_ISSUER_ID: ${{ secrets.NOTARY_API_ISSUER_ID }}
+        run: |
+          version=$(scripts/release/prepare.sh "$INPUT_VERSION")
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+      # Before the credentials: the tests run the package's dependencies' code.
+      - run: make lint test
+      - name: Import signing credentials
+        env:
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+          DEVELOPER_ID_P12_BASE64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
+          DEVELOPER_ID_P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+          NOTARY_API_KEY_P8_BASE64: ${{ secrets.NOTARY_API_KEY_P8_BASE64 }}
+        run: scripts/release/ci-keychain.sh setup
+      - name: Build, sign, notarize, package
+        env:
+          RELEASE_VERSION: ${{ steps.prepare.outputs.version }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_API_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_API_ISSUER_ID }}
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: make release
+      # The draft is published by hand: its DMG is the thing the developer accepts.
+      - name: Upload the assets into a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ steps.prepare.outputs.version }}
+        run: |
+          url=$(scripts/release/draft.sh "v$RELEASE_VERSION")
+          {
+            echo "Draft release: $url"
+            echo
+            echo "Download the DMG, test it, then Publish the release. Publishing creates the tag and ships the update."
+          } >>"$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dsym-v${{ steps.prepare.outputs.version }}
+          path: dist/*.dSYM.zip
+          retention-days: 90
+      - name: Remove signing credentials
+        if: always()
+        run: scripts/release/ci-keychain.sh cleanup

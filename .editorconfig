@@ -14,5 +14,14 @@ indent_size = 2
 [Makefile]
 indent_style = tab
 
+# Xcode writes these, and writes them its way: a project file in tabs, a scheme and a
+# workspace file in threes. Keep that, or the first save in an editor that reads this file
+# rewrites every line of them.
+[*.pbxproj]
+indent_style = tab
+
+[{*.xcscheme,contents.xcworkspacedata}]
+indent_size = 3
+
 [*.md]
 trim_trailing_whitespace = false

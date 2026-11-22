@@ -1,0 +1,44 @@
+# git-cliff computes a release from the commits on main: the squash-merged PR titles, in
+# Conventional Commits form. `git cliff --bumped-version` gives the next version and
+# scripts/release/prepare.sh writes its notes to .build/release-notes.md.
+# https://git-cliff.org/docs/configuration
+
+[changelog]
+# No version heading: the GitHub Release carries the version as its title, so these
+# notes are the groups alone.
+body = """{% for group, commits in commits | group_by(attribute="group") -%}
+### {{ group }}
+
+{% for commit in commits -%}
+- {{ commit.message }}
+
+{% endfor -%}
+{% endfor %}"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+# vX.Y.Z only: a tag in another shape must not set the version.
+tag_pattern = "v[0-9]+.[0-9]+.[0-9]+"
+# The first match wins, and the groups print in name order. A breaking change of any type,
+# marked by `!` or a BREAKING CHANGE: footer, gets its own group; matching the field, not
+# a `!` in the title, keeps a title such as `chore: tidy up!` out. feat, fix and perf
+# ship; a refactor ships nothing by itself (scripts/release/prepare.sh) but is listed, so
+# the notes say where the code was restructured. Every other type stays out.
+commit_parsers = [
+    { field = "breaking", pattern = "true", group = "Breaking Changes" },
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Fixes" },
+    { message = "^perf", group = "Performance" },
+    { message = "^refactor", group = "Refactoring" },
+    { message = ".*", skip = true },
+]
+
+[bump]
+# Below 1.0 a breaking change bumps the minor version, a feat the minor and a fix the
+# patch; the first release, before any tag, is 0.1.0.
+features_always_bump_minor = true
+breaking_always_bump_major = false
+# The v matters: git-cliff rejects an initial tag that tag_pattern above does not match.
+initial_tag = "v0.1.0"

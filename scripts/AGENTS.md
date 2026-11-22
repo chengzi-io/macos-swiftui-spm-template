@@ -3,15 +3,25 @@
 Conventions for the bash scripts behind the Makefile, CI and releases. Supplements the root
 [AGENTS.md](../AGENTS.md).
 
+## Layout
+
+- `common.sh`: sourced by every script here; the shared variables, `die`, `log`, `say`, the
+  app identity and the paths.
+- `setup/`: one-time setup, and the status that walks through it.
+- `dev/`: the daily loop, and every step of `make ci`.
+- `release/`: only `make release` and the Release workflow.
+
+A new script goes in the folder of when it runs.
+
 ## Write
 
-- Start with `#!/usr/bin/env bash`, then a comment saying what the script does, its arguments and its output; then `source "$(dirname "$0")/common.sh"`.
+- Start with `#!/usr/bin/env bash`, then a comment saying what the script does, its arguments and its output; then `source "$(dirname "$0")/../common.sh"`.
 - `common.sh` sets `set -euo pipefail`, runs from the repository root, exports the keys of `App/Configs/Identity.xcconfig` and defines `die`, `log` and the shared paths: use them, do not redefine them.
 - Write for macOS's bash 3.2: no associative arrays, no `mapfile`, guard empty arrays.
 - Write for BSD tools, not GNU: `sed -i ''`, `/usr/bin/grep` without `-P` (use `perl` for PCRE).
 - Errors go through `die "<what failed>; <how to fix it>"` to stderr; progress through `log`; stdout carries only the result a caller reads.
 - Quote every expansion; pass lists as arrays (`"${args[@]}"`), not strings.
-- A script a person runs gets a Makefile target with a `##` help line in its section.
+- A script a person runs gets an entry point: a Makefile target with a `##` help line in its section. A step of `make ci` gets a target without the `##` line, under a comment saying it is a step that `make help` leaves out. A release step gets no target: `scripts/release/build.sh` and the workflows call it.
 
 ## Check
 

@@ -21,15 +21,17 @@ flowchart LR
    of the views you changed.
 3. `make ci` before you open a PR. It is the definition of done.
 4. Open the PR with a Conventional Commit title
-   ([CONTRIBUTING](../.github/CONTRIBUTING.md)); it is squash-merged, and
-   [released](../.agents/skills/setup-releases/SKILL.md) once that skill has run.
+   ([CONTRIBUTING](../.github/CONTRIBUTING.md)); it is squash-merged. Shipping a version:
+   [RELEASING.md](RELEASING.md).
 
 CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 `gh run download <run id> -n renders`.
 
 ## Commands
 
-`make help` lists every target; these are the ones you use daily.
+`make help` lists the entry points; these are the ones you use daily. `make build`, `make
+smoke` and `make lint-assets` are steps of `make ci`, so `make help` leaves them out;
+they run on their own too.
 
 | Command | Does | When |
 | --- | --- | --- |
@@ -40,10 +42,11 @@ CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 | `make test` | package unit tests and renders, no app | after every change |
 | `make run` | builds and launches the debug app, logs in the terminal | to try a change |
 | `make fmt` | formats Swift sources in place | before committing |
-| `make lint` | formatting and `scripts/lint-rules.sh` | part of `make ci` |
-| `make ci` | versions, lint, test, assets, app, smoke | before a PR |
-| `make test:ui` | XCUITests; they take over the mouse and keyboard | when asked; CI runs them on every PR |
-| `make logs` | streams the app's unified logs | while debugging |
+| `make lint` | formatting and `scripts/dev/lint-rules.sh` | part of `make ci` |
+| `make lint-assets` | compiles the asset catalog and `AppIcon.icon` with actool, fails on any warning | after an icon change; part of `make ci` |
+| `make build` | builds the debug .app, ad-hoc signed | to check the app target builds |
+| `make ci` | lint, test, lint-assets, build, smoke | before a PR |
+| `make test-ui` | XCUITests; they take over the mouse and keyboard | when asked; CI runs them on every PR |
 | `make clean` | removes build output | after a toolchain change |
 
 | Task | Command |
@@ -55,7 +58,7 @@ CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 
 | Editor | Setup | Notes |
 | --- | --- | --- |
-| Xcode | `xed App/<App>.xcodeproj` | Run builds the real `.app` with the debugger attached; previews run in the package targets |
+| Xcode | `xed App/App.xcodeproj` | Run builds the real `.app` with the debugger attached; previews run in the package targets |
 | Xcode, package only | `xed .` | the package without the app shell |
 | VS Code, Cursor, Zed | the Swift extension (sourcekit-lsp) | loads the package at the root; `App/` gets no code intelligence, so use `make run` |
 
@@ -65,5 +68,6 @@ CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 ## Where code goes
 
 Where a file belongs and which way dependencies point: [Sources/AGENTS.md](../Sources/AGENTS.md);
-why: [ARCHITECTURE.md](ARCHITECTURE.md). To add a feature, ask your agent: its add-feature
-skill scaffolds the feature and its tests.
+why: [ARCHITECTURE.md](ARCHITECTURE.md). To add a feature, run `make feature
+NAME=<Area>`: it writes the feature, its tests and the targets, then prints the two lines
+that wire it.

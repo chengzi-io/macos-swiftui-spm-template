@@ -24,8 +24,18 @@ struct MainApp: App {
 private func makeModel() -> AppModel {
     #if DEBUG
         if ProcessInfo.processInfo.environment["UI_TESTING"] == "1" {
-            return AppModel(noteService: MockNoteService(), updater: MockUpdaterService())
+            return AppModel(
+                noteService: MockNoteService(),
+                updater: MockUpdaterService(),
+                preferences: MockPreferencesStore(),
+                appearance: MockAppearanceService()
+            )
         }
     #endif
-    return AppModel(noteService: LiveNoteService(), updater: LiveUpdaterService())
+    return AppModel(
+        noteService: LiveNoteService(),
+        updater: LiveUpdaterService(),
+        preferences: LivePreferencesStore(),
+        appearance: LiveAppearanceService()
+    )
 }

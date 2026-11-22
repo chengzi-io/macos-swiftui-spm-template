@@ -14,11 +14,6 @@ concurrency:
 jobs:
   quality:
     name: Lint, test, build
-    # release-please PRs only touch version.txt, CHANGELOG.md and the manifest. A skipped
-    # job still satisfies the required check, so only release-please's own PRs skip: its
-    # App opens them as a Bot, while a person's or an agent's token opens them as a User,
-    # and the same-repo guard keeps forks out.
-    if: ${{ !(startsWith(github.head_ref, 'release-please--') && github.event.pull_request.user.type == 'Bot' && github.event.pull_request.head.repo.full_name == github.repository) }}
     # Not macos-15: GitHub's macos-15 image (15.7.9) crashes in Xcode 26 compiling the Icon
     # Composer icon (AppIcon.icon). macOS 15.7.2 with Xcode 26.2 compiles it fine locally.
     runs-on: macos-26
@@ -27,6 +22,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          # Nothing here pushes, and a token left in .git/config can ride into an artifact.
+          persist-credentials: false
       # .xcode-version is the one place the Xcode version is written; release.yml does the same.
       - name: Select Xcode from .xcode-version
         run: |
@@ -36,25 +33,18 @@ jobs:
           echo "XCODE_VERSION=$xcode_version" >>"$GITHUB_ENV"
           echo "DEVELOPER_DIR=$developer_dir" >>"$GITHUB_ENV"
           sudo DEVELOPER_DIR="$developer_dir" xcodebuild -runFirstLaunch
-          sw_vers
-          DEVELOPER_DIR="$developer_dir" xcodebuild -version
       - run: make doctor
-      # template-only:start
-      # Every edit setup-project makes must still find its target.
-      - name: Dry-run setup-project
-        run: .agents/skills/setup-project/scripts/init.sh --dry-run --name Example --repo example/example --codeowner @example
-      # template-only:end
-      # template-only:start
-      # The release wiring of setup-releases must install into an app made from this template and build there.
-      - name: Install setup-releases on a copy
-        run: .agents/skills/setup-releases/scripts/ci-install-check.sh
-      # template-only:end
+      # Only the downloads: SwiftPM's clones and Sparkle's binary artifact. Build products
+      # stay out, so a stale .build cannot hide behind a green build, and the archives stay
+      # small enough to fetch faster than the work they save.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            .build
-          key: build-macos-26-xcode-${{ env.XCODE_VERSION }}-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: build-macos-26-xcode-${{ env.XCODE_VERSION }}-
+            .build/checkouts
+            .build/repositories
+            .build/artifacts
+          key: build-macos-26-xcode-spm-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: build-macos-26-xcode-spm-spm-
       - run: make ci
       # The views as this runner draws them, for the reviewer of a PR that changes one.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -65,14 +55,22 @@ jobs:
       # UI tests drive the mouse and keyboard; macOS asks for an admin password the
       # first time unless automation mode is enabled up front.
       - run: sudo automationmodetool enable-automationmode-without-authentication
-      - run: make test:ui
-      # make test:ui writes its result bundle here: screenshots and logs of a failing test.
+      - run: make test-ui
+      # make test-ui writes its result bundle here: screenshots and logs of a failing test.
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ui-tests-xcresult
           path: .build/UITests.xcresult
           if-no-files-found: warn
+      # The release build without secrets, so a broken release script fails this PR rather
+      # than release day. A release build refuses an empty SUPublicEDKey; the dummy key is
+      # what building ad-hoc needs, not a secret.
+      - name: Build the release ad-hoc
+        run: |
+          plutil -replace SUPublicEDKey -string AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= App/Configs/Info.plist
+          scripts/release/app.sh
+          scripts/release/dmg.sh
 
   scripts:
     name: Lint scripts and workflows
@@ -80,6 +78,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       # Pinned releases, checked against their published digests, so a new version's
       # findings arrive as a reviewed bump rather than a red PR.
       - name: Install shellcheck and actionlint
@@ -98,5 +98,3 @@ jobs:
       - run: git ls-files -z '*.sh' | xargs -0 shellcheck --external-sources --source-path=SCRIPTDIR --severity=warning
       # Also runs shellcheck over every workflow's run: steps.
       - run: actionlint
-      # The release workflow ships inside the setup-releases skill until it is installed.
-      - run: actionlint .agents/skills/setup-releases/wiring/.github/workflows/release.yml

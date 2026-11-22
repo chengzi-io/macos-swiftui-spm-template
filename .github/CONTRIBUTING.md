@@ -20,6 +20,10 @@ follows Conventional Commits (CI checks it): `<type>(<scope>): <subject>`.
 - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`,
   `chore`, `revert`. The subject is lowercase, imperative, with no trailing period.
 - A breaking change is `feat(api)!: drop v1 routes` or a `BREAKING CHANGE:` footer.
+- The type decides what ships ([docs/RELEASING.md](../docs/RELEASING.md#versions)):
+  `feat`, `fix`, `perf` and breaking changes do; a `refactor` only appears in the next
+  release's notes; the rest stays out. A change users can see is a `feat` or a `fix`, even
+  when it came out of a restructuring.
 
 ## PR flow
 
@@ -35,15 +39,18 @@ The checks stop mistakes, not someone set on getting past them. With two or more
 `main` also needs an approving review, and nobody approves their own PR. A token that can
 push can merge, so give an agent no write access, or a GitHub account of its own.
 
-Once the [setup-releases](../.agents/skills/setup-releases/SKILL.md) skill has installed
-it, release-please turns `feat` and `fix` commits into a release PR; merging it tags
-`vX.Y.Z`, and the release workflow attaches the DMG, dSYM and appcast.
+The template ships no `.github/CODEOWNERS`. Add one (`* @owner`) when someone should be
+requested on every PR: the review rule above comes from branch protection, not from that
+file.
+
+A merge to `main` ships nothing by itself: run the Release workflow when you want a
+version out, and publish the draft it leaves ([docs/RELEASING.md](../docs/RELEASING.md)).
 
 ## Docs style
 
-1. The first line says what the file is for and who reads it; past its line budget, split it.
+1. The first line says what the file is for and who reads it; a file that outgrows one reader splits.
 2. Tables for mappings and options, numbered lists for steps; no paragraph over 4 lines.
 3. Each fact lives in one place; elsewhere, link to it. Commands go in code blocks.
 4. Rules read "Do X" or "Don't Y, because Z", with a one-sentence reason.
 5. Agent files (`AGENTS.md`) hold no background for people; people's docs hold no agent orders.
-6. Shipped docs are in English. `make lint` checks budgets, links and `AGENTS.md`/`CLAUDE.md` pairs.
+6. Shipped docs are in English. `make lint` checks links and `AGENTS.md`/`CLAUDE.md` pairs.

@@ -1,11 +1,10 @@
 # AGENTS.md
 
 A macOS SwiftUI app. All code lives in the Swift package at the repository root
-(`Package.swift`, `Sources/`, `Tests/`); `App/<App>.xcodeproj` is a thin Xcode shell that
+(`Package.swift`, `Sources/`, `Tests/`); `App/App.xcodeproj` is a thin Xcode shell that
 builds, signs and packages it, and `scripts/` ships it. `<App>` is the app's name
-(`APP_NAME` in `App/Configs/Identity.xcconfig`): the project, its scheme and the `.app`
-carry it, while the targets are always `App` and `AppUITests` and the package
-`AppPackage`. This file holds what every task needs; the rest is in the files below.
+(`APP_NAME` in `App/Configs/Identity.xcconfig`): the `.app` carries it, while the project,
+its scheme, the targets (`App`, `AppUITests`) and the package (`AppPackage`) never change. This file holds what every task needs; the rest is in the files below.
 
 ## Done means
 
@@ -15,10 +14,10 @@ carry it, while the targets are always `App` and `AppUITests` and the package
 | `make ci` | before calling a task done: the definition of done, same as CI | minutes |
 | `make run` | to launch the debug app; logs go to the terminal | a minute |
 | `make fmt` | to format Swift sources (the pre-commit hook formats staged files) | seconds |
-| `make test:ui` | only when the user asks: it takes over the mouse and keyboard | minutes |
+| `make test-ui` | only when the user asks: it takes over the mouse and keyboard | minutes |
 
-CI also runs `make test:ui`, shellcheck and actionlint on every PR. `make help` lists
-every target.
+CI also runs `make test-ui`, shellcheck and actionlint on every PR. `make help` lists the
+entry points only: the steps `make ci` runs stay off the list.
 
 ## Toolchain
 
@@ -37,7 +36,7 @@ target, warnings as errors. Never raise `swift-tools-version` or use Swift 6.3+ 
 - Don't push, merge, tag or release without the user's go-ahead, because others see it at once.
 - Don't skip the git hooks (`--no-verify`, `LEFTHOOK=0`), because CI runs the same checks; fix what they report.
 - Don't commit certificates, `.p12`/`.p8` files or the Sparkle private key, because the repository may be public.
-- Don't edit `version.txt`, `.release-please-manifest.json` or `CHANGELOG.md`, because release-please owns them.
+- Don't generate a new Sparkle key for an app that has shipped, because installed copies would reject every update; restore the backup instead.
 
 ## Before editing, read
 
@@ -52,32 +51,6 @@ the root (Codex) load only this file, not the nested ones.
 | `scripts/` | [scripts/AGENTS.md](scripts/AGENTS.md) | bash conventions, `common.sh`, BSD tools, shellcheck |
 | `.github/` | [.github/AGENTS.md](.github/AGENTS.md) | workflows, pinned actions, the Xcode version, actionlint |
 
-## Skills
-
-Skills live in `.agents/skills/`; `.claude/skills/` links to each one, so link a new
-skill the same way. When the user says "next step", run the `next-step` skill.
-
-<!-- template-only:start -->
-While `.agents/skills/setup-project` exists, the app is still the template: run
-[setup-project](.agents/skills/setup-project/SKILL.md) before any other skill.
-<!-- template-only:end -->
-
-`setup-*` skills set up the project's infrastructure once and change the build or the
-release: start one only when the user names it or agrees to it in `next-step`. `add-*`
-and `design-*` skills are everyday development, any time after the `make status` project
-line is `ok`.
-
-| Skill | Use it to |
-| --- | --- |
-| [next-step](.agents/skills/next-step/SKILL.md) | say where the project stands and run what comes next, with consent |
-| [setup-releases](.agents/skills/setup-releases/SKILL.md) | install and finish the release pipeline: the wiring, the release environment, release-please's App, the Sparkle key, the first release |
-| [setup-developer-id](.agents/skills/setup-developer-id/SKILL.md) | sign and notarize releases with a Developer ID: certificate, notary key, `TEAM_ID`, five secrets |
-| [setup-homebrew](.agents/skills/setup-homebrew/SKILL.md) | publish the app as a Homebrew cask, in an own tap or `homebrew/cask` |
-| [add-feature](.agents/skills/add-feature/SKILL.md) | add a screen, window or area as a `<Name>Feature` target, or a service it needs |
-| [add-capability](.agents/skills/add-capability/SKILL.md) | add launch at login, networking, a menu bar item, a global shortcut, an AppKit bridge, crash reporting, Keychain, SwiftData or a privacy-manifest entry |
-| [design-app-icon](.agents/skills/design-app-icon/SKILL.md) | make or replace the app icon (`App/Application/AppIcon.icon`) |
-| [design-dmg-window](.agents/skills/design-dmg-window/SKILL.md) | design the DMG window |
-
 ## Docs
 
 | File | What it covers | Reader |
@@ -85,7 +58,7 @@ line is `ok`.
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | why the app is layered this way | people; agents when needed |
 | [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) | pinned versions, upgrades, mcpbridge, the CI runner | people and agents |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | the daily loop, editor setup, commands | people |
-| [wiring/docs/RELEASING.md](.agents/skills/setup-releases/wiring/docs/RELEASING.md) | running a release, recovery, crash symbolication (installed as `docs/RELEASING.md`) | people |
+| [docs/RELEASING.md](docs/RELEASING.md) | running a release, recovery, crash symbolication | people |
 | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) | commit and PR titles, the PR flow | people and agents |
 
 ## Commits

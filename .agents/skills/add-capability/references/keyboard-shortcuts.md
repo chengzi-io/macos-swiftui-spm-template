@@ -56,4 +56,5 @@ shortcut needs no mock. Listen with `events(_:for:)`, not `onKeyUp(for:)`: the p
 plans to deprecate `onKeyUp`, and with warnings as errors that deprecation would break
 the build. On macOS 15.0 and 15.1 a sandboxed app cannot register a shortcut whose only
 modifiers are Option or Option-Shift; 15.2 lifted that. Add `Show app` to
-`Features/Settings/Resources/Localizable.xcstrings` in every locale of `REQUIRED_LOCALES`.
+`Features/Settings/Resources/Localizable.xcstrings` in every language in
+`CFBundleLocalizations`.

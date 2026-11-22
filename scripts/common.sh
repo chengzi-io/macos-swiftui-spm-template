@@ -1,4 +1,4 @@
-# Sourced by scripts/*.sh. Runs from the repo root with the app identity
+# Sourced by every script under scripts/. Runs from the repo root with the app identity
 # (App/Configs/Identity.xcconfig) exported.
 # macOS ships bash 3.2: no associative arrays, no mapfile, guard empty arrays.
 # shellcheck shell=bash disable=SC2034 # the scripts that source this file read its variables
@@ -14,15 +14,23 @@ while IFS= read -r line; do
         export "${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
     fi
 done <App/Configs/Identity.xcconfig
-export RELEASES_URL="https://github.com/$GITHUB_REPOSITORY/releases"
 
 DERIVED_DATA=.build/xcode
-VERSION=$(tr -d '[:space:]' < version.txt)
+# RELEASE_VERSION (CI, and `make release RELEASE_VERSION=x`), else the newest vX.Y.Z tag
+# reachable from HEAD without the v, else 0.0.0 before the first release. git-cliff
+# computes a release's version; scripts/release/prepare.sh passes it on.
+VERSION=${RELEASE_VERSION:-}
+if [[ -z $VERSION ]]; then
+    # vX.Y.Z only: a tag in another shape, such as v1 or a beta, must not set the version.
+    VERSION=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' --exclude '*-*' 2>/dev/null || true)
+    VERSION=${VERSION#v}
+    [[ -n $VERSION ]] || VERSION=0.0.0
+fi
 BUILD_NUMBER=$(git rev-list --count HEAD)
 DEBUG_APP="$DERIVED_DATA/Build/Products/Debug/$APP_NAME.app"
-ARCHIVE="$DERIVED_DATA/$APP_NAME.xcarchive"
-RELEASE_APP="dist/$APP_NAME.app"
-SPARKLE_BIN=.build/artifacts/sparkle/Sparkle/bin
+# Every Swift source: swift format formats and lints these, lint-rules.sh checks them. All
+# of App/: an extension's target gets its own folder there.
+SWIFT_PATHS=(Package.swift App Sources Tests)
 
 die() {
     echo "error: $*" >&2
@@ -33,34 +41,34 @@ log() {
     echo "==> $*" >&2
 }
 
-# The Xcode project and its scheme carry APP_NAME; the targets inside are always App and
-# AppUITests, so renaming the app moves the project and the scheme, not what is in them.
-XCODE_PROJECT=App/$APP_NAME.xcodeproj
-XCODE_SCHEME=$XCODE_PROJECT/xcshareddata/xcschemes/$APP_NAME.xcscheme
-[[ -f $XCODE_PROJECT/project.pbxproj ]] ||
-    die "no $XCODE_PROJECT/project.pbxproj; the project is named after APP_NAME in App/Configs/Identity.xcconfig: git mv it and its scheme to match"
+# say <state> <text>: one checklist line, as scripts/setup/doctor.sh and
+# scripts/setup/status.sh print them: the state (ok, todo, info, warn, --, ?) padded to
+# five columns, then the text.
+say() {
+    printf '%-5s %s\n' "$1" "$2"
+}
+
+# deployment_target [xcconfig]: prints the MACOSX_DEPLOYMENT_TARGET the xcconfig sets
+# (default App/Configs/Project.xcconfig), such as 14.0; dies when it sets none.
+deployment_target() {
+    local xcconfig=${1:-App/Configs/Project.xcconfig} value
+    value=$(sed -nE 's/^MACOSX_DEPLOYMENT_TARGET[[:space:]]*=[[:space:]]*([^[:space:]]+).*/\1/p' "$xcconfig")
+    [[ -n $value ]] || die "no MACOSX_DEPLOYMENT_TARGET in $xcconfig"
+    echo "$value"
+}
+
+# The Xcode project and its scheme are always App. The app's name reaches the .app
+# through PRODUCT_NAME, so no file moves when it changes.
+XCODE_PROJECT=App/App.xcodeproj
+XCODE_SCHEME_NAME=App
+XCODE_SCHEME=$XCODE_PROJECT/xcshareddata/xcschemes/$XCODE_SCHEME_NAME.xcscheme
+[[ -f $XCODE_PROJECT/project.pbxproj ]] || die "no $XCODE_PROJECT/project.pbxproj"
 
 # Prints one digest of every file in App/Application/AppIcon.icon and its path, so
-# status.sh can tell the template's icon from the app's own.
+# scripts/setup/status.sh can tell the template's icon from the app's own.
 icon_digest() {
     (cd App/Application && find AppIcon.icon -type f -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256) |
         shasum -a 256 | awk '{ print $1 }'
-}
-
-# Prints SUPublicEDKey from App/Configs/Info.plist, the key installed copies check
-# updates against; empty until the setup-releases skill's sparkle-keys.sh writes it.
-sparkle_public_key() {
-    local key
-    key=$(plutil -extract SUPublicEDKey raw App/Configs/Info.plist) ||
-        die "no SUPublicEDKey in App/Configs/Info.plist"
-    echo "$key"
-}
-
-# Sets SUPublicEDKey in App/Configs/Info.plist in place, keeping the file's formatting
-# (plutil and PlistBuddy rewrite it with tabs).
-set_sparkle_public_key() {
-    sed -i '' -e '/<key>SUPublicEDKey<\/key>/{' -e 'n' -e "s|<string>.*</string>|<string>$1</string>|" -e '}' App/Configs/Info.plist
-    [[ $(plutil -extract SUPublicEDKey raw App/Configs/Info.plist) == "$1" ]] || die "could not set SUPublicEDKey in App/Configs/Info.plist"
 }
 
 # Prints the SHA-1 of the first valid codesigning identity for TEAM_ID whose name
@@ -69,6 +77,20 @@ find_identity() {
     local pattern=$1
     security find-identity -v -p codesigning |
         awk -v pattern="$pattern" -v team="($TEAM_ID)" '$0 ~ pattern && index($0, team) { print $2; exit }'
+}
+
+# The paths and the signing that only a release needs.
+ARCHIVE="$DERIVED_DATA/$APP_NAME.xcarchive"
+RELEASE_APP="dist/$APP_NAME.app"
+RELEASE_DMG="dist/$APP_NAME-$VERSION.dmg"
+
+# Prints SUPublicEDKey from App/Configs/Info.plist, the key installed copies check
+# updates against; empty until scripts/setup/sparkle-key.sh writes it.
+sparkle_public_key() {
+    local key
+    key=$(plutil -extract SUPublicEDKey raw App/Configs/Info.plist) ||
+        die "no SUPublicEDKey in App/Configs/Info.plist"
+    echo "$key"
 }
 
 # Prints the codesign identity for Developer ID builds: "-" (ad-hoc) when TEAM_ID is

@@ -6,7 +6,6 @@ APP_NAME = Pomelo
 APP_DISPLAY_NAME = Pomelo
 BUNDLE_ID = io.chengzi.Pomelo
 APP_CATEGORY = public.app-category.developer-tools
-COPYRIGHT = Copyright © 2026 ChengZi
 
 // Developer ID team. Empty: ad-hoc signing, no notarization.
 TEAM_ID =
@@ -14,7 +13,3 @@ TEAM_ID =
 // owner/repo on GitHub. Releases, and Sparkle's appcast, are served from its
 // Releases page.
 GITHUB_REPOSITORY = chengzi-io/macos-swiftui-spm-template
-
-// Locales every string catalog must translate, space separated, such as: en zh-Hans.
-// scripts/lint-rules.sh fails on a missing translation; en is the source language.
-REQUIRED_LOCALES = en zh-Hans
