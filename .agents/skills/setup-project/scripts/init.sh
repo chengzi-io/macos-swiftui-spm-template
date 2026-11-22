@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Turns this template into the user's own app, once: writes App/Configs/Identity.xcconfig,
-# LICENSE and README.md; fails while any template word remains; then deletes this skill and
+# LICENSE and both READMEs; fails while any template word remains; then deletes this skill and
 # its .claude/skills link.
 #
 #   init.sh                          read-only preflight; prints the defaults it can work out
@@ -28,6 +28,8 @@ TEMPLATE_REPO=chengzi-io/macos-swiftui-spm-template
 # A line only the template's own README.md carries: readme() replaces that page, and
 # leaves any other alone.
 TEMPLATE_README='built for coding agents'
+# The same for the Chinese counterpart: the page and the marker are a pair.
+TEMPLATE_README_ZH='为编程 agent 打造'
 LEFTOVERS='setup-project|Pomelo'
 IDENTITY=App/Configs/Identity.xcconfig
 SKILL=.agents/skills/setup-project
@@ -321,15 +323,20 @@ license() {
 }
 
 # readme: the app's page is its author's to write: the template's page is for people
-# choosing the template, so it becomes a stub. A page that is no longer the template's is
-# left alone, which is what keeps a second run from overwriting it.
+# choosing the template, so it becomes a stub, in English and in Chinese. A page that is no
+# longer the template's is left alone, which is what keeps a second run from overwriting it.
 readme() {
-    log "3/5 README.md"
-    if ! grep -qF "$TEMPLATE_README" README.md; then
+    log "3/5 README.md and README.zh-CN.md"
+    if grep -qF "$TEMPLATE_README" README.md; then
+        printf '# %s\n\n_What %s does and for whom, in one sentence._\n' "$name" "$name" | put README.md
+    else
         echo "   left alone: README.md is not the template's page" >&2
-        return
     fi
-    printf '# %s\n\n_What %s does and for whom, in one sentence._\n' "$name" "$name" | put README.md
+    if [[ -f README.zh-CN.md ]] && grep -qF "$TEMPLATE_README_ZH" README.zh-CN.md; then
+        printf '# %s\n\n_%s 做什么、给谁用，一句话。_\n' "$name" "$name" | put README.zh-CN.md
+    else
+        echo "   left alone: README.zh-CN.md is not the template's page" >&2
+    fi
 }
 
 delete_skill() {

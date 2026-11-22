@@ -86,7 +86,7 @@ the next step, and the last line says how to start it.
   `GITHUB_REPOSITORY`;
 - `LICENSE`;
 - `README.md`: the template's page becomes the app's stub, a title and the one-sentence
-  placeholder;
+  placeholder; `README.zh-CN.md` becomes the same stub in Chinese;
 - this skill and `.claude/skills/setup-project`.
 
 ## Never
