@@ -39,6 +39,10 @@ The checks stop mistakes, not someone set on getting past them. With two or more
 `main` also needs an approving review, and nobody approves their own PR. A token that can
 push can merge, so give an agent no write access, or a GitHub account of its own.
 
+The template ships no `.github/CODEOWNERS`. Add one (`* @owner`) when someone should be
+requested on every PR: the review rule above comes from branch protection, not from that
+file.
+
 A merge to `main` ships nothing by itself: run the Release workflow when you want a
 version out, and publish the draft it leaves ([docs/RELEASING.md](../docs/RELEASING.md)).
 

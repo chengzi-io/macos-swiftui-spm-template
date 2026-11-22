@@ -28,7 +28,7 @@ Run `init.sh` with no arguments, from the repository root:
     .agents/skills/setup-project/scripts/init.sh
 
 It is read-only. It checks the tools and the repository (Xcode matches `.xcode-version`,
-`gh` signed in unless `--codeowner` is given, `origin`, no `vX.Y.Z` tag, a clean tree) and
+`origin`, no `vX.Y.Z` tag, a clean tree) and
 prints every default it can work out, one per line. Fix what it reports, or ask the user to, and keep that list.
 
 ## Ask once
@@ -40,11 +40,11 @@ One message, in two parts:
    Show each default, or `(ask)`, and get an answer for each, even if it is "keep it":
    a default is never a confirmation. A new name changes the default bundle id with it,
    so confirm that one again.
-2. The defaults the user can change at any time: `category`, `repo`, `codeowner`,
-   `locales`. `en` is always a required language, as the source language; only the listed
-   ones are required in every string catalog. Two values are derived and not asked: the
-   display name follows `name`, and the LICENSE holder is the repository owner. `TEAM_ID`
-   keeps its current value.
+2. The defaults the user can change at any time: `category`, `repo`, `locales`. `en` is
+   always a required language, as the source language; only the listed ones are required
+   in every string catalog. Three values are derived and not asked: the display name
+   follows `name`, the LICENSE holder is the repository owner, and the bundle id follows
+   both. `TEAM_ID` keeps its current value.
 
 ## Plan
 
@@ -84,7 +84,7 @@ the next step, and the last line says how to start it.
 - `App/Configs/Identity.xcconfig`: `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID`,
   `APP_CATEGORY`, `GITHUB_REPOSITORY`;
 - `App/Configs/Info.plist`: `CFBundleLocalizations`, the app's languages;
-- `LICENSE`, `.github/CODEOWNERS`, `.github/ISSUE_TEMPLATE/config.yml`;
+- `LICENSE`;
 - `README.md`, from `wiring/README.md`: the app's page, with its Install and Update
   sections;
 - this skill and `.claude/skills/setup-project`.
@@ -92,7 +92,7 @@ the next step, and the last line says how to start it.
 ## Never
 
 - edit by hand a file the script owns (the project, schemes, Identity, Package.swift,
-  LICENSE, CODEOWNERS, README) or edit the script to get past a check
+  LICENSE, README) or edit the script to get past a check
 - roll back (`git reset --hard`, `git clean`) without the user's consent
 - set up the secrets or Apple accounts for the user
 - push, or create the GitHub repository, without the user's consent

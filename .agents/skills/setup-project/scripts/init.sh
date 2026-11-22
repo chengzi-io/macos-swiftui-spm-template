@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Turns this template into the user's own app, once: writes App/Configs/Identity.xcconfig,
-# the languages in App/Configs/Info.plist, LICENSE, CODEOWNERS, the issue template link and
-# README.md; fails while any template word remains; then deletes this skill and its
-# .claude/skills link.
+# the languages in App/Configs/Info.plist, LICENSE and README.md; fails while any template
+# word remains; then deletes this skill and its .claude/skills link.
 #
 #   init.sh                          read-only preflight; prints the defaults it can work out
 #   init.sh --dry-run --name MyApp   the checks and the plan; changes nothing
@@ -22,7 +21,6 @@
 #     photography, productivity, reference, social-networking, sports, travel, utilities,
 #     video, weather
 #   --repo owner/repo       GITHUB_REPOSITORY; defaults to the origin remote
-#   --codeowner @user       .github/CODEOWNERS; defaults to @<gh login>
 #   --locales "en zh-Hans"  CFBundleLocalizations; en is always included
 #   --skip-xcode            skip the Xcode check (only to test on a machine without Xcode)
 #   --dry-run               print every change as a "would ..." line, then stop
@@ -52,9 +50,8 @@ role-playing-games simulation-games sports-games strategy-games trivia-games wor
 graphics-design healthcare-fitness lifestyle medical music news photography productivity
 reference social-networking sports travel utilities video weather"
 
-name="" bundle_id="" category="" repo="" codeowner=""
+name="" bundle_id="" category="" repo=""
 locales="" skip_xcode=0 dry_run=0
-gh_login=""
 errors=0
 
 TMP=$(mktemp -d)
@@ -94,7 +91,6 @@ parse_inputs() {
         --bundle-id) bundle_id=$2 ;;
         --category) category=$2 ;;
         --repo) repo=$2 ;;
-        --codeowner) codeowner=$2 ;;
         --locales) locales=$2 ;;
         *) usage 1 ;;
         esac
@@ -120,12 +116,6 @@ preflight() {
             wanted=$(tr -d '[:space:]' <.xcode-version)
             [[ $version == "Xcode $wanted" ]] || fail "$version runs, .xcode-version wants Xcode $wanted"
         fi
-    fi
-    if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
-        gh_login=$(gh api user --jq .login 2>/dev/null) || gh_login=""
-    fi
-    if [[ -z $gh_login && -z $codeowner ]]; then
-        fail "gh is not signed in (gh auth login); without it, pass --codeowner"
     fi
     git remote get-url origin >/dev/null 2>&1 || [[ -n $repo ]] ||
         fail "no origin remote; add one or pass --repo owner/repo"
@@ -188,7 +178,6 @@ resolve_defaults() {
     if [[ -z $name ]]; then
         name=$(default_name)
     fi
-    [[ -n $codeowner || -z $gh_login ]] || codeowner=@$gh_login
     # The repository owner holds <owner>.github.io, so the id is theirs, whoever runs this.
     if [[ -z $bundle_id && -n $repo && -n $name ]]; then
         bundle_id=$(printf 'io.github.%s.%s' "${repo%%/*}" "$name" | tr '[:upper:]' '[:lower:]')
@@ -223,14 +212,12 @@ validate() {
     [[ $repo =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || fail "--repo '$repo' must be owner/repo"
     [[ $repo != "$TEMPLATE_REPO" ]] ||
         fail "--repo is the template itself; create the app's repository (Use this template) and pass it"
-    [[ $codeowner =~ ^@[A-Za-z0-9-]+(/[A-Za-z0-9._-]+)?$ ]] ||
-        fail "--codeowner '$codeowner' must be @user or @org/team"
     is_category "$category" ||
         fail "--category '$category' is not an App Store category; the 40 public.app-category.* values are listed in --help"
     if grep -qE "$LEFTOVERS" <<<"$name"; then
         fail "'$name' contains a template word ($LEFTOVERS); the last step would reject it"
     fi
-    for value in "$bundle_id" "$repo" "$codeowner"; do
+    for value in "$bundle_id" "$repo"; do
         [[ $value != "$name" ]] || continue
         if grep -qE "$LEFTOVERS" <<<"$value"; then
             fail "'$value' contains a template word ($LEFTOVERS); the last step would reject it"
@@ -251,7 +238,6 @@ name            ${name:-(ask)}  (permanent after the first release)
 bundle-id       ${bundle_id:-(ask)}  (permanent after the first release)
 category        ${category:-(ask)}
 repo            ${repo:-(ask)}
-codeowner       ${codeowner:-(ask)}
 locales         ${locales:-(ask)}
 OUT
 }
@@ -392,13 +378,11 @@ identity_step() {
     set_locales "$locales"
 }
 
-licenses() {
+license() {
     local year
     year=$(date +%Y)
-    log "2/5 LICENSE, CODEOWNERS, issue template link"
+    log "2/5 LICENSE"
     edit LICENSE -e "s|^Copyright \(c\) .*|Copyright (c) $year ${repo%%/*}|"
-    edit .github/CODEOWNERS -e "s|@[A-Za-z0-9_/.-]+|$codeowner|g"
-    edit .github/ISSUE_TEMPLATE/config.yml -e "s|github.com/[^/]+/[^/]+/security|github.com/$repo/security|"
 }
 
 readme() {
@@ -474,7 +458,7 @@ if ((dry_run == 0)); then
 fi
 
 identity_step
-licenses
+license
 readme
 leftovers
 delete_skill
