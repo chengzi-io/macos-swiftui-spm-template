@@ -32,12 +32,17 @@ jobs:
           echo "DEVELOPER_DIR=$developer_dir" >>"$GITHUB_ENV"
           sudo DEVELOPER_DIR="$developer_dir" xcodebuild -runFirstLaunch
       - run: make doctor
+      # Only the downloads: SwiftPM's clones and Sparkle's binary artifact. Build products
+      # stay out, so a stale .build cannot hide behind a green build, and the archives stay
+      # small enough to fetch faster than the work they save.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            .build
-          key: build-macos-26-xcode-${{ env.XCODE_VERSION }}-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: build-macos-26-xcode-${{ env.XCODE_VERSION }}-
+            .build/checkouts
+            .build/repositories
+            .build/artifacts
+          key: build-macos-26-xcode-spm-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: build-macos-26-xcode-spm-spm-
       - run: make ci
       # The views as this runner draws them, for the reviewer of a PR that changes one.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
