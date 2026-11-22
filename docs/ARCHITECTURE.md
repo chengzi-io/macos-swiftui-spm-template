@@ -1,8 +1,8 @@
 # Architecture
 
-Why the code is split the way it is, for people reading the template. The rules agents
-follow live in [Sources/AGENTS.md](../Sources/AGENTS.md) and [App/AGENTS.md](../App/AGENTS.md);
-this page gives the reasons.
+Why the code is split the way it is. The rules to follow live in
+[Sources/AGENTS.md](../Sources/AGENTS.md) and [App/AGENTS.md](../App/AGENTS.md); this page
+gives the reasons.
 
 ## How the app is built
 
@@ -48,12 +48,9 @@ flowchart TB
 
 ## One rule holds it together
 
-Features see protocols; only `MainApp` builds the live implementations.
-
-| Effect | Why it matters |
-| --- | --- |
-| Tests and previews run against mocks | nothing touches the system, so tests are fast and repeatable |
-| A feature cannot import a Live | it does not depend on one, so `make test` fails on the import |
+Only `MainApp` builds the live implementations; a feature sees protocols. Tests and
+previews therefore run on mocks, and an import of a Live target anywhere else fails
+`make test`.
 
 ## Where does this code go?
 
@@ -76,27 +73,9 @@ flowchart TD
 ## A hypothetical example: a menu bar monitor
 
 Not in the template: an imagined app of the size the structure is for, a monitor that
-shows CPU, memory and network in the menu bar and alerts when CPU stays high.
-
-```mermaid
-flowchart TB
-    App["MainApp"] --> AppRoot
-    App --> MonitorLive
-    App --> PlatformLive
-    AppRoot --> MonitorFeature
-    AppRoot --> SettingsFeature
-    MonitorFeature --> Monitor
-    MonitorFeature --> Alerts
-    MonitorFeature --> DesignSystem
-    SettingsFeature --> Alerts
-    SettingsFeature --> Platform
-    SettingsFeature --> DesignSystem
-    Alerts --> Monitor
-    Alerts --> Platform
-    MonitorLive --> Monitor
-    MonitorLive --> SMCKit
-    PlatformLive --> Platform
-```
+shows CPU, memory and network in the menu bar and alerts when CPU stays high. `MainApp`
+builds `MonitorLive` and `PlatformLive`; `AppRoot` holds `MonitorFeature` and
+`SettingsFeature`; `Alerts` depends on `Monitor` and `Platform`.
 
 | Question | Answer in the monitor | Why |
 | --- | --- | --- |

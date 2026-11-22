@@ -1,6 +1,6 @@
 # Contributing
 
-How commits, PRs and docs are written here. For people and agents.
+How commits, PRs and docs are written here.
 
 ## Setup
 
@@ -53,4 +53,6 @@ version out, and publish the draft it leaves ([docs/RELEASING.md](../docs/RELEAS
 3. Each fact lives in one place; elsewhere, link to it. Commands go in code blocks.
 4. Rules read "Do X" or "Don't Y, because Z", with a one-sentence reason.
 5. Agent files (`AGENTS.md`) hold no background for people; people's docs hold no agent orders.
-6. Shipped docs are in English. `make lint` checks links and `AGENTS.md`/`CLAUDE.md` pairs.
+6. Shipped docs are in English, with a Chinese copy beside them (`README.zh-CN.md`, `docs/zh/`).
+   English is the source: a change lands there first, then in the copy. `make lint` checks
+   links and `AGENTS.md`/`CLAUDE.md` pairs.

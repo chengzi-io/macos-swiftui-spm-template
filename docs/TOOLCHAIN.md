@@ -1,7 +1,7 @@
 # Toolchain
 
 Which Xcode, Swift and macOS versions this repository builds with, and how to change
-them. For people and agents.
+them.
 
 ## Versions
 

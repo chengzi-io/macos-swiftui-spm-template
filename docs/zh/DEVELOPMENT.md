@@ -5,16 +5,6 @@
 
 ## 日常循环
 
-```mermaid
-flowchart LR
-    setup["make setup<br/>once per clone"] --> edit["edit"]
-    edit --> test["make test<br/>seconds"]
-    test -->|fails| edit
-    test --> look["look at the renders<br/>of changed views"]
-    look --> ci["make ci<br/>before a PR"]
-    ci --> pr["PR: Conventional<br/>Commit title"]
-```
-
 1. `make setup` 一次：检查工具链，装好 git 钩子。
 2. 每次改完都跑 `make test`。它的渲染测试把每个画面、明暗两套画到
    `.build/renders/<test file>/<test>.png`。没有谁去比对它们：打开你改过的那些视图的图片看。
@@ -28,8 +18,8 @@ CI 会把它在 macOS 26 上画的那些渲染图作为这次运行的 `renders`
 
 ## 命令
 
-`make help` 列出入口；你天天用的是下面这些。`make build`、`make
-smoke` 和 `make lint-assets` 是 `make ci` 的步骤，所以 `make help` 里没有它们；它们单独也能跑。
+`make help` 列出入口。`make build`、`make smoke` 和 `make lint-assets` 是 `make ci` 的步骤，
+所以 `make help` 里没有它们；它们单独也能跑。
 
 | 命令 | 做什么 | 什么时候 |
 | --- | --- | --- |

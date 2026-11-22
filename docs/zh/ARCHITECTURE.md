@@ -1,6 +1,6 @@
 # 架构
 
-代码为什么这样拆，给读模板的人看。agent 遵守的规则写在
+代码为什么这样拆。要遵守的规则写在
 [Sources/AGENTS.md](../../Sources/AGENTS.md) 和 [App/AGENTS.md](../../App/AGENTS.md) 里；
 这一页给的是理由。
 
@@ -8,11 +8,11 @@
 
 ```mermaid
 flowchart LR
-    pkg["Package.swift, Sources/<br/>all code, string catalogs"] --> xb
-    shell["App/: Xcode project,<br/>@main, assets, AppIcon.icon"] --> xb
-    cfg["App/Configs/<br/>xcconfig, Info.plist, entitlements"] --> xb
-    xb["xcodebuild<br/>compile, embed Sparkle, sign"] --> app[".app"] --> smoke["scripts/dev/smoke.sh"]
-    pkg --> st["swift test<br/>unit and render tests, seconds"]
+    pkg["Package.swift、Sources/<br/>所有代码、string catalog"] --> xb
+    shell["App/：Xcode 工程、<br/>@main、资源、AppIcon.icon"] --> xb
+    cfg["App/Configs/<br/>xcconfig、Info.plist、entitlements"] --> xb
+    xb["xcodebuild<br/>编译、内嵌 Sparkle、签名"] --> app[".app"] --> smoke["scripts/dev/smoke.sh"]
+    pkg --> st["swift test<br/>单元测试和渲染测试，几秒"]
 ```
 
 | 为什么 | 因为 |
@@ -36,10 +36,10 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    MainApp["MainApp (Xcode target)"] --> AppRoot
-    MainApp --> Live["Domain Live, PlatformLive"]
+    MainApp["MainApp（Xcode target）"] --> AppRoot
+    MainApp --> Live["Domain Live、PlatformLive"]
     AppRoot --> Feature
-    AppRoot --> Core["Domain Core, Platform"]
+    AppRoot --> Core["Domain Core、Platform"]
     Feature --> Core
     Feature --> DS["DesignSystem"]
     Live --> Core
@@ -48,55 +48,33 @@ flowchart TB
 
 ## 一条规则把它们串起来
 
-功能看到的是协议；只有 `MainApp` 构建 live 实现。
-
-| 效果 | 为什么重要 |
-| --- | --- |
-| 测试和 Preview 跑在 mock 上 | 没有谁去碰系统，所以测试又快又可重复 |
-| feature 没法 import 一个 Live | 它不依赖 Live，所以一旦 import，`make test` 就失败 |
+live 实现只由 `MainApp` 构建，feature 看到的是协议。所以测试和 Preview 都跑在 mock 上，在别处
+import 一个 Live target 会让 `make test` 失败。
 
 ## 这段代码放哪？
 
 ```mermaid
 flowchart TD
-    start["New code"] --> see{"Does the user see it?"}
-    see -->|"yes: the app's look,<br/>knowing no domain"| ds["DesignSystem"]
-    see -->|"yes: a screen or its parts"| feature["the feature of that area"]
-    see -->|no| outside{"Does it reach outside the process?<br/>system, files, network, clock"}
-    outside -->|yes| anyApp{"Would any Mac app need it?"}
-    anyApp -->|"yes: updates, notifications"| platform["Platform"]
-    anyApp -->|no| domain["its domain"]
-    platform --> split["protocol and mock in Core,<br/>implementation in Live"]
+    start["新代码"] --> see{"用户看得见吗？"}
+    see -->|"看得见：应用的外观，<br/>不认识任何领域"| ds["DesignSystem"]
+    see -->|"看得见：一个画面或它的部件"| feature["那个区域的 feature"]
+    see -->|"看不见"| outside{"要碰到进程外面吗？<br/>系统、文件、网络、时钟"}
+    outside -->|"要"| anyApp{"任何 Mac 应用都需要吗？"}
+    anyApp -->|"需要：更新、通知"| platform["Platform"]
+    anyApp -->|"不需要"| domain["它所属的领域"]
+    platform --> split["协议和 mock 放 Core，<br/>实现放 Live"]
     domain --> split
-    outside -->|no| users{"Who uses it?"}
-    users -->|one feature| beside["a plain type in that feature"]
-    users -->|"several features,<br/>or no screen"| core["a plain type or model<br/>in a domain's Core"]
+    outside -->|"不要"| users{"谁用它？"}
+    users -->|"一个 feature"| beside["那个 feature 里的普通类型"]
+    users -->|"多个 feature，<br/>或者没有画面"| core["某个领域 Core 里的<br/>普通类型或 model"]
 ```
 
 ## 一个假设的例子：菜单栏监控
 
 模板里没有这东西：一个想象出来的应用，规模正是这套结构面向的规模，一个把 CPU、内存和网络
-显示在菜单栏、并在 CPU 持续偏高时发出告警的监控。
-
-```mermaid
-flowchart TB
-    App["MainApp"] --> AppRoot
-    App --> MonitorLive
-    App --> PlatformLive
-    AppRoot --> MonitorFeature
-    AppRoot --> SettingsFeature
-    MonitorFeature --> Monitor
-    MonitorFeature --> Alerts
-    MonitorFeature --> DesignSystem
-    SettingsFeature --> Alerts
-    SettingsFeature --> Platform
-    SettingsFeature --> DesignSystem
-    Alerts --> Monitor
-    Alerts --> Platform
-    MonitorLive --> Monitor
-    MonitorLive --> SMCKit
-    PlatformLive --> Platform
-```
+显示在菜单栏、并在 CPU 持续偏高时发出告警的监控。`MainApp` 构建 `MonitorLive` 和
+`PlatformLive`；`AppRoot` 持有 `MonitorFeature` 和 `SettingsFeature`；`Alerts` 依赖
+`Monitor` 和 `Platform`。
 
 | 问题 | 监控里的答案 | 为什么 |
 | --- | --- | --- |

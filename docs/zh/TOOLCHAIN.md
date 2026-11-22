@@ -1,6 +1,6 @@
 # 工具链
 
-这个仓库用哪个 Xcode、Swift 和 macOS 版本构建，以及怎么改它们。给人也给 agent 看。
+这个仓库用哪个 Xcode、Swift 和 macOS 版本构建，以及怎么改它们。
 
 ## 版本
 

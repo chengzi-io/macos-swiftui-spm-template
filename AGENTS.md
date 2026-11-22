@@ -22,8 +22,9 @@ entry points only: the steps `make ci` runs stay off the list.
 ## Toolchain
 
 Xcode 26.2 only (`.xcode-version`; CI uses the `macos-26` runner), Swift 6.2, macOS 14
-target, warnings as errors. Never raise `swift-tools-version` or use Swift 6.3+ or Xcode
-27 features: [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md).
+target, warnings as errors. Never use Swift 6.3+ or Xcode 27 features, and raise
+`swift-tools-version` only in the upgrade PR [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) walks
+through.
 
 ## Never
 
@@ -55,6 +56,7 @@ the root (Codex) load only this file, not the nested ones.
 
 | File | What it covers | Reader |
 | --- | --- | --- |
+| [README.md](README.md), [README.zh-CN.md](README.zh-CN.md) | what the template gives you and how to start; `docs/zh/` mirrors every doc below | people new to the repository |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | why the app is layered this way | people; agents when needed |
 | [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) | pinned versions, upgrades, mcpbridge, the CI runner | people and agents |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | the daily loop, editor setup, commands | people |

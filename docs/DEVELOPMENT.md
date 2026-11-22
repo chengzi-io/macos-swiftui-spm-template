@@ -5,16 +5,6 @@ Xcode 26.2, the version CI uses ([TOOLCHAIN.md](TOOLCHAIN.md)); `make doctor` ch
 
 ## Daily loop
 
-```mermaid
-flowchart LR
-    setup["make setup<br/>once per clone"] --> edit["edit"]
-    edit --> test["make test<br/>seconds"]
-    test -->|fails| edit
-    test --> look["look at the renders<br/>of changed views"]
-    look --> ci["make ci<br/>before a PR"]
-    ci --> pr["PR: Conventional<br/>Commit title"]
-```
-
 1. `make setup` once: checks the toolchain and installs the git hooks.
 2. `make test` after every change. Its render tests draw each screen, light and dark,
    to `.build/renders/<test file>/<test>.png`. Nothing compares them: open the images
@@ -29,9 +19,8 @@ CI uploads the renders it draws on macOS 26 as the run's `renders` artifact:
 
 ## Commands
 
-`make help` lists the entry points; these are the ones you use daily. `make build`, `make
-smoke` and `make lint-assets` are steps of `make ci`, so `make help` leaves them out;
-they run on their own too.
+`make help` lists the entry points. `make build`, `make smoke` and `make lint-assets` are
+steps of `make ci`, so `make help` leaves them out; they run on their own too.
 
 | Command | Does | When |
 | --- | --- | --- |
