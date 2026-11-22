@@ -28,7 +28,7 @@
 #   --repo owner/repo       GITHUB_REPOSITORY; defaults to the origin remote
 #   --codeowner @user       .github/CODEOWNERS; defaults to @<gh login>
 #   --copyright "Jane Doe"  the LICENSE holder; defaults to the repository owner
-#   --locales "en zh-Hans"  REQUIRED_LOCALES; en is always included
+#   --locales "en zh-Hans"  CFBundleLocalizations; en is always included
 #   --skip-xcode            skip the Xcode check (only to test on a machine without Xcode)
 #   --dry-run               print every change as a "would ..." line, then stop
 #   -h, --help              this text
@@ -46,6 +46,7 @@ TEMPLATE_NAME=Pomelo
 TEMPLATE_REPO=chengzi-io/macos-swiftui-spm-template
 LEFTOVERS='setup-project|template-only|Pomelo'
 IDENTITY=App/Configs/Identity.xcconfig
+INFO_PLIST=App/Configs/Info.plist
 SKILL=.agents/skills/setup-project
 LINK=.claude/skills/setup-project
 
@@ -369,6 +370,28 @@ set_identity() {
     fi
 }
 
+# set_locales <space separated>: CFBundleLocalizations, the array macOS reads and make lint
+# checks translations against. plutil rewrites the file's indentation only.
+set_locales() {
+    local json current
+    local -a list
+    read -r -a list <<<"$1"
+    json=$(printf '"%s",' "${list[@]+"${list[@]}"}")
+    json="[${json%,}]"
+    current=$(plutil -extract CFBundleLocalizations json -o - "$INFO_PLIST" | tr -d '[:space:]') ||
+        die "$INFO_PLIST has no CFBundleLocalizations array"
+    if [[ $current == "$json" ]]; then
+        echo "   done already: CFBundleLocalizations = $1" >&2
+        return
+    fi
+    if ((dry_run == 1)); then
+        echo "   would set: CFBundleLocalizations = $1 ($INFO_PLIST)" >&2
+    else
+        plutil -replace CFBundleLocalizations -json "$json" "$INFO_PLIST"
+        echo "   set: CFBundleLocalizations = $1 ($INFO_PLIST)" >&2
+    fi
+}
+
 # run description command...: runs it, or with --dry-run says it would.
 run() {
     local description=$1
@@ -419,7 +442,7 @@ identity_step() {
     set_identity APP_CATEGORY "$category"
     set_identity COPYRIGHT "Copyright © $(date +%Y) $holder"
     set_identity GITHUB_REPOSITORY "$repo"
-    set_identity REQUIRED_LOCALES "$locales"
+    set_locales "$locales"
 }
 
 licenses() {

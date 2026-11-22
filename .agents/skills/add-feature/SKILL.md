@@ -75,7 +75,7 @@ mock live in a Core, its live implementation in the matching `Live`, which
 
 ### 5. Translate and verify
 
-For each locale in `REQUIRED_LOCALES` (`App/Configs/Identity.xcconfig`) except `en`, give
+For each language in `CFBundleLocalizations` (`App/Configs/Info.plist`) except `en`, give
 every string a value and set its `state` to `translated`. Then `make ci`, and show the user
 the renders in `.build/renders/<Name>ViewRenderTests/`. A failing check and its fix:
 [scaffold output and fixes](references/scaffold-output.md).

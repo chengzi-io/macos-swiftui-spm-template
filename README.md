@@ -46,7 +46,7 @@ Why each layer exists: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | Swift 6 language mode, warnings as errors, lefthook, pinned toolchain | what compiles is clean; `make ci` is the same gate CI runs |
 | a `Release` workflow and Sparkle | one **Run workflow** builds, signs and drafts a DMG; you test it, **Publish release** ships it, and installed apps update themselves |
 | skills that ship with the repository for the big moves | the agent knows them in order: setup, features, capabilities |
-| string catalogs enforced per `REQUIRED_LOCALES`, sandbox, privacy manifest, Icon Composer icon | the parts every App Store review asks for, done |
+| string catalogs enforced per `CFBundleLocalizations`, sandbox, privacy manifest, Icon Composer icon | the parts every App Store review asks for, done |
 
 ## Start
 

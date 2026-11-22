@@ -187,7 +187,8 @@ struct LaunchAtLoginToggle: View {
 Keep the binding's `set:` a closure: passing the method `setEnabled` itself crashes the
 Swift 6.2.3 compiler. Add `Launch at login`, `Turned off in System Settings.`,
 `Open Login Items…` and `The login item could not be changed.` to
-`Features/Settings/Resources/Localizable.xcstrings` in every locale of `REQUIRED_LOCALES`.
+`Features/Settings/Resources/Localizable.xcstrings` in every language in
+`CFBundleLocalizations`.
 `App/Application/MainApp.swift` builds `LiveLaunchAtLoginService()` (the mock under
 `UI_TESTING=1`) and passes it through `AppModel` to `SettingsModel`, which owns a
 `LaunchAtLoginModel(service:)` for `GeneralSettingsView`. Test the model

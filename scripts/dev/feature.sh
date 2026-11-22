@@ -134,12 +134,19 @@ public struct ${name}View: View {
 }
 EOF
 
-# The view's one string, with an entry for each locale of REQUIRED_LOCALES but the source
-# language, marked new: make lint fails until each is translated.
+# The app's languages: the array macOS reads, and the one make lint checks catalogs against.
+declared_locales=$(plutil -extract CFBundleLocalizations json -o - App/Configs/Info.plist) ||
+    die "feature.sh: App/Configs/Info.plist has no CFBundleLocalizations array"
+locales=$(jq -r '.[]' <<<"$declared_locales")
+[[ -n $locales ]] || die "feature.sh: App/Configs/Info.plist lists no CFBundleLocalizations"
+locale_list=${locales//$'\n'/ }
+
+# The view's one string, with an entry for each language but the source language, marked
+# new: make lint fails until each is translated.
 {
     printf '{\n  "sourceLanguage" : "en",\n  "strings" : {\n    "%s" : {\n' "$name"
     translations=()
-    for locale in ${REQUIRED_LOCALES:-en}; do
+    for locale in $locales; do
         [[ $locale == en ]] || translations+=("$locale")
     done
     if ((${#translations[@]} == 0)); then
@@ -220,6 +227,6 @@ Wire it, each file also importing ${name}Feature:
 
 A Core it needs later: swift package add-target-dependency <Core> ${name}Feature
 
-Translate "${name}" in Resources/Localizable.xcstrings for ${REQUIRED_LOCALES:-en}: make lint
+Translate "${name}" in Resources/Localizable.xcstrings for ${locale_list}: make lint
 fails while one is new. make test then draws the view into .build/renders/.
 EOF

@@ -81,7 +81,7 @@ KeyboardShortcuts, Sentry and the like need the user's yes first; pin it `exact:
 ### 6. Strings
 
 The strings the recipe adds go in the target's `Localizable.xcstrings`, translated into
-every locale of `REQUIRED_LOCALES` (`App/Configs/Identity.xcconfig`).
+every language in `CFBundleLocalizations` (`App/Configs/Info.plist`).
 
 ### 7. Tests
 

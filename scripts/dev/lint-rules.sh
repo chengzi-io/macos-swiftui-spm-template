@@ -136,15 +136,20 @@ while read -r target; do
     status=1
 done < <(comm -23 <(printf '%s\n' "$declared") <(printf '%s\n' "$listed"))
 
-# Every string in each locale of REQUIRED_LOCALES (App/Configs/Identity.xcconfig, space
-# separated; en when unset). A catalog's key is its source-language text, so the source
-# language needs no entry; a plural lists one state per form.
-for locale in ${REQUIRED_LOCALES:-en}; do
+# Every string in each language of CFBundleLocalizations (App/Configs/Info.plist, the array
+# macOS reads). A catalog's key is its source-language text, so the source language needs no
+# entry; a plural lists one state per form.
+declared_locales=$(plutil -extract CFBundleLocalizations json -o - App/Configs/Info.plist) ||
+    die "lint-rules.sh: App/Configs/Info.plist has no CFBundleLocalizations array"
+locales=$(jq -r '.[]' <<<"$declared_locales")
+# An empty array would make the loop below check nothing.
+[[ -n $locales ]] || die "lint-rules.sh: App/Configs/Info.plist lists no CFBundleLocalizations"
+for locale in $locales; do
     while read -r catalog; do
         [[ $locale != "$(jq -r '.sourceLanguage' "$catalog")" ]] || continue
         while read -r key; do
             [[ -n $key ]] || continue
-            echo "error: $catalog: \"$key\" has no $locale translation; add one, or take $locale out of REQUIRED_LOCALES in App/Configs/Identity.xcconfig" >&2
+            echo "error: $catalog: \"$key\" has no $locale translation; translate it, or drop $locale from CFBundleLocalizations (App/Configs/Info.plist)" >&2
             status=1
         done < <(jq -r --arg locale "$locale" '.strings | to_entries[] | select(.value.shouldTranslate != false)
             | select([.value.localizations[$locale] // {} | .. | objects | .stringUnit? // empty | .state]

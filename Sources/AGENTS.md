@@ -53,7 +53,7 @@ this way: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
 - Every view has a `#Preview` built from mocks.
 - Package resources need `bundle: .module` (`Text("Key", bundle: .module)`); without it the app's bundle is searched, the raw key shows and nothing fails to compile.
-- Every user-facing string goes in its target's `Localizable.xcstrings`, translated into each locale of `REQUIRED_LOCALES` (`App/Configs/Identity.xcconfig`).
+- Every user-facing string goes in its target's `Localizable.xcstrings`, translated into each language in `CFBundleLocalizations` (`App/Configs/Info.plist`).
 - Errors: each service throws its own `enum …Error: Error`; the model catches once, logs, and turns it into state the view shows. No empty `catch`, no `try?` on errors that matter.
 - Logging: a module that logs has an internal `Log` enum (`Log.swift`) of `os.Logger`s (subsystem: the bundle id) with its own category; dynamic values stay private unless marked `privacy: .public`. Never log tokens or personal data.
 - Warnings are errors. Fix them, do not silence them. `MemberImportVisibility` is on: import every module whose members a file uses.

@@ -7,7 +7,7 @@ The files `make feature` writes for `<Name>`, and the checks that fail after it.
 | `Sources/Features/<Name>/<Name>Model.swift` | `@Observable` model; the screens' state and the state they share |
 | `Sources/Features/<Name>/<Name>View.swift` | the view, taking its model through `init`, and a `#Preview` |
 | `Sources/Features/<Name>/Log.swift` | `Log.<name>`, the module's `Logger` |
-| `Sources/Features/<Name>/Resources/Localizable.xcstrings` | the view's strings; one `new` entry per `REQUIRED_LOCALES` locale |
+| `Sources/Features/<Name>/Resources/Localizable.xcstrings` | the view's strings; one `new` entry per language in `CFBundleLocalizations` |
 | `Tests/Features/<Name>Tests/<Name>ViewRenderTests.swift` | renders the view light and dark into `.build/renders/` |
 | `Package.swift` | `<Name>Feature` with its `Resources` and `swiftSettings: ui`, `<Name>FeatureTests`, and `"<Name>Feature"` in `AppRoot`, written by `swift package add-target` |
 | `App/<App>.xcodeproj/xcshareddata/xcschemes/<App>.xcscheme` | gains a `<Name>FeatureTests` `TestableReference` |

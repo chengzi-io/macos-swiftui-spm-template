@@ -60,9 +60,9 @@ MenuBarExtra {
 }
 ```
 
-Add `About %@`, `Settings…` and `Quit` to `AppRoot/Resources/Localizable.xcstrings` in every locale of
-`REQUIRED_LOCALES`, creating it and `resources: [.process("Resources")]` on the
-`AppRoot` target if AppRoot has no strings yet. Settings uses `openSettings` rather than
+Add `About %@`, `Settings…` and `Quit` to `AppRoot/Resources/Localizable.xcstrings` in every
+language in `CFBundleLocalizations`, creating it and `resources: [.process("Resources")]` on
+the `AppRoot` target if AppRoot has no strings yet. Settings uses `openSettings` rather than
 `SettingsLink`, which cannot activate the app. Apple plans to deprecate
 `activate(ignoringOtherApps:)` (its documentation lists macOS 27), but Swift warns only
 once the deployment target reaches that release; `activate()` alone still leaves
