@@ -11,15 +11,6 @@
 #   --name NAME             the app: the .app, the executable, and APP_NAME
 #   --bundle-id io.github.owner.myapp  BUNDLE_ID; defaults to io.github.<repository owner>.<name>,
 #                           lowercase
-#   --category VALUE        APP_CATEGORY; defaults to the current one. VALUE is
-#                           public.app-category. plus one of these 40:
-#     business, developer-tools, education, entertainment, finance, games, action-games,
-#     adventure-games, arcade-games, board-games, card-games, casino-games, dice-games,
-#     educational-games, family-games, kids-games, music-games, puzzle-games, racing-games,
-#     role-playing-games, simulation-games, sports-games, strategy-games, trivia-games,
-#     word-games, graphics-design, healthcare-fitness, lifestyle, medical, music, news,
-#     photography, productivity, reference, social-networking, sports, travel, utilities,
-#     video, weather
 #   --repo owner/repo       GITHUB_REPOSITORY; defaults to the origin remote
 #   --locales "en zh-Hans"  CFBundleLocalizations; en is always included
 #   --skip-xcode            skip the Xcode check (only to test on a machine without Xcode)
@@ -44,15 +35,7 @@ INFO_PLIST=App/Configs/Info.plist
 SKILL=.agents/skills/setup-project
 LINK=.claude/skills/setup-project
 
-# The 40 App Store categories, each after public.app-category.
-CATEGORIES="business developer-tools education entertainment finance games action-games
-adventure-games arcade-games board-games card-games casino-games dice-games
-educational-games family-games kids-games music-games puzzle-games racing-games
-role-playing-games simulation-games sports-games strategy-games trivia-games word-games
-graphics-design healthcare-fitness lifestyle medical music news photography productivity
-reference social-networking sports travel utilities video weather"
-
-name="" bundle_id="" category="" repo=""
+name="" bundle_id="" repo=""
 locales="" skip_xcode=0 dry_run=0
 errors=0
 
@@ -91,7 +74,6 @@ parse_inputs() {
         case $1 in
         --name) name=$2 ;;
         --bundle-id) bundle_id=$2 ;;
-        --category) category=$2 ;;
         --repo) repo=$2 ;;
         --locales) locales=$2 ;;
         *) usage 1 ;;
@@ -150,15 +132,6 @@ package_targets() {
     sed -nE 's/.*\.library\(name: "([^"]+)".*/\1/p' Package.swift
 }
 
-# is_category VALUE: whether VALUE is one of the 40 App Store categories.
-is_category() {
-    local value
-    for value in $CATEGORIES; do
-        [[ $1 != "public.app-category.$value" ]] || return 0
-    done
-    return 1
-}
-
 # default_name: the repository's name in CamelCase (my-cool-app -> MyCoolApp), or nothing
 # when it is no app name: every part that is not a letter or a digit starts a word.
 default_name() {
@@ -184,7 +157,6 @@ resolve_defaults() {
     if [[ -z $bundle_id && -n $repo && -n $name ]]; then
         bundle_id=$(printf 'io.github.%s.%s' "${repo%%/*}" "$name" | tr '[:upper:]' '[:lower:]')
     fi
-    category=${category:-$(identity APP_CATEGORY)}
     locales=${locales:-en}
     locales=$(tr ',' ' ' <<<"$locales" | tr -s ' ' | sed -E 's/^ //; s/ $//')
 }
@@ -214,8 +186,6 @@ validate() {
     [[ $repo =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || fail "--repo '$repo' must be owner/repo"
     [[ $repo != "$TEMPLATE_REPO" ]] ||
         fail "--repo is the template itself; create the app's repository (Use this template) and pass it"
-    is_category "$category" ||
-        fail "--category '$category' is not an App Store category; the 40 public.app-category.* values are listed in --help"
     if grep -qE "$LEFTOVERS" <<<"$name"; then
         fail "'$name' contains a template word ($LEFTOVERS); the last step would reject it"
     fi
@@ -238,7 +208,6 @@ print_defaults() {
     cat <<OUT
 name            ${name:-(ask)}  (permanent after the first release)
 bundle-id       ${bundle_id:-(ask)}  (permanent after the first release)
-category        ${category:-(ask)}
 repo            ${repo:-(ask)}
 locales         ${locales:-(ask)}
 OUT
@@ -375,7 +344,6 @@ identity_step() {
     set_identity APP_NAME "$name"
     set_identity APP_DISPLAY_NAME "$name"
     set_identity BUNDLE_ID "$bundle_id"
-    set_identity APP_CATEGORY "$category"
     set_identity GITHUB_REPOSITORY "$repo"
     set_locales "$locales"
 }

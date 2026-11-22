@@ -17,12 +17,13 @@ Supplements the root [AGENTS.md](../AGENTS.md).
 | Key | Affects |
 |---|---|
 | `APP_NAME`, `APP_DISPLAY_NAME`, `BUNDLE_ID` | the app; change only before the first release, since updates match the bundle id |
-| `APP_CATEGORY` | Info.plist |
+| `APP_CATEGORY` | Info.plist, as `public.app-category.` plus one of Apple's category names |
 | `TEAM_ID` | release signing and notarization only (the release pipeline); local builds stay ad-hoc |
 | `GITHUB_REPOSITORY` | release and appcast URLs |
 
-Setup writes every key; change them here only. `scripts/common.sh` reads them too, so keep
-plain `KEY = value` lines: no quotes, no `$(...)`, no `//`.
+Setup writes every key but `APP_CATEGORY`, which keeps the template's `developer-tools`
+until the app's category is clear; change them here only. `scripts/common.sh` reads them
+too, so keep plain `KEY = value` lines: no quotes, no `$(...)`, no `//`.
 
 Languages are not identity: `CFBundleLocalizations` in `Configs/Info.plist` is the one
 place they are declared. macOS lists exactly these in Language & Region › Applications,

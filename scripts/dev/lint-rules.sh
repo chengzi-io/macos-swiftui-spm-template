@@ -190,6 +190,14 @@ while read -r xcconfig; do
     fi
 done < <(find App -name '*.xcconfig' | sort)
 
+# APP_CATEGORY feeds LSApplicationCategoryType, which the App Store requires. Apple adds
+# categories, so the shape is checked and the list is not: a frozen list would reject a
+# valid new one.
+if [[ ! $APP_CATEGORY =~ ^public\.app-category\.[a-z0-9-]+$ ]]; then
+    echo "error: App/Configs/Identity.xcconfig: APP_CATEGORY is '$APP_CATEGORY', not public.app-category.<name>" >&2
+    status=1
+fi
+
 # Build settings live in App/Configs/*.xcconfig. Xcode writes one into project.pbxproj when
 # it is set in the Build Settings or Signing panel, and there it wins over the xcconfig.
 hits=$(awk '/buildSettings = \{/ { inside = 1; next }

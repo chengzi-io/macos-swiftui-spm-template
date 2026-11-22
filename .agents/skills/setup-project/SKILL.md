@@ -40,11 +40,13 @@ One message, in two parts:
    Show each default, or `(ask)`, and get an answer for each, even if it is "keep it":
    a default is never a confirmation. A new name changes the default bundle id with it,
    so confirm that one again.
-2. The defaults the user can change at any time: `category`, `repo`, `locales`. `en` is
-   always a required language, as the source language; only the listed ones are required
-   in every string catalog. Three values are derived and not asked: the display name
-   follows `name`, the LICENSE holder is the repository owner, and the bundle id follows
-   both. `TEAM_ID` keeps its current value.
+2. The defaults the user can change at any time: `repo`, `locales`. `en` is always a
+   required language, as the source language; only the listed ones are required in every
+   string catalog. Three values are derived and not asked: the display name follows
+   `name`, the LICENSE holder is the repository owner, and the bundle id follows both.
+   `TEAM_ID` keeps its current value, and `APP_CATEGORY` keeps the template's
+   `developer-tools`: say so, and change it in `App/Configs/Identity.xcconfig` when the
+   app's category is clear.
 
 ## Plan
 
