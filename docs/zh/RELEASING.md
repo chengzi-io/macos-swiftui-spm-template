@@ -24,7 +24,7 @@
 
 如果自上一个版本以来只有 `refactor:`、`chore:`、`docs:`、`ci:` 这类 commit，运行会在第一步
 失败，报 "nothing to release since vX.Y.Z"。这不是出了问题：这些 commit 什么都不发，等
-`main` 上有了 `feat`、`fix` 或 `perf` 再跑。
+`main` 上有了 `feat`、`fix`、`perf` 或 `revert` 再跑。
 
 ## 版本号
 
@@ -33,7 +33,7 @@
 | 自上一个版本以来的 commit | 版本 |
 | --- | --- |
 | 有一个 `feat` | 次版本号：1.4.2 → 1.5.0 |
-| 有一个 `fix` 或 `perf` | 修订号：1.4.2 → 1.4.3 |
+| 有一个 `fix`、`perf` 或 `revert` | 修订号：1.4.2 → 1.4.3 |
 | 1.0 之前的破坏性变更 | 次版本号：0.4.2 → 0.5.0 |
 | 只有 `refactor`、`docs`、`chore`、`ci`、`test` … | 什么都不发；运行就此停下 |
 | 还没有，第一次发版 | `0.1.0` |
@@ -45,9 +45,9 @@
 副本总能看见更新的构建。Dependabot 以 `fix(deps)` 提安全更新，它们随下一次发版出去。
 
 Releases 页面就是 changelog：每个 Release 的说明就是它那一节，没有 `CHANGELOG.md` 要编辑。
-说明里的标题归在 Breaking Changes、Features、Fixes、Performance 和 Refactoring 下面。
-`refactor` 自己什么都不发，但它的标题会留到下一次发版的说明里，所以草稿会写清哪里的代码
-重组过、该重试什么；其他类型不进说明。
+说明里的标题归在 Breaking Changes、Features、Bug Fixes、Performance、Reverts 和 Refactoring
+下面。`refactor` 自己什么都不发，但它的标题会留到下一次发版的说明里，所以草稿会写清哪里的
+代码重组过、该重试什么；其他类型不进说明。
 
 ## 首次发版之前
 

@@ -25,7 +25,7 @@ version number again and leaves a new draft. A draft has no tag, so nothing bloc
 
 A run with only `refactor:`, `chore:`, `docs:`, `ci:` and similar commits since the last
 release fails in its first step with "nothing to release since vX.Y.Z". Nothing is wrong:
-those commits ship nothing, so wait until a `feat`, `fix` or `perf` is on `main`.
+those commits ship nothing, so wait until a `feat`, `fix`, `perf` or `revert` is on `main`.
 
 ## Versions
 
@@ -34,7 +34,7 @@ The next version comes from the Conventional Commit titles since the last releas
 | Commits since the last release | Version |
 | --- | --- |
 | a `feat` | minor: 1.4.2 → 1.5.0 |
-| a `fix` or a `perf` | patch: 1.4.2 → 1.4.3 |
+| a `fix`, `perf` or `revert` | patch: 1.4.2 → 1.4.3 |
 | a breaking change, below 1.0 | minor: 0.4.2 → 0.5.0 |
 | only `refactor`, `docs`, `chore`, `ci`, `test`, … | nothing; the run stops |
 | none yet, the first release | `0.1.0` |
@@ -48,10 +48,10 @@ it only grows, so an installed copy always sees a newer build. Dependabot opens 
 updates as `fix(deps)`, which ship with the next release.
 
 The Releases page is the changelog: each release's notes are its section, and there is no
-`CHANGELOG.md` to edit. The notes list the titles under Breaking Changes, Features, Fixes,
-Performance and Refactoring. A `refactor` ships nothing by itself, but its title waits for
-the next release's notes, so the draft says where the code was restructured and what to
-try again; the other types stay out.
+`CHANGELOG.md` to edit. The notes list the titles under Breaking Changes, Features, Bug Fixes,
+Performance, Reverts and Refactoring. A `refactor` ships nothing by itself, but its title
+waits for the next release's notes, so the draft says where the code was restructured and
+what to try again; the other types stay out.
 
 ## Before the first release
 

@@ -72,15 +72,15 @@ if [[ -n $actions ]]; then
     done
 fi
 
-# 4. Something to release: a feat, a fix, a perf or a breaking change since the last tag
-# (cliff.toml's groups), which the checks below need too. A refactor is listed in the
-# notes but changes nothing a user sees, so it does not count. This runs before the
+# 4. Something to release: a feat, a fix, a perf, a revert or a breaking change since the
+# last tag (cliff.toml's groups), which the checks below need too. A refactor is listed in
+# the notes but changes nothing a user sees, so it does not count. This runs before the
 # version, because a history without one leaves git-cliff's version at the last tag, whose
 # "not newer" would hide the cause. An explicit VERSION does not lift this, since that
 # release would ship no change.
 last_tag=$(newest_tag)
 releasable=$(git cliff --unreleased --context |
-    jq '[.[].commits[] | select(.breaking or .group == "Features" or .group == "Fixes" or .group == "Performance")] | length') ||
+    jq '[.[].commits[] | (.group // "" | sub("^<!--[^>]*-->"; "")) as $g | select(.breaking or $g == "Features" or $g == "Bug Fixes" or $g == "Performance" or $g == "Reverts")] | length') ||
     die "cannot read the commits since the last release; run: git cliff --unreleased --context"
 [[ $releasable -gt 0 ]] ||
     die "nothing to release since ${last_tag:-the first commit}: only refactor, chore, docs, ci, ... commits"
@@ -109,7 +109,11 @@ if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null 2>&1
 fi
 
 mkdir -p .build
-git cliff --unreleased --tag "v$version" --output .build/release-notes.md
+cliff_args=(--unreleased --tag "v$version" --offline --output .build/release-notes.md)
+if [[ -n ${GITHUB_REPOSITORY:-} ]]; then
+    cliff_args+=(--github-repo "$GITHUB_REPOSITORY")
+fi
+git cliff "${cliff_args[@]}"
 
 # An ad-hoc build is blocked by Gatekeeper on its first launch, and the note is the only
 # place the release says so.

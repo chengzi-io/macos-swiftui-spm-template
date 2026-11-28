@@ -7,31 +7,38 @@
 # No version heading: the GitHub Release carries the version as its title, so these
 # notes are the groups alone.
 body = """{% for group, commits in commits | group_by(attribute="group") -%}
-### {{ group }}
+### {{ group | striptags | trim }}
 
 {% for commit in commits -%}
-- {{ commit.message }}
-
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}{% if commit.breaking and commit.breaking_description %}{{ commit.breaking_description | split(pat="\n") | first | trim }}{% else %}{{ commit.message | split(pat="\n") | first | trim }}{% endif %}
+{% endfor %}
 {% endfor -%}
-{% endfor %}"""
+{% if remote.github.owner and remote.github.repo and previous.version and version -%}
+**Full Changelog**: https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/compare/{{ previous.version }}...{{ version }}
+{% endif -%}"""
 trim = true
 
 [git]
 conventional_commits = true
 filter_unconventional = true
+protect_breaking_commits = true
+sort_commits = "oldest"
 # vX.Y.Z only: a tag in another shape must not set the version.
-tag_pattern = "v[0-9]+.[0-9]+.[0-9]+"
-# The first match wins, and the groups print in name order. A breaking change of any type,
-# marked by `!` or a BREAKING CHANGE: footer, gets its own group; matching the field, not
-# a `!` in the title, keeps a title such as `chore: tidy up!` out. feat, fix and perf
-# ship; a refactor ships nothing by itself (scripts/release/prepare.sh) but is listed, so
-# the notes say where the code was restructured. Every other type stays out.
+tag_pattern = '^v[0-9]+\.[0-9]+\.[0-9]+$'
+# The first match wins; HTML comment prefixes set the display order instead of relying on
+# group names sorting alphabetically, and striptags above drops them from the heading.
+# A breaking change of any type (`!` or a BREAKING CHANGE: footer) gets its own group;
+# matching the field, not `!` in the title, keeps a title such as `chore: tidy up!` out.
+# feat, fix, perf, revert and breaking changes ship; a refactor ships nothing by itself
+# (scripts/release/prepare.sh) but is listed, so the notes say where the code was
+# restructured. Every other type stays out.
 commit_parsers = [
-    { field = "breaking", pattern = "true", group = "Breaking Changes" },
-    { message = "^feat", group = "Features" },
-    { message = "^fix", group = "Fixes" },
-    { message = "^perf", group = "Performance" },
-    { message = "^refactor", group = "Refactoring" },
+    { field = "breaking", pattern = "true", group = "<!-- 0 -->Breaking Changes" },
+    { message = "^feat", group = "<!-- 1 -->Features" },
+    { message = "^fix", group = "<!-- 2 -->Bug Fixes" },
+    { message = "^perf", group = "<!-- 3 -->Performance" },
+    { message = "^revert", group = "<!-- 4 -->Reverts" },
+    { message = "^refactor", group = "<!-- 5 -->Refactoring" },
     { message = ".*", skip = true },
 ]
 
